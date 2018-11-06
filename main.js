@@ -9,7 +9,7 @@
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 const adapter = new utils.Adapter('solarlog');
 var https = require('http'); 
-const deviceIpAdress = adapter.config.ip; 
+const deviceIpAdress = adapter.config.host; 
 let polling;
 var cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 var data = '{"801":{"170":null}}';
@@ -70,7 +70,7 @@ adapter.on('message', function (obj) {
 
 // is called when databases are connected and adapter received configuration.
 adapter.on('ready', function() {
-    if (adapter.config.ip) {  
+    if (adapter.config.host) {  
         adapter.log.info('[START] Starting solarlog adapter');
         main();
     } else adapter.log.warn('[START] No IP-address set');
