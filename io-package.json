@@ -76,7 +76,6 @@
         "type": "general",
         "license": "MIT",
         "messagebox": false,
-        "restartAdapters": ["vis"]
     },
     "native": {
         "test1": true,
