@@ -4,6 +4,6 @@
   "My select": "My select",
   "on save adapter restarts with new config immediately": "on save adapter restarts with new config immediately",
   "template adapter settings": "template adapter settings",
-  "ip": "Solarlog IP:",
+  "host": "Solarlog IP:",
   "pollInterval": "Polling - Interval (ms):"
 }
