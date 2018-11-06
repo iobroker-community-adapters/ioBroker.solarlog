@@ -71,14 +71,14 @@
 <!-- you have to put your config page in a div with id adapter-container -->
 <div id="adapter-container">
 
-    <table><tr>
-            <td><img src="solarlog.png"/></td>
-            <td><h3 class="translate">FHEM adapter settings</h3></td>
-        </tr></table>
-        <table>
-            <tr><td><label class="translate" for="ip">Solarlog IP:</label></td><td class="admin-icon"></td><td><input class="value" id="ip" /></td></tr>
-            <tr><td><label class="translate" for="pollInterval">Abfrage - Intervall (ms):</label></td><td class="admin-icon"></td><td><input class="value" id="pollInterval" /></td></tr>
-        </table>
+     <table><tr>
+        <td><img src="solarlog.png"/></td>
+        <td><h3 class="translate">solarlog adapter settings</h3></td>
+    </tr></table>
+    <p>
+        <span><label for="host" class="translate">host</label></span><input class="value" id="host"/><br>
+        <span><label for="pollInterval" class="translate">pollInterval</label></span><input class="value" id="pollInterval"/><br>
+    </p>
     <p class="translate">on save adapter restarts with new config immediately</p>
 
 </div>
