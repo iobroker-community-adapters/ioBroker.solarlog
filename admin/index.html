@@ -72,14 +72,13 @@
 <div id="adapter-container">
 
     <table><tr>
-        <td><img src="solarlog.png"/></td>
-        <td><h3 class="translate">template adapter settings</h3></td>
-    </tr></table>
-    <p>
-        <span><label for="ip" class="translate">ip</label></span><input class="value" id="ip"/><br>
-        <span><label for="pollInterval" class="translate">pollInterval</label></span><input class="value" id="pollInterval"/><br>
-    </p>
-
+            <td><img src="solarlog.png"/></td>
+            <td><h3 class="translate">FHEM adapter settings</h3></td>
+        </tr></table>
+        <table>
+            <tr><td><label class="translate" for="ip">Solarlog - IP:</label></td><td class="admin-icon"></td><td><input class="value" id="ip" /></td></tr>
+            <tr><td><label class="translate" for="pollInterval">Polling Interval (ms):</label></td><td class="admin-icon"></td><td><input class="value" id="pollInterval" /></td></tr>
+        </table>
     <p class="translate">on save adapter restarts with new config immediately</p>
 
 </div>
