@@ -67,20 +67,20 @@ adapter.on('ready', function() {
 function main() {
     // Vars
     const DeviceIpAdress = adapter.config.host;
-	var cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
-	var data = '{"801":{"170":null}}';
+    var cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
+    var data = '{"801":{"170":null}}';
 
-	var options = {
-    host: DeviceIpAdress,
-    path: cmd,
-    method: 'POST',
-    headers: {
-        'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-        'Content-Type': 'application/json',
-        'Accept': 'applciation/json',
-        'Content-Length': data.length
-    }
-};
+    var options = {
+    	host: DeviceIpAdress,
+    	path: cmd,
+    	method: 'POST',
+    	headers: {
+    	 'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+       	 'Content-Type': 'application/json',
+       	 'Accept': 'applciation/json',
+       	 'Content-Length': data.length
+    	}
+    };
     const pollingTime = adapter.config.pollInterval || 300000;
     adapter.log.debug('[INFO] Configured polling interval: ' + pollingTime);
     adapter.log.debug('[START] Started Adapter with: ' + adapter.config.host); 
@@ -118,7 +118,7 @@ function httpsReq(options) {
     var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-var bodyChunks  = [];
+    var bodyChunks  = [];
     var chunkLine   = 0;
     res.on('data', function(chunk) {
         chunkLine = chunkLine + 1;
