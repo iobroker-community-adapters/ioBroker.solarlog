@@ -145,7 +145,7 @@ function httpsReq(cmd, data, options) {
 	
    
     req.on('error', function(e) { // Fehler abfangen
-        adapter.log.debug('ERROR: ' + e.message,"warn");
+        adapter.log.warn('ERROR: ' + e.message);
     });
 
     adapter.log.debug("Data to request body: " + data);
