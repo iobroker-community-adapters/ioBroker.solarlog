@@ -1,0 +1,46 @@
+{
+	"name": "iobroker.solarlog",
+	"version": "0.0.2",
+	"engines": {
+    	"node": ">=6.0.0"
+	},
+	"description": "solarlog",
+	"author": {
+		"name": "Marcel Adam",
+		"email": "marceladam@gmx.ch"
+	},
+	"contributors": [
+		{
+			"name": "Marcel Adam",
+			"email": "marceladam@gmx.ch"
+		}
+	],
+	"homepage": "https://github.com/forelleblau/ioBroker.solarlog",
+	"license": "MIT",
+	"keywords": [
+		"ioBroker",
+		"solarlog",
+		"Smart Home",
+		"home automation"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/forelleblau/ioBroker.solarlog"
+	},
+	"dependencies": {
+		"request": "^2.87.0"
+	},
+	"devDependencies": {
+		"gulp": "^3.9.1",
+		"mocha": "^4.1.0",
+		"chai": "^4.1.2"
+	},
+	"main": "main.js",
+	"scripts": {
+		"test": "node node_modules/mocha/bin/mocha --exit"
+	},
+	"bugs": {
+		"url": "https://github.com/forelleblau/ioBroker.solarlog/issues"
+	},
+	"readmeFilename": "README.md"
+}
