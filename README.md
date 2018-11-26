@@ -4,7 +4,8 @@ An ioBroker adapter for solarlog - devices
 Install adapter, create instance.
 Set Solarlog - IP-Adress und polling - intervall 
 
-Latest version: 0.0.2
+## Changelog
+### 0.0.2 First running version
 
 Defined objects: 
 - Time last data sync
@@ -28,5 +29,4 @@ Defined objects:
 Planned Objects:
 - Description/Yield/Consuption of all connected inverters and meters
 
-##Changelog
-0.0.2 First running version
+
