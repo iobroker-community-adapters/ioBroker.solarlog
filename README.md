@@ -28,4 +28,5 @@ Defined objects:
 Planned Objects:
 - Description/Yield/Consuption of all connected inverters and meters
 
-
+##Changelog
+0.0.2 First running version
