@@ -7,7 +7,7 @@
 'use strict';
 
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
-const adapter = new utils.Adapter('solarlog_test');
+const adapter = new utils.Adapter('solarlog');
 var DeviceIpAdress;
 var https = require('http'); 
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
