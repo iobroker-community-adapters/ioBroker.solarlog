@@ -2,9 +2,17 @@
 An ioBroker adapter for solarlog - devices
 
 Install adapter, create instance.
-Set Solarlog - IP-Adress und polling - intervall 
+Set Solarlog - IP-adress and polling - intervall 
 
 ## Changelog
+### 0.0.3
+New functions added!
+- reads all defined inverters/meters 
+- sets objects named as in solarlog 
+- gets values (current production/consumption) and states for each inverter
+
+Planned for next version: reading solarlog smart energy settings and states
+
 ### 0.0.2 First running version
 
 Defined objects: 

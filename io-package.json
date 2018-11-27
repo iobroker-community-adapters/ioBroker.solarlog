@@ -1,11 +1,15 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.0.2",
+		"version": "0.0.3",
 		"news": {
+			"0.0.3": {
+				"en": "better readme, import data of all inverters and meters",
+				"de": "Erweiterte Readme, Import der Daten aller Unterzähler"
+			},
 			"0.0.2": {
 				"en": "better readme, error - handling, better log",
-				"de": "Erweiterte Readmeeadme, Fehlerhandling, Log optimiert"
+				"de": "Erweiterte Readme, Fehlerhandling, Log optimiert"
 			},
 			"0.0.1": {
 				"en": "initial adapter",
@@ -15,14 +19,14 @@
 		"title": "solarlog",
 		"titleLang": {
 			"en": "solarlogMonitor",
-			"de": "solarlogMonitor"
+			"de": "Monitor"
 		},
 		"desc": {
 			"en": "Monitor your solarlog meter",
 			"de": "Überwache deinen Solarlog Meter"
 		},
 		"authors": [
-			"Marcel Adam <marceladam@gmx.ch>"
+			"forelleblau <marceladam@gmx.ch>"
 		],
 		"docs": {
 			"de": "docs/de/README.md"
@@ -72,6 +76,21 @@
 				"read": true,
 				"write": false,
 				"desc": "Last successful synchronization"
+			},
+			"native": {
+				
+			}
+		},
+		{
+			"_id": "info.numinv",
+			"type": "state",
+			"common": {
+				"name": "Number of inverters",
+				"type": "number",
+				"role": "value.numinv",
+				"read": true,
+				"write": false,
+				"desc": "Total number of inverters and meters"
 			},
 			"native": {
 				
