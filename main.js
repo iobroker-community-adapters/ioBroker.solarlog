@@ -274,6 +274,7 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 				name: 'PAC',
 				desc: 'Power AC',
 				type: 'number',
+				role: "value.pac",
 				read: true,
 				write: false,
 				unit: "W"
@@ -287,6 +288,7 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 				name: 'status',
 				desc: 'Staus of Inverter',
 				type: 'string',
+				role: "info.status",
 				read: true,
 				write: false
 			},
