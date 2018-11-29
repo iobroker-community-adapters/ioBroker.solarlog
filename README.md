@@ -1,3 +1,4 @@
+![Logo](admin/solarlog.png)
 # ioBroker.solarlog
 An ioBroker adapter for solarlog - devices
 
