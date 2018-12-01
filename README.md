@@ -8,10 +8,21 @@
 
 An ioBroker adapter for solarlog - devices
 
+The open JSON-interface (offene Json-Schnittstelle) has to be activated in the Solarlog's configuration menue (Konfiguration - System - Zugangskontrolle - Offene Json-Schnittstelle: akrivieren.)
+
 Install adapter, create instance.
 Set Solarlog - IP-adress and polling - intervall 
+Check if all inverter - data is collectet. !! The user-password in solarlog has to be deactivated for this option!!
+Achtung: Damit die Abfrage der Unterzähler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
 
 ## Changelog
+### 0.0.4
+- Inverter-import optional
+- Error - logs refer to functions
+- better readme
+
+Planned for next version: reading solarlog smart energy settings and states
+
 ### 0.0.3
 New functions added!
 - reads all defined inverters/meters 

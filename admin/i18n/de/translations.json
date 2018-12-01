@@ -5,5 +5,6 @@
   "on save adapter restarts with new config immediately": "Beim Speichern von Einstellungen der Adapter wird sofort neu gestartet.",
   "template adapter settings": "Beispiel",
   "host": "Solarlog IP:",
-  "pollInterval": "Abfrage - Intervall (ms):"
+  "pollInterval": "Abfrage - Intervall (ms):",
+  "invimp": "Unterzähler importieren. Achtung: Benutzerpasswort im Solarlog muss deaktiviert sein"		
 }

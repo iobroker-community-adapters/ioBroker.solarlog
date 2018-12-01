@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.0.3",
+		"version": "0.0.4",
 		"news": {
+			"0.0.4": {
+				"en": "better readme, error-logging refers to functions, inverter-import optional",
+				"de": "Erweiterte Readme, Error-logging nennt funktionen, Import der Daten aller Unterzähler optional möglich"
+			},
 			"0.0.3": {
 				"en": "better readme, import data of all inverters and meters",
 				"de": "Erweiterte Readme, Import der Daten aller Unterzähler"
@@ -19,7 +23,7 @@
 		"title": "solarlog",
 		"titleLang": {
 			"en": "solarlogMonitor",
-			"de": "Monitor"
+			"de": "SolarlogMonitor"
 		},
 		"desc": {
 			"en": "Monitor your solarlog meter",
@@ -52,7 +56,8 @@
 	},
 	"native": {
 		"host": "",
-		"pollInterval":300000
+		"pollInterval":300000,
+		"InvImp": false
 	},
 	"objects": [],
 	"instanceObjects": [
@@ -60,7 +65,7 @@
 			"_id": "info",
 			"type": "channel",
 			"common": {
-				"name": "Information"
+			"name": "Information"
 			},
 			"native": {
 				
