@@ -16,6 +16,10 @@ Set Solarlog - IP-adress and polling - intervall
 Check if all inverter - data is collectet. !! The user-password in solarlog has to be deactivated for this option!!
 Achtung: Damit die Abfrage der Unterzähler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
 
+Tested on:
+Solarlog 200 / 500 / 1200Meter
+
+
 ## Changelog
 ### 0.0.5
 - better readme
