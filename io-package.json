@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.0.4",
+		"version": "0.0.5",
 		"news": {
+			"0.0.5": {
+				"en": "better readme, correct labels in config-dialogue",
+				"de": "Erweiterte Readme, korrekte Beschriftung im Config-Dialog"
+			},
 			"0.0.4": {
 				"en": "better readme, error-logging refers to functions, inverter-import optional",
 				"de": "Erweiterte Readme, Error-logging nennt funktionen, Import der Daten aller Unterzähler optional möglich"
