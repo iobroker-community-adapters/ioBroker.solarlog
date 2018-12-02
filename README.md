@@ -17,6 +17,12 @@ Check if all inverter - data is collectet. !! The user-password in solarlog has 
 Achtung: Damit die Abfrage der Unterzähler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
 
 ## Changelog
+### 0.0.5
+- better readme
+- correct labes in config-dialoge
+
+Planned for next version: reading solarlog smart energy settings and states
+
 ### 0.0.4
 - Inverter-import optional
 - Error - logs refer to functions
