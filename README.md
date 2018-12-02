@@ -12,8 +12,9 @@ The open JSON-interface (offene Json-Schnittstelle) has to be activated in the S
 
 Install adapter, create instance.
 Set Solarlog - IP-adress and polling - intervall 
+
 Check if all inverter - data is collectet. !! The user-password in solarlog has to be deactivated for this option!!
-Achtung: Damit die Abfrage der Unterz‰hler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
+Achtung: Damit die Abfrage der Unterz√§hler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
 
 ## Changelog
 ### 0.0.4
