@@ -14,16 +14,21 @@ Install adapter, create instance.
 Set Solarlog - IP-adress and polling - intervall 
 
 Check if all inverter - data is collectet. !! The user-password in solarlog has to be deactivated for this option!!
-Achtung: Damit die Abfrage der Unterz√§hler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
+Achtung: Damit die Abfrage der Unterz‰hler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
+
+If the automatic import of inverter/meter data does not set the correct number of devices/channels, please indicate the number of devices to import manually.
 
 Tested on:
 Solarlog 200 / 500 / 1200Meter
 
 
 ## Changelog
+### 0.0.6
+- option to indicate the number of inverters/meters to import (in some cases the automatic import does not work correct)
+
 ### 0.0.5
 - better readme
-- correct labes in config-dialoge
+- correct labes in config-dialogue
 
 Planned for next version: reading solarlog smart energy settings and states
 

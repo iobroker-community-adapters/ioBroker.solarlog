@@ -6,6 +6,5 @@
   "template adapter settings": "Beispiel",
   "host": "Solarlog IP:",
   "pollInterval": "Abfrage - Intervall (ms):",
-  "invimp": "Unterzaehler-Abfrage. Achtung! Benutzer-Passwort im Solarlog muss deaktiviert sein"
+  "invimp": "Unterzähler importieren. Achtung: Benutzerpasswort im Solarlog muss deaktiviert sein"		
 }
-
