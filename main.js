@@ -210,7 +210,8 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzäh
 			}
 			else {
 				numinv = adapter.config.numinv + 1;
-				adapter.log.debug("Manuell " + numinv-1 + " Zaehler importieren"}
+				adapter.log.debug("Manuell " + numinv-1 + " Zaehler importieren");
+				}
 			
 		} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler NumInv: " + e.message);
