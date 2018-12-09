@@ -199,25 +199,18 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzäh
 		try{
 			var dataJ=JSON.parse(body);
 			
-			if (adapter.config.numinv = 0) {			
-				while (statusuz != "OFFLINE" && numinv < 100) {
-					statusuz = (dataJ[608][numinv.toString()]);  
-						if (statusuz != "OFFLINE") {
-						   adapter.log.debug(dataJ[608][numinv.toString()]);
-						}
-					numinv++;
+			while (statusuz != "OFFLINE" && numinv < 100) {
+				statusuz = (dataJ[609][numinv.toString()]);  
+					if (statusuz != "OFFLINE") {
+					   adapter.log.debug(dataJ[609][numinv.toString()]);
 					}
-			}
-			else {
-				numinv = adapter.config.numinv + 1;
-				adapter.log.debug("Manuell " + numinv-1 + " Zaehler importieren");
+				numinv++;
 				}
-			
 		} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler NumInv: " + e.message);
 		}			
         adapter.setState('info.numinv'/*numinv*/, numinv-1, true);
-        adapter.log.debug("Numer of Inverters/Meters :" + numinv-1);
+        adapter.log.debug("Numer of Inverters/Meters :" + numinv);
 		adapter.log.debug("END Request: " + JSON.stringify(data));
 		
 		adapter.setObjectNotExists('INV', {
