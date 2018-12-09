@@ -4,8 +4,8 @@
 		"version": "0.0.6",
 		"news": {
 			"0.0.6": {
-				"en": "option to indicate the number of inverters/meters to import",
-				"de": "Optionale manuelle Eingabe der Anzahll Unterzaehler möglich"
+				"en": "optimized evaluation of the number of inverters/meters to import",
+				"de": "Verbesserte Ermittlung der Anzahll Unterzaehler"
 			},
 			"0.0.5": {
 				"en": "better readme,correct labels in config-dialogue",
