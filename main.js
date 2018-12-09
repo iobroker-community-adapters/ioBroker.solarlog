@@ -84,7 +84,7 @@ function main() {
 	var uzimp = (adapter.config.invimp).toString();
 	adapter.log.debug("InvImp: " + adapter.config.invimp);
 	adapter.log.debug("uzimp: " + uzimp);
-	var data='{"608":null}';
+	var data='{"609":null}';
 	var options = {
 		host: DeviceIpAdress,
 		path: cmd,
@@ -201,16 +201,16 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzäh
 			
 			while (statusuz != "OFFLINE" && numinv < 100) {
 				statusuz = (dataJ[609][numinv.toString()]);  
-					if (statusuz != "OFFLINE") {
-					   adapter.log.debug(dataJ[609][numinv.toString()]);
-					}
+					//if (statusuz != "OFFLINE") {
+					//   adapter.log.debug(dataJ[609][numinv.toString()]);
+					//}
 				numinv++;
 				}
 		} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler NumInv: " + e.message);
 		}			
         adapter.setState('info.numinv'/*numinv*/, numinv-1, true);
-        adapter.log.debug("Numer of Inverters/Meters :" + numinv);
+        adapter.log.debug("Numer of Inverters/Meters :" + (numinv-1));
 		adapter.log.debug("END Request: " + JSON.stringify(data));
 		
 		adapter.setObjectNotExists('INV', {
