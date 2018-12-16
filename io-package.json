@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.0.6",
+		"version": "0.0.7",
 		"news": {
+			"0.0.7": {
+				"en": "import of daily sum of production/consumption, connection status indication fixed",
+				"de": "Import der Tagessummen pro Unterzaehler, Anzeige Verbindungsstatus repariert"
+			},
 			"0.0.6": {
 				"en": "optimized evaluation of the number of inverters/meters to import",
 				"de": "Verbesserte Ermittlung der Anzahll Unterzaehler"
@@ -122,6 +126,22 @@
 				"def": false,
 				"desc": "Total installed generator power",
 				"unit": "Wp"
+			},
+			"native": {
+				
+			}
+		},
+		{
+			"_id": "info.connection",
+			"type": "state",
+			"common": {
+				"name": "solarlog connected",
+				"type": "boolean",
+				"role": "indicator.connected",
+				"read": true,
+				"write": false,
+				"def": false,
+				"desc": "Is solarlog connected?"
 			},
 			"native": {
 				

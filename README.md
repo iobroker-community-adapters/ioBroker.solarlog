@@ -8,7 +8,7 @@
 
 An ioBroker adapter for solarlog - devices
 
-The open JSON-interface (offene Json-Schnittstelle) has to be activated in the Solarlog's configuration menue (Konfiguration - System - Zugangskontrolle - Offene Json-Schnittstelle: akrivieren.)
+The open JSON-interface (offene Json-Schnittstelle) has to be activated in the Solarlog's configuration menue (Konfiguration - System - Zugangskontrolle - Offene Json-Schnittstelle: aktivieren.)
 
 Install adapter, create instance.
 Set Solarlog - IP-adress and polling - intervall 
@@ -21,6 +21,9 @@ Solarlog 200 / 500 / 1200Meter
 
 
 ## Changelog
+### 0.0.7
+- import of daily sum of production/consumption per inverter/meter in Wh
+- info connection state fixed
 ### 0.0.6
 - optimized evaluation of number of inverters/meters to import
 

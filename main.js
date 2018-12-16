@@ -14,7 +14,7 @@ const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 var statusuz ="on";
 var numinv = 0;
 var names =[];
-var uzimp = "false";
+var uzimp;
 var testend;
 var testj= 0;
 var testi= 0;
@@ -70,6 +70,7 @@ adapter.on('message', function (obj) {
 adapter.on('ready', function() {
     if (adapter.config.host) {  
         adapter.log.info('[START] Starting solarlog adapter');
+		adapter.setState('info.connection', true, true);
         main();
     } else adapter.log.warn('[START] No IP-address set');
 });
@@ -81,7 +82,7 @@ function main() {
     const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
     var statusuz ="on";
 	var numinv = 0;
-	var uzimp = (adapter.config.invimp).toString();
+	uzimp = (adapter.config.invimp).toString();
 	adapter.log.debug("InvImp: " + adapter.config.invimp);
 	adapter.log.debug("uzimp: " + uzimp);
 	var data='{"609":null}';
@@ -111,12 +112,12 @@ function main() {
 		
 		testend = setInterval(test, 2000); //überprüfen ob alle Channels angelegt sind. 
     	
-		setTimeout(function(){httpsReqDataStandard(cmd, uzimp);},300000); //abfragen der Standard-Werte
+		//setTimeout(function(){httpsReqDataStandard(cmd, uzimp);},30000); //abfragen der Standard-Werte
 	
 		
 		if (!polling) {
 			polling = setTimeout(function repeat() { // poll states every [30] seconds
-				httpsReqDataStandard(cmd, uzimp, httpsReqDataUZ(cmd, names));
+				httpsReqDataStandard(cmd, uzimp);
 				setTimeout(repeat, pollingTime);
 			}, pollingTime);
 		} // endIf
@@ -153,7 +154,7 @@ function test() {
 			if (testi==numinv){
 				adapter.log.info("Alle WR/Meter gefunden");
 				adapter.log.debug("Names: " + names);
-				httpsReqDataUZ(cmd, names);
+				httpsReqDataStandard(cmd, uzimp);
 				clearInterval(testend);	
 				}
 			else {
@@ -289,7 +290,7 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 			native: {}
 		});
 		
-		// create States PAC/Status Inverter(i)
+		// create States PAC/Status/DaySum Inverter(i)
 		adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]).toString() + ".PAC",{
 			type: 'state',
 			common: {
@@ -313,6 +314,20 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 				role: "info.status",
 				read: true,
 				write: false
+			},
+			native: {}
+		});
+		
+		adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]) + ".daysum",{
+			type: 'state',
+			common: {
+				name: 'DaySum',
+				desc: 'Daily sum Wh',
+				type: 'number',
+				role: "value.daysum",
+				read: true,
+				write: false,
+				unit: "Wh"
 			},
 			native: {}
 		});
@@ -390,8 +405,10 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
 			} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler DataStandard: " + e.message);
 			}
+			adapter.log.debug("InvImp= " + uzimp);
 			if (uzimp=="true"){
-				httpsReqDataUZ(cmd, names, httpsReqStatUZ(cmd, names));
+				adapter.log.debug("Unterzähler importieren");
+				httpsReqDataUZ(cmd, names);
 			}
 			
 	       });
@@ -511,6 +528,7 @@ function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzählerwerte
 			} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler StatUZ: " + e.message);
 		}
+		httpsReqDataSumUZ(cmd, names);
         });
 
     });
@@ -525,3 +543,67 @@ function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzählerwerte
      
     req.end();	
 } //End httpsReqStatUZ
+
+function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzählerwerte
+    var data = '{"777":{"0":null}}';
+    var options = {
+    host: DeviceIpAdress,
+    path: cmd,
+    method: 'POST',
+    headers: {
+        'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+        'Content-Type': 'application/json',
+        'Accept': 'applciation/json',
+        'Content-Length': data.length
+        }
+    };   
+    
+    var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    var bodyChunks  = [];
+    var chunkLine   = 0;
+    res.on('data', function(chunk) {
+        chunkLine = chunkLine + 1;
+        // Hier können die einzelnen Zeilen verarbeitet werden...
+        bodyChunks.push(chunk);
+
+    }).on('end', function() {
+        var body = Buffer.concat(bodyChunks);
+        // ...und/oder das Gesamtergebnis (body).
+        adapter.log.debug("body: " + body);
+		
+		try{		
+		var dataSUZ = (JSON.parse(body));
+		adapter.log.debug("Inv. to treat: " + names);
+		var namLeng = names.length;
+		adapter.log.debug("Anzahl Elemente: " + namLeng);
+		var d= new Date();
+		adapter.log.debug("Tag: " + d.getDate());
+		var indexday=d.getDate()-1;
+		adapter.log.debug("IndexTag: " + indexday);
+		
+		for (var suzi=0; suzi<namLeng; suzi++){
+			adapter.log.debug("INV." + names[suzi] + ": " + dataSUZ[777][0][indexday][1][suzi]);
+			adapter.setState("INV." + names[suzi] + ".daysum", dataSUZ[777][0][indexday][1][suzi], true);
+		}
+		adapter.log.debug("END");
+		
+		} catch(e) {
+				adapter.log.warn("JSON-parse-Fehler DataSUZ: " + e.message);
+		}
+		     
+        });
+
+    });
+    
+    req.on('error', function(e) { // Fehler abfangen
+        adapter.log.warn('ERROR ReqDataUZ: ' + e.message,"warn");
+    });
+
+    adapter.log.debug("Data to request body: " + data);
+    // write data to request body
+    (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+     
+    req.end();	
+} //End httpsReqDataSumUZ
