@@ -21,6 +21,8 @@ Solarlog 200 / 500 / 1200Meter
 
 
 ## Changelog
+### 0.0.8
+- bugfix daysum - function
 ### 0.0.7
 - import of daily sum of production/consumption per inverter/meter in Wh
 - info connection state fixed

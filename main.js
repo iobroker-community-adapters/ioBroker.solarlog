@@ -574,18 +574,27 @@ function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzählerwerte
         adapter.log.debug("body: " + body);
 		
 		try{		
-		var dataSUZ = (JSON.parse(body));
+		var dataSUZ = JSON.parse(body)[777][0];
+		adapter.log.debug("DataSUZ: " + dataSUZ);
 		adapter.log.debug("Inv. to treat: " + names);
 		var namLeng = names.length;
 		adapter.log.debug("Anzahl Elemente: " + namLeng);
 		var d= new Date();
-		adapter.log.debug("Tag: " + d.getDate());
-		var indexday=d.getDate()-1;
-		adapter.log.debug("IndexTag: " + indexday);
-		
+		var heute = (d.getDate()+"."+(d.getMonth()+1)+"."+(d.getFullYear()-2000)).toString();
+		adapter.log.debug("Heute: " + heute);
+		for (var isuz=0; isuz<31; isuz++){
+			var indextag = dataSUZ[isuz].indexOf(heute.toString());
+            if (indextag != -1){
+                var indexsuz = isuz;
+				adapter.log.debug("Index Tageswerte: " + indexsuz);
+                break;
+            }
+            }
+		var daysum = dataSUZ[indexsuz][1];
+		adapter.log.debug("Tagessummen: " + daysum);
 		for (var suzi=0; suzi<namLeng; suzi++){
-			adapter.log.debug("INV." + names[suzi] + ": " + dataSUZ[777][0][indexday][1][suzi]);
-			adapter.setState("INV." + names[suzi] + ".daysum", dataSUZ[777][0][indexday][1][suzi], true);
+			adapter.log.debug("INV." + names[suzi] + ": " + daysum[suzi]);
+			adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
 		}
 		adapter.log.debug("END");
 		

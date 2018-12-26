@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.0.7",
+		"version": "0.0.8",
 		"news": {
+			"0.0.8": {
+				"en": "bugfix for daysum function",
+				"de": "Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben"
+			},
 			"0.0.7": {
 				"en": "import of daily sum of production/consumption, connection status indication fixed",
 				"de": "Import der Tagessummen pro Unterzaehler, Anzeige Verbindungsstatus repariert"
