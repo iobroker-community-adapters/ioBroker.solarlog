@@ -17,10 +17,12 @@ Check if all inverter - data is collectet. !! The user-password in solarlog has 
 Achtung: Damit die Abfrage der Unterzähler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
 
 Tested on:
-Solarlog 200 / 500 / 1200Meter
+Solarlog 200PM+ / 300PM+ / 500 / 1200Meter
 
 
 ## Changelog
+### 0.0.9
+- another bugfix daysum - function
 ### 0.0.8
 - bugfix daysum - function
 ### 0.0.7

@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.0.8",
+		"version": "0.0.9",
 		"news": {
+			"0.0.9": {
+				"en": "another bugfix for daysum function (format date)",
+				"de": "Weiterer Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben (Datumsformat)"
+			},
 			"0.0.8": {
 				"en": "bugfix for daysum function",
 				"de": "Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben"

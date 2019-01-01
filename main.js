@@ -580,7 +580,7 @@ function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzählerwerte
 		var namLeng = names.length;
 		adapter.log.debug("Anzahl Elemente: " + namLeng);
 		var d= new Date();
-		var heute = (d.getDate()+"."+(d.getMonth()+1)+"."+(d.getFullYear()-2000)).toString();
+		var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth()+1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
 		adapter.log.debug("Heute: " + heute);
 		for (var isuz=0; isuz<31; isuz++){
 			var indextag = dataSUZ[isuz].indexOf(heute.toString());
