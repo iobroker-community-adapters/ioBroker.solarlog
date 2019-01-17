@@ -11,16 +11,18 @@ An ioBroker adapter for solarlog - devices
 The open JSON-interface (offene Json-Schnittstelle) has to be activated in the Solarlog's configuration menue (Konfiguration - System - Zugangskontrolle - Offene Json-Schnittstelle: aktivieren.)
 
 Install adapter, create instance.
-Set Solarlog - IP-adress and polling - intervall 
+Set Solarlog - IP-adress (192.XXX.X.XXX), port (optional) and polling - intervall (in millilseconds)
 
 Check if all inverter - data is collectet. !! The user-password in solarlog has to be deactivated for this option!!
-Achtung: Damit die Abfrage der Unterzähler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
+Achtung: Damit die Abfrage der Unterzaehler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
 
 Tested on:
 Solarlog 200PM+ / 300PM+ / 500 / 1200Meter
 
 
 ## Changelog
+### 0.1.0
+- optional port declaration, readme updated
 ### 0.0.9
 - another bugfix daysum - function
 ### 0.0.8
@@ -46,19 +48,19 @@ Planned for next version: reading solarlog smart energy settings and states
 
 ### 0.0.3
 New functions added!
-- reads all defined inverters/meters 
-- sets objects named as in solarlog 
+- reads all defined inverters/meters
+- sets objects named as in solarlog
 - gets values (current production/consumption) and states for each inverter
 
 Planned for next version: reading solarlog smart energy settings and states
 
 ### 0.0.2 First running version
 
-Defined objects: 
+Defined objects:
 - Time last data sync
 - Installed generator power
 - Total output PAC from all of the inverters and meters in inverter mode.
-- Total output PAC from all of the inverters 
+- Total output PAC from all of the inverters
 - Average voltage UAC from the inverter
 - Average voltage UDC from the inverter
 - Total yield for the day from all of the inverters
