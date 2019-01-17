@@ -9,7 +9,8 @@
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 const adapter = new utils.Adapter('solarlog');
 var DeviceIpAdress;
-var https = require('http'); 
+var Port;
+var https = require('http');
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 var statusuz ="on";
 var numinv = 0;
@@ -40,7 +41,7 @@ adapter.on('unload', function (callback) {
 adapter.on('objectChange', function (id, obj) {
     // Warning, obj can be null if it was deleted
     adapter.log.info('objectChange ' + id + ' ' + JSON.stringify(obj));
-}); 
+});
 
 // is called if a subscribed state changes
 adapter.on('stateChange', function (id, state) {
@@ -68,7 +69,7 @@ adapter.on('message', function (obj) {
 
 // is called when databases are connected and adapter received configuration.
 adapter.on('ready', function() {
-    if (adapter.config.host) {  
+    if (adapter.config.host) {
         adapter.log.info('[START] Starting solarlog adapter');
 		adapter.setState('info.connection', true, true);
         main();
@@ -79,6 +80,7 @@ adapter.on('ready', function() {
 function main() {
     // Vars
     DeviceIpAdress = adapter.config.host;
+    Port = adapter.config.port;
     const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
     var statusuz ="on";
 	var numinv = 0;
@@ -88,6 +90,7 @@ function main() {
 	var data='{"609":null}';
 	var options = {
 		host: DeviceIpAdress,
+		port: Port,
 		path: cmd,
 		method: 'POST',
 		headers: {
@@ -96,25 +99,25 @@ function main() {
 			'Accept': 'applciation/json',
 			'Content-Length': data.length
 		}
-	};   
+	};
     const pollingTime = adapter.config.pollInterval || 300000;
     adapter.log.debug('[INFO] Configured polling interval: ' + pollingTime);
     adapter.log.debug('[START] Started Adapter with: ' + adapter.config.host);
-	
+
 	adapter.log.debug("Options: " + JSON.stringify(options));
 	adapter.log.debug("Data: " + JSON.stringify(data));
-	
+
 	if (uzimp == "true"){
 		adapter.log.debug("uzimp: " + uzimp);
 		adapter.log.debug("WR Importieren");
-    	
-		httpsReqNumInv(data, options, numinv, uzimp, defobjUZ()); //Anlegen eines Channels pro Unterzähler mit den Objekten Wert und Status
-		
-		testend = setInterval(test, 2000); //überprüfen ob alle Channels angelegt sind. 
-    	
+
+		httpsReqNumInv(data, options, numinv, uzimp, defobjUZ()); //Anlegen eines Channels pro Unterzï¿½hler mit den Objekten Wert und Status
+
+		testend = setInterval(test, 2000); //ï¿½berprï¿½fen ob alle Channels angelegt sind.
+
 		//setTimeout(function(){httpsReqDataStandard(cmd, uzimp);},30000); //abfragen der Standard-Werte
-	
-		
+
+
 		if (!polling) {
 			polling = setTimeout(function repeat() { // poll states every [30] seconds
 				httpsReqDataStandard(cmd, uzimp);
@@ -127,12 +130,12 @@ function main() {
 		adapter.log.debug("uzimp: " + uzimp);
 		adapter.log.debug("WR nicht Importieren");
 		httpsReqDataStandard(cmd, uzimp);
-			
+
 		if (!polling) {
 			polling = setTimeout(function repeat() { // poll states every [30] seconds
-			
+
 				httpsReqDataStandard(cmd, uzimp);
-			
+
 				setTimeout(repeat, pollingTime);
 			}, pollingTime);
 		} // endIf
@@ -140,8 +143,8 @@ function main() {
     // all states changes inside the adapters namespace are subscribed
     adapter.subscribeStates('*');
 
-   
-} // endMain	
+
+} // endMain
 
 function test() {
 	adapter.getState("info.numinv", function (err, obj) {
@@ -155,25 +158,25 @@ function test() {
 				adapter.log.info("Alle WR/Meter gefunden");
 				adapter.log.debug("Names: " + names);
 				httpsReqDataStandard(cmd, uzimp);
-				clearInterval(testend);	
+				clearInterval(testend);
 				}
 			else {
 			testi=0;
 			adapter.log.warn("Nicht alle WR/Meter gefunden");
 			testj++;
 			  if (testj>3){
-				adapter.log.warn("Fehler, noch nicht alle Unterzähler angelegt");
+				adapter.log.warn("Fehler, noch nicht alle Unterzï¿½hler angelegt");
 				clearInterval(testend);
 				}
 			}
-		}	
+		}
 	});
 } // END test()
 
 
-function check(uz) {   
+function check(uz) {
 	adapter.getObject('INV.' + uz, function(err, obj) {
-		if (obj) {		
+		if (obj) {
 		adapter.log.debug("Adapter " + uz + " vorhanden");
         testi++;
 		}
@@ -182,7 +185,7 @@ function check(uz) {
 	});
 } // END check()
 
-function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzähler und löst das Anlegen der Channels/Objekte aus.
+function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzï¿½hler und lï¿½st das Anlegen der Channels/Objekte aus.
 	var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (RÃ¼ckmeldung vom Webserver)
@@ -199,9 +202,9 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzäh
         adapter.log.debug("body: " + body);
 		try{
 			var dataJ=JSON.parse(body);
-			
+
 			while (statusuz != "OFFLINE" && numinv < 100) {
-				statusuz = (dataJ[609][numinv.toString()]);  
+				statusuz = (dataJ[609][numinv.toString()]);
 					//if (statusuz != "OFFLINE") {
 					//   adapter.log.debug(dataJ[609][numinv.toString()]);
 					//}
@@ -209,11 +212,11 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzäh
 				}
 		} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler NumInv: " + e.message);
-		}			
+		}
         adapter.setState('info.numinv'/*numinv*/, numinv-1, true);
         adapter.log.debug("Numer of Inverters/Meters :" + (numinv-1));
 		adapter.log.debug("END Request: " + JSON.stringify(data));
-		
+
 		adapter.setObjectNotExists('INV', {
         type: 'device',
         role: '',
@@ -222,10 +225,10 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzäh
         },
         native: {}
 		});
-          
-        defobjUZ(numinv); 
-		});   
-	}); 
+
+        defobjUZ(numinv);
+		});
+	});
  req.on('error', function(e) { // Fehler abfangen
         adapter.log.warn('ERROR ReqNumInv: ' + e.message,"warn");
         });
@@ -233,11 +236,11 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzäh
     adapter.log.debug("Data to request body: " + data);
     // write data to request body
     (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
- req.end();              
-  
+ req.end();
+
 } //end httpsReqNumInv
 
-function defobjUZ(numinv){ //Schlaufe mit Abfrage der Information pro Unterzähler und auslösen der Objekterstellung
+function defobjUZ(numinv){ //Schlaufe mit Abfrage der Information pro Unterzï¿½hler und auslï¿½sen der Objekterstellung
     for (var i=0; i<numinv-1;i++) {
 		var data1 = '{"141":{"';
 		var data2 = '":{"119":null}}}';
@@ -253,33 +256,33 @@ function defobjUZ(numinv){ //Schlaufe mit Abfrage der Information pro Unterzähle
 					'Content-Length': datauz.length
 					}
 			};
-			
+
 		adapter.log.debug("Options: " + JSON.stringify(options));
 		adapter.log.debug("Data: " + JSON.stringify(datauz));
-		
+
 		httpsReqSetUZ(datauz, options, i);
-    }  
+    }
 } //end defobjUZ
 
-function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte pro Unterzähler
+function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte pro Unterzï¿½hler
     var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rï¿½ckmeldung vom Webserver)
 	var bodyChunks  = [];
     var chunkLine   = 0;
     res.on('data', function(chunk) {
         chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
+        // Hier kï¿½nnen die einzelnen Zeilen verarbeitet werden...
         bodyChunks.push(chunk);
 
     }).on('end', function() {
         var bodyuz = Buffer.concat(bodyChunks);
         // ...und/oder das Gesamtergebnis (body).
         adapter.log.debug("body: " + bodyuz);
-        
+
 		try{
 		var dataJuz = (JSON.parse(bodyuz));
-			
+
 		// create Channel Inverter(i)
 		adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]).toString(), {
 			type: 'channel',
@@ -289,7 +292,7 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 			},
 			native: {}
 		});
-		
+
 		// create States PAC/Status/DaySum Inverter(i)
 		adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]).toString() + ".PAC",{
 			type: 'state',
@@ -304,7 +307,7 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 			},
 			native: {}
 		});
-		
+
 		adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]) + ".status",{
 			type: 'state',
 			common: {
@@ -317,7 +320,7 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 			},
 			native: {}
 		});
-		
+
 		adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]) + ".daysum",{
 			type: 'state',
 			common: {
@@ -331,17 +334,17 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
 			},
 			native: {}
 		});
-  			
+
 		names.push(dataJuz[141][i.toString()][119]);
 		adapter.log.debug("Inverters: " + names);
-		
+
 		} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler SetUZ: " + e.message);
 		}
 		});
 
     });
-    
+
  req.on('error', function(e) { // Fehler abfangen
         adapter.log.warn('ERROR ReqSetUZ: ' + e.message,"warn");
     });
@@ -349,7 +352,7 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
     adapter.log.debug("Data to request body: " + data);
     // write data to request body
     (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-        
+
 req.end();
 } //End httpsReqSetUZ
 
@@ -366,22 +369,22 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
 			'Accept': 'applciation/json',
 			'Content-Length': data.length
 		}
-	};   
+	};
 	var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rï¿½ckmeldung vom Webserver)
     var bodyChunks  = [];
     var chunkLine   = 0;
     res.on('data', function(chunk) {
         chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
+        // Hier kï¿½nnen die einzelnen Zeilen verarbeitet werden...
         bodyChunks.push(chunk);
     }).on('end', function() {
 		adapter.log.debug("no more date in response");
-   	
+
         var body = Buffer.concat(bodyChunks);
         // ...und/oder das Gesamtergebnis (body).
-        
+
 			try{
                 var json = (JSON.parse(body));
 				adapter.log.debug("Body: " + body);
@@ -407,14 +410,14 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
 			}
 			adapter.log.debug("InvImp= " + uzimp);
 			if (uzimp=="true"){
-				adapter.log.debug("Unterzähler importieren");
+				adapter.log.debug("Unterzï¿½hler importieren");
 				httpsReqDataUZ(cmd, names);
 			}
-			
+
 	       });
 	});
-	
-   
+
+
     req.on('error', function(e) { // Fehler abfangen
         adapter.log.warn('ERROR ReqDataStandard: ' + e.message,"warn");
     });
@@ -426,7 +429,7 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
 
 } //end httpsReqDataStandard()
 
-function httpsReqDataUZ(cmd, names){ //Abfrage der Unterzählerwerte
+function httpsReqDataUZ(cmd, names){ //Abfrage der Unterzï¿½hlerwerte
     var data = '{"782":null}';
     var options = {
     host: DeviceIpAdress,
@@ -438,24 +441,24 @@ function httpsReqDataUZ(cmd, names){ //Abfrage der Unterzählerwerte
         'Accept': 'applciation/json',
         'Content-Length': data.length
         }
-    };   
-    
+    };
+
     var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rï¿½ckmeldung vom Webserver)
     var bodyChunks  = [];
     var chunkLine   = 0;
     res.on('data', function(chunk) {
         chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
+        // Hier kï¿½nnen die einzelnen Zeilen verarbeitet werden...
         bodyChunks.push(chunk);
 
     }).on('end', function() {
         var body = Buffer.concat(bodyChunks);
         // ...und/oder das Gesamtergebnis (body).
         adapter.log.debug("body: " + body);
-		
-		try{		
+
+		try{
 		var dataJUZ = (JSON.parse(body));
 		adapter.log.debug("Inv. to treat: " + names);
 		var namLeng = names.length;
@@ -465,16 +468,16 @@ function httpsReqDataUZ(cmd, names){ //Abfrage der Unterzählerwerte
 			adapter.setState("INV." + names[uzi] + ".PAC", dataJUZ[782][uzi], true);
 		}
 		adapter.log.debug("END");
-		
+
 		} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler DataUZ: " + e.message);
 		}
 		httpsReqStatUZ(cmd, names);
-     
+
         });
 
     });
-    
+
     req.on('error', function(e) { // Fehler abfangen
         adapter.log.warn('ERROR ReqDataUZ: ' + e.message,"warn");
     });
@@ -482,11 +485,11 @@ function httpsReqDataUZ(cmd, names){ //Abfrage der Unterzählerwerte
     adapter.log.debug("Data to request body: " + data);
     // write data to request body
     (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-     
-    req.end();	
+
+    req.end();
 } //End httpsReqDataUZ
 
-function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzählerwerte
+function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzï¿½hlerwerte
     var data = '{"608":null}';
     var options = {
     host: DeviceIpAdress,
@@ -498,16 +501,16 @@ function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzählerwerte
         'Accept': 'applciation/json',
         'Content-Length': data.length
         }
-    };   
-    
+    };
+
     var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rï¿½ckmeldung vom Webserver)
     var bodyChunks  = [];
     var chunkLine   = 0;
     res.on('data', function(chunk) {
         chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
+        // Hier kï¿½nnen die einzelnen Zeilen verarbeitet werden...
         bodyChunks.push(chunk);
 
     }).on('end', function() {
@@ -524,7 +527,7 @@ function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzählerwerte
 				adapter.setState("INV." + names[uzj] + ".status", dataJSUZ[608][uzj], true);
 			}
             adapter.log.debug("END");
-      
+
 			} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler StatUZ: " + e.message);
 		}
@@ -532,7 +535,7 @@ function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzählerwerte
         });
 
     });
-    
+
     req.on('error', function(e) { // Fehler abfangen
         adapter.log.debug('ERROR ReqStatUZ: ' + e.message,"warn");
     });
@@ -540,11 +543,11 @@ function httpsReqStatUZ(cmd, names){ //Abfrage der Unterzählerwerte
     adapter.log.debug("Data to request body: " + data);
     // write data to request body
     (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-     
-    req.end();	
+
+    req.end();
 } //End httpsReqStatUZ
 
-function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzählerwerte
+function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzï¿½hlerwerte
     var data = '{"777":{"0":null}}';
     var options = {
     host: DeviceIpAdress,
@@ -556,24 +559,24 @@ function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzählerwerte
         'Accept': 'applciation/json',
         'Content-Length': data.length
         }
-    };   
-    
+    };
+
     var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rï¿½ckmeldung vom Webserver)
     var bodyChunks  = [];
     var chunkLine   = 0;
     res.on('data', function(chunk) {
         chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
+        // Hier kï¿½nnen die einzelnen Zeilen verarbeitet werden...
         bodyChunks.push(chunk);
 
     }).on('end', function() {
         var body = Buffer.concat(bodyChunks);
         // ...und/oder das Gesamtergebnis (body).
         adapter.log.debug("body: " + body);
-		
-		try{		
+
+		try{
 		var dataSUZ = JSON.parse(body)[777][0];
 		adapter.log.debug("DataSUZ: " + dataSUZ);
 		adapter.log.debug("Inv. to treat: " + names);
@@ -597,15 +600,15 @@ function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzählerwerte
 			adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
 		}
 		adapter.log.debug("END");
-		
+
 		} catch(e) {
 				adapter.log.warn("JSON-parse-Fehler DataSUZ: " + e.message);
 		}
-		     
+
         });
 
     });
-    
+
     req.on('error', function(e) { // Fehler abfangen
         adapter.log.warn('ERROR ReqDataUZ: ' + e.message,"warn");
     });
@@ -613,6 +616,6 @@ function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterzählerwerte
     adapter.log.debug("Data to request body: " + data);
     // write data to request body
     (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-     
-    req.end();	
+
+    req.end();
 } //End httpsReqDataSumUZ
