@@ -76,6 +76,7 @@
 	},
 	"native": {
 		"host": "",
+		"port":80,
 		"pollInterval":300000,
 		"invimp": false,
 		"numinv":0
@@ -89,7 +90,7 @@
 			"name": "Information"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -104,7 +105,7 @@
 				"desc": "Last successful synchronization"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -119,7 +120,7 @@
 				"desc": "Total number of inverters and meters"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -136,7 +137,7 @@
 				"unit": "Wp"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -152,7 +153,7 @@
 				"desc": "Is solarlog connected?"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -162,7 +163,7 @@
 				"name": "Status"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -179,7 +180,7 @@
 				"unit": "W"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -196,7 +197,7 @@
 				"unit": "W"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -213,7 +214,7 @@
 				"unit": "V"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -230,7 +231,7 @@
 				"unit": "V"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -247,7 +248,7 @@
 				"unit": "W"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -264,7 +265,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -281,7 +282,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -298,7 +299,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -315,7 +316,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -332,7 +333,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -349,7 +350,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -366,7 +367,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -381,10 +382,10 @@
 				"def": false,
 				"desc": "Total consumption for the month",
 				"unit": "Wh"
-				
+
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -401,7 +402,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-				
+
 			}
 		},
 		{
@@ -418,7 +419,7 @@
 				"unit": "Wh"
 			},
 			"native": {
-					
+
 			}
 		}
 	]
