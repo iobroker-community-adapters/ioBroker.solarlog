@@ -247,6 +247,7 @@ function defobjUZ(numinv){ //Schlaufe mit Abfrage der Information pro Unterz�h
 		var datauz = data1 + i.toString() + data2;
 		var options = {
 			host: DeviceIpAdress,
+			port: Port,
 			path: cmd,
 			method: 'POST',
 			headers: {
@@ -361,6 +362,7 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
 	var data = '{"801":{"170":null}}';
 	var options = {
 		host: DeviceIpAdress,
+		port: Port,
 		path: cmd,
 		method: 'POST',
 		headers: {
@@ -433,6 +435,7 @@ function httpsReqDataUZ(cmd, names){ //Abfrage der Unterz�hlerwerte
     var data = '{"782":null}';
     var options = {
     host: DeviceIpAdress,
+	port: Port,
     path: cmd,
     method: 'POST',
     headers: {
@@ -493,6 +496,7 @@ function httpsReqStatUZ(cmd, names){ //Abfrage der Unterz�hlerwerte
     var data = '{"608":null}';
     var options = {
     host: DeviceIpAdress,
+	port: Port,
     path: cmd,
     method: 'POST',
     headers: {
@@ -551,6 +555,7 @@ function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterz�hlerwerte
     var data = '{"777":{"0":null}}';
     var options = {
     host: DeviceIpAdress,
+	port: Port,
     path: cmd,
     method: 'POST',
     headers: {
