@@ -20,10 +20,7 @@ var testend;
 var testj= 0;
 var testi= 0;
 
-
-
 let polling;
-
 
 // when adapter shuts down
 adapter.on('unload', function (callback) {
@@ -115,9 +112,6 @@ function main() {
 
 		testend = setInterval(test, 2000); //�berpr�fen ob alle Channels angelegt sind.
 
-		//setTimeout(function(){httpsReqDataStandard(cmd, uzimp);},30000); //abfragen der Standard-Werte
-
-
 		if (!polling) {
 			polling = setTimeout(function repeat() { // poll states every [30] seconds
 				httpsReqDataStandard(cmd, uzimp);
@@ -142,8 +136,6 @@ function main() {
 	}
     // all states changes inside the adapters namespace are subscribed
     adapter.subscribeStates('*');
-
-
 } // endMain
 
 function test() {
@@ -172,7 +164,6 @@ function test() {
 		}
 	});
 } // END test()
-
 
 function check(uz) {
 	adapter.getObject('INV.' + uz, function(err, obj) {

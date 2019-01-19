@@ -1,9 +1,10 @@
 {
   "Auto": "Auto",
   "Manual": "Manual",
-  "My select": "Mi seleccion",
-  "on save adapter restarts with new config immediately": "en el adaptador de guardar se reinicia con nueva configuración de inmediato",
-  "template adapter settings": "configuración del adaptador de plantilla",
-  "test1": "Prueba 1",
-  "test2": "Prueba 2"
+  "My select": "My select",
+  "on save adapter restarts with new config immediately": "on save adapter restarts with new config immediately",
+  "template adapter settings": "template adapter settings",
+  "host": "Solarlog IP:",
+  "pollInterval": "Polling - Interval (ms):",
+  "invimp": "Import all inverter data. !! User-password in Solarlog has to be deactivated"
 }
