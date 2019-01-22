@@ -25,7 +25,7 @@ let polling;
 function startAdapter(options) {
     options = options || {};
     Object.assign(options, {
-        name: 'sonnen'
+        name: 'solarlog'
     });
 
     adapter = new utils.Adapter(options);
