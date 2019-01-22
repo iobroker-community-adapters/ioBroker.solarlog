@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.1.0",
+		"version": "0.1.1",
 		"news": {
+			"0.1.1": {
+				"en": "support for compact mode",
+				"de": "Support für Compact Mode"
+			},
 			"0.1.0": {
 				"en": "optional port specification, readme",
 				"de": "Möglichkeit Port festzulegen (optional), Readme"

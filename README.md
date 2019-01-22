@@ -21,6 +21,8 @@ Solarlog 200PM+ / 300PM+ / 500 / 1200Meter
 
 
 ## Changelog
+### 0.1.1
+- support for compact mode
 ### 0.1.0
 - optional port declaration, readme updated
 ### 0.0.9
