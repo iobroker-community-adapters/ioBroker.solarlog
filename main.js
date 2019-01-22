@@ -7,7 +7,7 @@
 'use strict';
 
 const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
-const adapter = new utils.Adapter('solarlog');
+let adapter;
 var DeviceIpAdress;
 var Port;
 var https = require('http');
@@ -21,6 +21,14 @@ var testj= 0;
 var testi= 0;
 
 let polling;
+
+function startAdapter(options) {
+    options = options || {};
+    Object.assign(options, {
+        name: 'sonnen'
+    });
+
+    adapter = new utils.Adapter(options);
 
 // when adapter shuts down
 adapter.on('unload', function (callback) {
@@ -73,6 +81,8 @@ adapter.on('ready', function() {
     } else adapter.log.warn('[START] No IP-address set');
 });
 
+return adapter;
+} // endStartAdapter
 
 function main() {
     // Vars
@@ -615,3 +625,11 @@ function httpsReqDataSumUZ(cmd, names){ //Abfrage der Unterz�hlerwerte
 
     req.end();
 } //End httpsReqDataSumUZ
+
+// If started as allInOne/compact mode => return function to create instance
+if (module && module.parent) {
+    module.exports = startAdapter;
+} else {
+    // or start the instance directly
+    startAdapter();
+} // endElse

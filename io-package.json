@@ -61,6 +61,7 @@
 		},
 		"platform": "Javascript/Node.js",
 		"mode": "daemon",
+		"compact": true,
 		"icon": "solarlog.png",
 		"materialize": true,
 		"enabled": true,
