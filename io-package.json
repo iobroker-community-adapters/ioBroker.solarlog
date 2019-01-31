@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.1.1",
+		"version": "0.1.2",
 		"news": {
+			"0.1.2": {
+				"en": "Inverter / meter - detection optimized",
+				"de": "Geräteerkennung verbessert"
+			},
 			"0.1.1": {
 				"en": "support for compact mode",
 				"de": "Support für Compact Mode"

@@ -94,7 +94,7 @@ function main() {
 	uzimp = (adapter.config.invimp).toString();
 	adapter.log.debug("InvImp: " + adapter.config.invimp);
 	adapter.log.debug("uzimp: " + uzimp);
-	var data='{"609":null}';
+	var data='{"740":null}';
 	var options = {
 		host: DeviceIpAdress,
 		port: Port,
@@ -204,8 +204,8 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterzï¿
 		try{
 			var dataJ=JSON.parse(body);
 
-			while (statusuz != "OFFLINE" && numinv < 100) {
-				statusuz = (dataJ[609][numinv.toString()]);
+			while (statusuz != "Err" && numinv < 100) {
+				statusuz = (dataJ[740][numinv.toString()]);
 					//if (statusuz != "OFFLINE") {
 					//   adapter.log.debug(dataJ[609][numinv.toString()]);
 					//}
