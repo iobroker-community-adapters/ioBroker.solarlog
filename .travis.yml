@@ -3,20 +3,24 @@ os:
   - osx
 language: node_js
 node_js:
+  - '4'
   - '6'
   - '8'
   - '10'
+  - '11'
+env:
+  - IOBROKER=master
+  - IOBROKER=1.5.x
 before_script:
   - export NPMVERSION=$(echo "$($(which npm) -v)"|cut -c1)
   - 'if [[ $NPMVERSION == 5 ]]; then npm install -g npm@5; fi'
   - npm -v
   - npm install winston@2.3.1
-  - 'npm install https://github.com/ioBroker/ioBroker.js-controller/tarball/master --production'
-env:
-  - CXX=g++-4.8
+  - 'if [ "$IOBROKER" == "master" ]; then npm install https://github.com/ioBroker/ioBroker.js-controller/tarball/master --production; fi'
+  - 'if [ "$IOBROKER" == "1.5.x" ]; then npm install https://github.com/ioBroker/ioBroker.js-controller/tarball/${IOBROKER} --production; fi'
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - g++-4.8
+- g++-4.8
