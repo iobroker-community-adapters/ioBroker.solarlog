@@ -19,7 +19,7 @@ before_script:
   - 'if [ "$IOBROKER" == "master" ]; then npm install https://github.com/ioBroker/ioBroker.js-controller/tarball/master --production; fi'
   - 'if [ "$IOBROKER" == "1.5.x" ]; then npm install https://github.com/ioBroker/ioBroker.js-controller/tarball/${IOBROKER} --production; fi'
 env:
-  - IOBROKER=1.5.x
+  - IOBROKER=master
 addons: null
 apt: null
 sources:
