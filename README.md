@@ -1,4 +1,5 @@
 ![Logo](admin/solarlog.png)
+
 # ioBroker.solarlog
 
 [![NPM version](http://img.shields.io/npm/v/iobroker.solarlog.svg)](https://www.npmjs.com/package/iobroker.solarlog)
@@ -13,77 +14,100 @@ The open JSON-interface (offene Json-Schnittstelle) has to be activated in the S
 Install adapter, create instance.
 Set Solarlog - IP-adress (192.XXX.X.XXX), port (optional) and polling - intervall (in millilseconds)
 
-Check if all inverter - data is collectet. !! The user-password in solarlog has to be deactivated for this option!!
+Check if all inverter - data is collected. !! The user-password in solarlog has to be deactivated for this option!!
 Achtung: Damit die Abfrage der Unterzaehler funktioniert, muss das Benutzerpasswort im Solarlog deaktiviert sein
 
 Tested on:
 Solarlog 200PM+ / 300PM+ / 500 / 1200Meter
 
-
 ## Changelog
+
+### 0.1.3
+
+-   Core Files/Testing Update and introduce adapter-core
+
 ### 0.1.2
-- Inverter/meter - detecion optimized
+
+-   Inverter/meter - detecion optimized
+
 ### 0.1.1
-- support for compact mode
+
+-   support for compact mode
+
 ### 0.1.0
-- optional port declaration, readme updated
+
+-   optional port declaration, readme updated
+
 ### 0.0.9
-- another bugfix daysum - function
+
+-   another bugfix daysum - function
+
 ### 0.0.8
-- bugfix daysum - function
+
+-   bugfix daysum - function
+
 ### 0.0.7
-- import of daily sum of production/consumption per inverter/meter in Wh
-- info connection state fixed
+
+-   import of daily sum of production/consumption per inverter/meter in Wh
+-   info connection state fixed
+
 ### 0.0.6
-- optimized evaluation of number of inverters/meters to import
+
+-   optimized evaluation of number of inverters/meters to import
 
 ### 0.0.5
-- better readme
-- correct labes in config-dialogue
+
+-   better readme
+-   correct labes in config-dialogue
 
 Planned for next version: reading solarlog smart energy settings and states
 
 ### 0.0.4
-- Inverter-import optional
-- Error - logs refer to functions
-- better readme
+
+-   Inverter-import optional
+-   Error - logs refer to functions
+-   better readme
 
 Planned for next version: reading solarlog smart energy settings and states
 
 ### 0.0.3
+
 New functions added!
-- reads all defined inverters/meters
-- sets objects named as in solarlog
-- gets values (current production/consumption) and states for each inverter
+
+-   reads all defined inverters/meters
+-   sets objects named as in solarlog
+-   gets values (current production/consumption) and states for each inverter
 
 Planned for next version: reading solarlog smart energy settings and states
 
 ### 0.0.2 First running version
 
 Defined objects:
-- Time last data sync
-- Installed generator power
-- Total output PAC from all of the inverters and meters in inverter mode.
-- Total output PAC from all of the inverters
-- Average voltage UAC from the inverter
-- Average voltage UDC from the inverter
-- Total yield for the day from all of the inverters
-- Total yield for the previous day from all of the inverters
-- Total yield for the month from all of the inverters
-- Total yield for the year from all of the inverters
-- Total yield from all of the inverters
-- Current total consumption PAC from all of the consumption meters
-- Total consumption from all of the consumption meters
-- Total consumption for the previous day; all of the consumption meters
-- Total consumption for the month; all of the consumption meters
-- Total consumption for the year; all of the consumption meters
-- Accumulated total consumption, all Consumption meter
+
+-   Time last data sync
+-   Installed generator power
+-   Total output PAC from all of the inverters and meters in inverter mode.
+-   Total output PAC from all of the inverters
+-   Average voltage UAC from the inverter
+-   Average voltage UDC from the inverter
+-   Total yield for the day from all of the inverters
+-   Total yield for the previous day from all of the inverters
+-   Total yield for the month from all of the inverters
+-   Total yield for the year from all of the inverters
+-   Total yield from all of the inverters
+-   Current total consumption PAC from all of the consumption meters
+-   Total consumption from all of the consumption meters
+-   Total consumption for the previous day; all of the consumption meters
+-   Total consumption for the month; all of the consumption meters
+-   Total consumption for the year; all of the consumption meters
+-   Accumulated total consumption, all Consumption meter
 
 Planned Objects:
-- Description/Yield/Consuption of all connected inverters and meters
 
+-   Description/Yield/Consuption of all connected inverters and meters
 
 ## License
+
 The MIT License (MIT)
 
 Copyright (c) 2018 forelleblau marceladam@gmx.ch
