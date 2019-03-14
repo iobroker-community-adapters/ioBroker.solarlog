@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.1.3",
+		"version": "0.1.4",
 		"news": {
+			"0.1.4": {
+				"en": "Readme - update",
+				"de": "Readme - Update"
+			},
 			"0.1.3": {
 				"en": "Core Files/Testing Update and introduce adapter-core",
 				"de": "Core Files/Testing Update und adapter-core eingeführt"

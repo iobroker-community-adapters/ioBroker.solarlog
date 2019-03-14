@@ -22,6 +22,10 @@ Solarlog 200PM+ / 300PM+ / 500 / 1200Meter
 
 ## Changelog
 
+### 0.1.4
+
+- Readme - update
+
 ### 0.1.3
 
 -   Core Files/Testing Update and introduce adapter-core
