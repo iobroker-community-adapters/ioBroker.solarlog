@@ -158,7 +158,7 @@ function test() {
       if (testi == numinv) {
         adapter.log.info("Alle WR/Meter gefunden");
         adapter.log.debug("Names: " + names);
-        httpsReqDataStandard(cmd, uzimp);
+        httpsReqSumYearUZ(cmd, names);
         clearInterval(testend);
       } else {
         testi = 0;
@@ -608,7 +608,7 @@ function httpsReqDataSumUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler DataSUZ: " + e.message);
       }
-      httpsReqSumYearUZ(cmd, names);
+
 
     });
 
@@ -704,7 +704,7 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler SumYearUZ: " + e.message);
       }
-
+      httpsReqDataStandard(cmd, uzimp);
     });
 
   });
