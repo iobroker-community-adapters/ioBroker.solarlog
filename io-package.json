@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.1.4",
+		"version": "0.1.5",
 		"news": {
+			"0.1.5": {
+				"en": "Reads now historic data (yearly sum per Inverter), testing update",
+				"de": "Liest jetzt historische Daten (Jahressummen pro Zähler), Testing - Update"
+			},
 			"0.1.4": {
 				"en": "Readme - update",
 				"de": "Readme - Update"
