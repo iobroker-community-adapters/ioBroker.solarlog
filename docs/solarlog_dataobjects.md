@@ -1,4 +1,4 @@
-# Solarlog data objekcts
+# Solarlog data objects
 
 ## Offical JSON-request
 
