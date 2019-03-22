@@ -17,10 +17,10 @@ All these requests have benn discovered by analyzing the solarlog webinterface w
 {"782":null} consumption/Production per inverter/meter.
 {"608":null} Status per inverter/meter.
 
-{"776"::null} 5-min consumption/production per inverter/meter
+{"776"::null} 5-min consumption/production per inverter/meter.
 {"777"::null} daily consumption/production per inverter/meter.
 {"778"::null} daily self - consumption.
-{"779"::null} monthly consumption/production per inverter/meter
+{"779"::null} monthly consumption/production per inverter/meter.
 {"854":null} yealry consumption/production per inverter/meter.
 
 ### Other data
