@@ -76,9 +76,6 @@
 		"authors": [
 			"forelleblau <marceladam@gmx.ch>"
 		],
-		"docs": {
-			"de": "docs/de/README.md"
-		},
 		"platform": "Javascript/Node.js",
 		"mode": "daemon",
 		"compact": true,
