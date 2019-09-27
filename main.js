@@ -16,6 +16,8 @@ var statusuz = "on";
 var numinv = 0;
 var names = [];
 var uzimp;
+var battpresent = false;
+var battdata = [];
 var testend;
 var testj = 0;
 var testi = 0;
@@ -158,7 +160,7 @@ function test() {
       if (testi == numinv) {
         adapter.log.info("Alle WR/Meter gefunden");
         adapter.log.debug("Names: " + names);
-        httpsReqSumYearUZ(cmd, names);
+        httpsReqBattpresent(cmd, names);
         clearInterval(testend);
       } else {
         testi = 0;
@@ -409,12 +411,17 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler DataStandard: " + e.message);
       }
+
+      if (battpresent == "true"){
+        adapter.log.debug("Batterie vorhanden: " + battpresent);
+        httpsReqBattData(cmd, names);
+      } else {
       adapter.log.debug("InvImp= " + uzimp);
       if (uzimp == "true") {
-        adapter.log.debug("Unterz�hler importieren");
+        adapter.log.debug("Unterzaehler importieren");
         httpsReqDataUZ(cmd, names);
       }
-
+    }
     });
   });
 
@@ -429,6 +436,68 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
   req.end();
 
 } //end httpsReqDataStandard()
+
+function httpsReqBattData(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
+
+  var data = '{"858":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+
+      try{
+        battdata = JSON.parse(body)[858];
+        adapter.log.debug("Battdata: " + battdata);
+        adapter.setState('BATT.BattLevel', battdata[1], true);
+        adapter.setState('BATT.ChargePower', battdata[2], true);
+        adapter.setState('BATT.DischargePower', battdata[3], true);
+
+        adapter.log.debug("END");
+
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler httpsReqBattdata: " + e.message);
+      }
+      adapter.log.debug("InvImp= " + uzimp);
+      if (uzimp == "true") {
+        adapter.log.debug("Unterzaehler importieren");
+        httpsReqDataUZ(cmd, names);
+      }
+    });
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR httpsReqBattdata: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+} //End httpsReqBattData
 
 function httpsReqDataUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
   var data = '{"782":null}';
@@ -719,6 +788,104 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
 
   req.end();
 } //End httpsReqSumYearUZ
+
+function httpsReqBattpresent(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
+
+  var data = '{"858":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+
+      try{
+        battdata = JSON.parse(body)[858];
+        adapter.log.debug("Battdata: " + battdata);
+        if (battdata.length > 0){
+        battpresent=true;
+        adapter.log.debug("Batterie vorhanden, lege Objekte an.");
+        adapter.setObjectNotExists('BATT.' + 'ChargePower', {
+          type: 'state',
+          common: {
+            name: 'chargepower',
+            desc: 'Battery charging power',
+            type: 'number',
+            role: "value.chargepower",
+            read: true,
+            write: false,
+            unit: "W"
+          },
+          native: {}
+        });
+        adapter.setObjectNotExists('BATT.' + 'DischargePower', {
+          type: 'state',
+          common: {
+            name: 'dischargepower',
+            desc: 'Battery discharging power',
+            type: 'number',
+            role: "value.dischargepower",
+            read: true,
+            write: false,
+            unit: "W"
+          },
+          native: {}
+        });
+        adapter.setObjectNotExists('BATT.' + 'BattLevel', {
+          type: 'state',
+          common: {
+            name: 'battlevel',
+            desc: 'Battery Level',
+            type: 'number',
+            role: "value.battlevel",
+            read: true,
+            write: false,
+            unit: "%"
+          },
+          native: {}
+        });
+      }
+
+        adapter.log.debug("END");
+
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler httpsReqBattpresent: " + e.message);
+      }
+      httpsReqSumYearUZ(cmd, names);
+    });
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR httpsReqBattpresent: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+} //End httpsReqBattpresent
 
 // If started as allInOne/compact mode => return function to create instance
 if (module && module.parent) {

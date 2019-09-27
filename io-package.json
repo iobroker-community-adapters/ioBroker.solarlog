@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.1.5",
+		"version": "0.1.6",
 		"news": {
+			"0.1.6": {
+				"en": "Reads now battery data",
+				"de": "Liest jetzt Batteriewerte aus"
+			},
 			"0.1.5": {
 				"en": "Reads now historic data (yearly sum per Inverter), testing update",
 				"de": "Liest jetzt historische Daten (Jahressummen pro Zähler), Testing - Update"
