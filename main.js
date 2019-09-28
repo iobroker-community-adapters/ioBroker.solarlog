@@ -16,7 +16,7 @@ var statusuz = "on";
 var numinv = 0;
 var names = [];
 var uzimp;
-var battpresent = false;
+var battpresent = "false";
 var battdata = [];
 var testend;
 var testj = 0;
@@ -411,11 +411,12 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler DataStandard: " + e.message);
       }
-
+      adapter.log.debug("Batteriestatus: " + battpresent);
       if (battpresent == "true"){
         adapter.log.debug("Batterie vorhanden: " + battpresent);
         httpsReqBattData(cmd, names);
       } else {
+        adapter.log.debug("Keine Batterie");
       adapter.log.debug("InvImp= " + uzimp);
       if (uzimp == "true") {
         adapter.log.debug("Unterzaehler importieren");
@@ -824,8 +825,9 @@ function httpsReqBattpresent(cmd, names) { //Abfrage der Jahressummen Unterz�h
         battdata = JSON.parse(body)[858];
         adapter.log.debug("Battdata: " + battdata);
         if (battdata.length > 0){
-        battpresent=true;
+        battpresent="true";
         adapter.log.debug("Batterie vorhanden, lege Objekte an.");
+        adapter.log.debug("Batteriestatus: " + battpresent);
         adapter.setObjectNotExists('BATT.' + 'ChargePower', {
           type: 'state',
           common: {
