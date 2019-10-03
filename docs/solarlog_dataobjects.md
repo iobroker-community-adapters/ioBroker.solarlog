@@ -8,9 +8,9 @@
 
 All these requests have benn discovered by analyzing the solarlog webinterface with google's debeloper - tools.
 
-### Device data (inverters/meters)
+### Device data (inverters/meters/batteries/other)
 
-- {"740":null} Configuration per inverter/meter (if it's not "Err", you know there is a device on this position).
+- {"740":null} Serial nubers of connected devices (if it's not "Err", you know there is a device on this position).
 
 - {"141":{"i":{"119":null}}} Name of inverter. i = Position in the objekt "740", above. !! Do not call the entire "141" - object, it lasts very long or your solarlog can't handle that.
 
@@ -19,9 +19,10 @@ All these requests have benn discovered by analyzing the solarlog webinterface w
 
 - {"776"::null} 5-min consumption/production per inverter/meter.
 - {"777"::null} daily consumption/production per inverter/meter.
-- {"778"::null} daily self - consumption.
+- {"778"::null} daily self - consumption; self-consuption, charge & discharge energy of battery if connected. 
 - {"779"::null} monthly consumption/production per inverter/meter.
 - {"854":null} yealry consumption/production per inverter/meter.
+- {"858":null} voltage, level, charge & discharge power of battery. Empty if no battery is connected.
 
 ### Other data
 - {"152"::null} 0-11: monthly % of total production estimated, 161: kWp installed, 162: kWh/kWp p.a. estimated.
