@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "solarlog",
-		"version": "0.1.6",
+		"version": "1.0.0",
 		"news": {
+			"1.0.0": {
+				"en": "Reads now devicetypes, -brands and -classes. Sets correct params for batteries. Displays self-consumption @'status'",
+				"de": "Liest jetzt Gerätetypen, -klassen und -marken aus. Legt die richtigen Objekte für Batteriespeicher an. Ziegt im 'status' den Eigenverbrauch an"
+			},
 			"0.1.6": {
 				"en": "Reads now battery data",
 				"de": "Liest jetzt Batteriewerte aus"

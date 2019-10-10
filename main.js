@@ -13,10 +13,22 @@ var Port;
 var https = require('http');
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 var statusuz = "on";
+var devicelist = [];
+var brandlist = [];
+var deviceclasslist = ["Wechselrichter", "Sensor", "Zähler", "Hybrid-System", "Batterie", "Intelligente Verbraucher", "Schalter", "Wärmepumpe", "Heizstab", "Ladestation"];
 var numinv = 0;
 var names = [];
+
+var deviceinfos = [];
+var devicetypes = [];
+var devicebrands = [];
+var deviceclasses = [];
+
 var uzimp;
+var battdevicepresent = "false";
 var battpresent = "false";
+var battindex = [];
+var battarrind = 0;
 var battdata = [];
 var testend;
 var testj = 0;
@@ -92,37 +104,22 @@ function main() {
   Port = adapter.config.port;
   const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
   var statusuz = "on";
-  var numinv = 0;
+  numinv = 0;
   uzimp = (adapter.config.invimp).toString();
   adapter.log.debug("InvImp: " + adapter.config.invimp);
   adapter.log.debug("uzimp: " + uzimp);
-  var data = '{"740":null}';
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
-    }
-  };
+
   const pollingTime = adapter.config.pollInterval || 300000;
   adapter.log.debug('[INFO] Configured polling interval: ' + pollingTime);
   adapter.log.debug('[START] Started Adapter with: ' + adapter.config.host);
-
-  adapter.log.debug("Options: " + JSON.stringify(options));
-  adapter.log.debug("Data: " + JSON.stringify(data));
 
   if (uzimp == "true") {
     adapter.log.debug("uzimp: " + uzimp);
     adapter.log.debug("WR Importieren");
 
-    httpsReqNumInv(data, options, numinv, uzimp, defobjUZ()); //Anlegen eines Channels pro Unterz�hler mit den Objekten Wert und Status
+    httpsReqDevicelist();
 
-    testend = setInterval(test, 2000); //�berpr�fen ob alle Channels angelegt sind.
+    testend = setInterval(test, 3000); //�berpr�fen ob alle Channels angelegt sind.
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
@@ -152,16 +149,16 @@ function main() {
 function test() {
   adapter.getState("info.numinv", function(err, obj) {
     if (obj) {
-      numinv = obj.val;
+      var numbinv = obj.val;
       adapter.log.debug("Inverters to test: " + names);
-      adapter.log.debug("numinv: " + numinv);
+      adapter.log.debug("numbinv: " + numbinv);
       names.forEach(check);
       adapter.log.debug("Anzahl positiv: " + testi);
-      if (testi == numinv) {
+      if (testi == numbinv) {
+        clearInterval(testend);
         adapter.log.info("Alle WR/Meter gefunden");
         adapter.log.debug("Names: " + names);
-        httpsReqBattpresent(cmd, names);
-        clearInterval(testend);
+        setdeviceinfo(names);
       } else {
         testi = 0;
         adapter.log.warn("Nicht alle WR/Meter gefunden");
@@ -186,7 +183,125 @@ function check(uz) {
   });
 } // END check()
 
-function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterz�hler und l�st das Anlegen der Channels/Objekte aus.
+function httpsReqDevicelist() { //Füllt die Variabe devicelist mit der Geräteliste aus dem solarlog.
+  var data = '{"739":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier können die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+      try {
+        devicelist = JSON.parse(body);
+        adapter.log.debug("Devicelist: " + devicelist);
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler devicelist: " + e.message);
+      }
+
+      adapter.log.debug("END Request: " + JSON.stringify(data));
+      httpsReqBrandlist();
+
+    });
+  });
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR devicelist: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+  req.end();
+
+} //end httpsReqDevicelist
+
+function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteliste aus dem solarlog.
+  var data = '{"744":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier können die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+      try {
+        brandlist = JSON.parse(body);
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler brandlist: " + e.message);
+      }
+
+      adapter.log.debug("END Request: " + JSON.stringify(data));
+
+      httpsReqNumInv(); //Anlegen eines Channels pro Unterz�hler mit den Objekten Wert und Status
+    });
+  });
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR brandlist: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+  req.end();
+
+} //end httpsReqBrandlist
+
+function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das Anlegen der Channels/Objekte aus.
+
+  var data = '{"740":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+  adapter.log.debug("Options: " + JSON.stringify(options));
+  adapter.log.debug("Data: " + JSON.stringify(data));
+
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
@@ -227,7 +342,7 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterz�
         native: {}
       });
 
-      defobjUZ(numinv);
+      getuznames(numinv);
     });
   });
   req.on('error', function(e) { // Fehler abfangen
@@ -241,8 +356,8 @@ function httpsReqNumInv(data, options, numinv) { //Ermittelt die Anzahl Unterz�
 
 } //end httpsReqNumInv
 
-function defobjUZ(numinv) { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
-  for (var i = 0; i < numinv - 1; i++) {
+function getuznames(numinv) { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
+  for (var i = 0; i < (numinv - 1); i++) {
     var data1 = '{"141":{"';
     var data2 = '":{"119":null}}}';
     var datauz = data1 + i.toString() + data2;
@@ -262,11 +377,12 @@ function defobjUZ(numinv) { //Schlaufe mit Abfrage der Information pro Unterz�
     adapter.log.debug("Options: " + JSON.stringify(options));
     adapter.log.debug("Data: " + JSON.stringify(datauz));
 
-    httpsReqSetUZ(datauz, options, i);
+    httpsReqGetUzNames(datauz, options, i);
   }
-} //end defobjUZ
 
-function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
+} //end getuznames
+
+function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
@@ -285,70 +401,198 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
       try {
         var dataJuz = (JSON.parse(bodyuz));
 
-        // create Channel Inverter(i)
-        adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]).toString(), {
-          type: 'channel',
-          role: '',
-          common: {
-            name: "" + (dataJuz[141][i.toString()][119]).toString()
-          },
-          native: {}
-        });
 
-        // create States PAC/Status/DaySum Inverter(i)
-        adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]).toString() + ".PAC", {
-          type: 'state',
-          common: {
-            name: 'PAC',
-            desc: 'Power AC',
-            type: 'number',
-            role: "value.pac",
-            read: true,
-            write: false,
-            unit: "W"
-          },
-          native: {}
-        });
-
-        adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]) + ".status", {
-          type: 'state',
-          common: {
-            name: 'status',
-            desc: 'Staus of Inverter',
-            type: 'string',
-            role: "info.status",
-            read: true,
-            write: false
-          },
-          native: {}
-        });
-
-        adapter.setObjectNotExists('INV.' + (dataJuz[141][i.toString()][119]) + ".daysum", {
-          type: 'state',
-          common: {
-            name: 'DaySum',
-            desc: 'Daily sum Wh',
-            type: 'number',
-            role: "value.daysum",
-            read: true,
-            write: false,
-            unit: "Wh"
-          },
-          native: {}
-        });
 
         names.push(dataJuz[141][i.toString()][119]);
         adapter.log.debug("Inverters: " + names);
 
+        if (i == (numinv - 2)) {
+          adapter.log.debug("Lese Geräteinformationen");
+          getuzdeviceinfo();
+        }
+
       } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler SetUZ: " + e.message);
+        adapter.log.warn("JSON-parse-Fehler httpsReqGetUzNames: " + e.message);
+      }
+
+    });
+
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR httpsReqGetUzNames: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + datauz);
+  // write data to request body
+  (datauz ? req.write(datauz) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+} //End httpsReqGetUzNames
+
+function getuzdeviceinfo() { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
+  for (var i = 0; i < (numinv - 1); i++) {
+    var data1 = '{"141":{"';
+    var data2 = '":{"162":null}}}';
+    var datauz = data1 + i.toString() + data2;
+    var options = {
+      host: DeviceIpAdress,
+      port: Port,
+      path: cmd,
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+        'Content-Type': 'application/json',
+        'Accept': 'applciation/json',
+        'Content-Length': datauz.length
+      }
+    };
+
+    adapter.log.debug("Options: " + JSON.stringify(options));
+    adapter.log.debug("Data: " + JSON.stringify(datauz));
+
+    httpsReqGetUzDeviceinfo(datauz, options, i);
+  }
+
+} //end getuzdeviceinfo
+
+function httpsReqGetUzDeviceinfo(datauz, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var bodyuz = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + bodyuz);
+
+      try {
+        var dataJuz = (JSON.parse(bodyuz));
+
+        deviceinfos.push(dataJuz[141][i.toString()][162]);
+        adapter.log.debug("Deviceinfos: " + deviceinfos);
+
+        if (i == (numinv - 2)) {
+          defdeviceinfo();
+        }
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler httpsReqGetUzDeviceinfo: " + e.message);
       }
     });
 
   });
 
   req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR ReqSetUZ: ' + e.message, "warn");
+    adapter.log.warn('ERROR httpsReqGetUzDeviceinfo: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + datauz);
+  // write data to request body
+  (datauz ? req.write(datauz) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+} //End httpsReqGetUzDeviceinfo
+
+
+
+
+function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
+  var namLeng = names.length;
+  for (var y = 0; y < namLeng; y++) {
+    adapter.log.debug("INV." + names[y] + ".devicetype: " + devicelist[739][deviceinfos[y]][1]);
+    devicetypes.push(devicelist[739][deviceinfos[y]][1]);
+
+    adapter.log.debug("INV." + names[y] + ".devicebrand: " + brandlist[744][devicelist[739][deviceinfos[y]][0]]);
+    devicebrands.push(brandlist[744][devicelist[739][deviceinfos[y]][0]]);
+
+    deviceclasses.push(deviceclasslist[(Math.log(devicelist[739][deviceinfos[y]][5]) / Math.LN2)]);
+    if (deviceclasslist[(Math.log(devicelist[739][deviceinfos[y]][5]) / Math.LN2)] == "Batterie") {
+      battdevicepresent = "true";
+      adapter.log.debug("Batterie als Gerät vorhanden");
+      battindex[battarrind] = y;
+      adapter.log.debug("Index Gerät Batterie: " + y);
+      battarrind++;
+
+      adapter.log.debug("INV." + names[y] + ".deviceclass: " + deviceclasslist[(Math.log(devicelist[739][deviceinfos[y]][5]) / Math.LN2)]);
+
+    } else {
+      battdevicepresent = "false";
+      adapter.log.debug("Keine Batterie als Gerät vorhanden");
+
+    }
+    adapter.log.debug("Batterie als Gerät: " + battdevicepresent);
+  }
+  adapter.log.debug("Devicetypes: " + devicetypes);
+  adapter.log.debug("Devicebrands: " + devicebrands);
+  adapter.log.debug("Deviceclasses: " + deviceclasses);
+
+  httpsReqBattpresent();
+
+} // end defdeviceinfo
+
+
+function httpsReqBattpresent() { //Abfrage der Jahressummen Unterz�hlerwerte
+
+  var data = '{"858":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+
+      try {
+        battdata = JSON.parse(body)[858];
+        adapter.log.debug("Battdata: " + battdata);
+        if (battdata.length > 0) {
+          battpresent = "true";
+          adapter.log.debug("Batterie vorhanden, lege Objekte an.");
+          adapter.log.debug("Batteriestatus: " + battpresent);
+
+        } else {
+          adapter.log.debug("Keine Batterie vorhanden.");
+          adapter.log.debug("Batteriestatus: " + battpresent);
+        }
+
+        adapter.log.debug("END");
+
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler httpsReqBattpresent: " + e.message);
+      }
+      setInvObjects();
+
+    });
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR httpsReqBattpresent: ' + e.message, "warn");
   });
 
   adapter.log.debug("Data to request body: " + data);
@@ -356,8 +600,388 @@ function httpsReqSetUZ(data, options, i) { //erstellt die Channels und Objekte p
   (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
 
   req.end();
-} //End httpsReqSetUZ
+} //End httpsReqBattpresent
 
+function setInvObjects() {
+  // create Channel Inverter(i)
+  adapter.log.debug("Lege nun Objekte an - soweit nicht vorhanden 2");
+  adapter.log.debug("NumInv Obj: " + numinv);
+  adapter.log.debug("Names zum anlegen: " + names);
+  for (var i = 0; i < (numinv - 1); i++) {
+    adapter.setObjectNotExists('INV.' + names[i], {
+      type: 'channel',
+      role: '',
+      common: {
+        name: "" + names[i]
+      },
+      native: {}
+    });
+
+    // create States PAC/Status/DaySum Inverter(i)
+    if (deviceclasses[i] != "Batterie") {
+      adapter.setObjectNotExists('INV.' + names[i] + ".PAC", {
+        type: 'state',
+        common: {
+          name: 'PAC',
+          desc: 'Power AC',
+          type: 'number',
+          role: "value.pac",
+          read: true,
+          write: false,
+          unit: "W"
+        },
+        native: {}
+      });
+    }
+
+    adapter.setObjectNotExists('INV.' + names[i] + ".status", {
+      type: 'state',
+      common: {
+        name: 'status',
+        desc: 'Staus of Inverter',
+        type: 'string',
+        role: "info.status",
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+    if (deviceclasses[i] != "Batterie") {
+      adapter.setObjectNotExists('INV.' + names[i] + ".daysum", {
+        type: 'state',
+        common: {
+          name: 'DaySum',
+          desc: 'Daily sum Wh',
+          type: 'number',
+          role: "value.daysum",
+          read: true,
+          write: false,
+          unit: "Wh"
+        },
+        native: {}
+      });
+    }
+    adapter.setObjectNotExists('INV.' + names[i] + ".deviceclass", {
+      type: 'state',
+      common: {
+        name: 'DeviceClass',
+        desc: 'Device Class',
+        type: 'string',
+        role: "value.deviceclass",
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    adapter.setObjectNotExists('INV.' + names[i] + ".devicebrand", {
+      type: 'state',
+      common: {
+        name: 'DeviceBrand',
+        desc: 'Device brand',
+        type: 'string',
+        role: "value.devicebrand",
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    adapter.setObjectNotExists('INV.' + names[i] + ".devicetype", {
+      type: 'state',
+      common: {
+        name: 'DeviceType',
+        desc: 'Device type',
+        type: 'string',
+        role: "value.Devicetype",
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+
+    if (deviceclasses[i] == "Batterie" && battdevicepresent == "true" && battpresent == "true") {
+      adapter.setObjectNotExists("INV." + names[i] + '.ChargePower', {
+        type: 'state',
+        common: {
+          name: 'chargepower',
+          desc: 'Battery charging power',
+          type: 'number',
+          role: "value.chargepower",
+          read: true,
+          write: false,
+          unit: "W"
+        },
+        native: {}
+      });
+      adapter.setObjectNotExists("INV." + names[i] + '.DischargePower', {
+        type: 'state',
+        common: {
+          name: 'dischargepower',
+          desc: 'Battery discharging power',
+          type: 'number',
+          role: "value.dischargepower",
+          read: true,
+          write: false,
+          unit: "W"
+        },
+        native: {}
+      });
+      adapter.setObjectNotExists("INV." + names[i] + '.BattLevel', {
+        type: 'state',
+        common: {
+          name: 'battlevel',
+          desc: 'Battery Level',
+          type: 'number',
+          role: "value.battlevel",
+          read: true,
+          write: false,
+          unit: "%"
+        },
+        native: {}
+      });
+      adapter.setObjectNotExists("INV." + names[i] + 'BattSelfCons', {
+        type: 'state',
+        common: {
+          name: 'battselfcons',
+          desc: 'Battery self consuption',
+          type: 'number',
+          role: "value.battselfcons",
+          read: true,
+          write: false,
+          unit: "Wh"
+        },
+        native: {}
+      });
+      adapter.setObjectNotExists("INV." + names[i] + 'BattChargeDaysum', {
+        type: 'state',
+        common: {
+          name: 'battchargedaysum',
+          desc: 'Total battery charged today',
+          type: 'number',
+          role: "value.battchargedaysum",
+          read: true,
+          write: false,
+          unit: "Wh"
+        },
+        native: {}
+      });
+      adapter.setObjectNotExists("INV." + names[i] + 'BattDischargeDaysum', {
+        type: 'state',
+        common: {
+          name: 'battdischargedaysum',
+          desc: 'Total battery diesemcharged today',
+          type: 'number',
+          role: "value.battdischargedaysum",
+          read: true,
+          write: false,
+          unit: "Wh"
+        },
+        native: {}
+      });
+    }
+  }
+
+  if (battdevicepresent == "false" && battpresent == "true") {
+
+    adapter.setObjectNotExists('INV.Battery.' + 'ChargePower', {
+      type: 'state',
+      common: {
+        name: 'chargepower',
+        desc: 'Battery charging power',
+        type: 'number',
+        role: "value.chargepower",
+        read: true,
+        write: false,
+        unit: "W"
+      },
+      native: {}
+    });
+    adapter.setObjectNotExists('INV.Battery.' + 'DischargePower', {
+      type: 'state',
+      common: {
+        name: 'dischargepower',
+        desc: 'Battery discharging power',
+        type: 'number',
+        role: "value.dischargepower",
+        read: true,
+        write: false,
+        unit: "W"
+      },
+      native: {}
+    });
+    adapter.setObjectNotExists('INV.Battery.' + 'BattLevel', {
+      type: 'state',
+      common: {
+        name: 'battlevel',
+        desc: 'Battery Level',
+        type: 'number',
+        role: "value.battlevel",
+        read: true,
+        write: false,
+        unit: "%"
+      },
+      native: {}
+    });
+    adapter.setObjectNotExists("INV.Battery." + 'BattSelfCons', {
+      type: 'state',
+      common: {
+        name: 'battselfcons',
+        desc: 'Battery self consuption',
+        type: 'number',
+        role: "value.battselfcons",
+        read: true,
+        write: false,
+        unit: "Wh"
+      },
+      native: {}
+    });
+    adapter.setObjectNotExists("INV.Battery." + 'BattChargeDaysum', {
+      type: 'state',
+      common: {
+        name: 'battchargedaysum',
+        desc: 'Total battery charged today',
+        type: 'number',
+        role: "value.battchargedaysum",
+        read: true,
+        write: false,
+        unit: "Wh"
+      },
+      native: {}
+    });
+    adapter.setObjectNotExists("INV.Battery." + 'BattDischargeDaysum', {
+      type: 'state',
+      common: {
+        name: 'battdischargedaysum',
+        desc: 'Total battery diesemcharged today',
+        type: 'number',
+        role: "value.battdischargedaysum",
+        read: true,
+        write: false,
+        unit: "Wh"
+      },
+      native: {}
+    });
+  }
+  adapter.setObjectNotExists('status.consselfconsyieldday', {
+    type: 'state',
+    common: {
+      name: 'selfconsyieldday',
+      desc: 'Total self consumption today',
+      type: 'number',
+      role: "value.selfconsyieldday",
+      read: true,
+      write: false,
+      unit: "Wh"
+    },
+    native: {}
+  });
+} //End setInvObjects
+
+function setdeviceinfo() {
+  for (var i = 0; i < (numinv - 1); i++) {
+    adapter.setState("INV." + names[i] + ".deviceclass", deviceclasses[i], true);
+    adapter.setState("INV." + names[i] + ".devicetype", devicetypes[i], true);
+    adapter.setState("INV." + names[i] + ".devicebrand", devicebrands[i], true);
+  }
+  httpsReqSumYearUZ(cmd, names);
+} //End setdeviceinfo
+
+function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
+  // create Channel Historic
+  adapter.setObjectNotExists('Historic', {
+    type: 'channel',
+    role: '',
+    common: {
+      name: "Historic Data"
+    },
+    native: {}
+  });
+  var data = '{"854":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+
+      try {
+        var dataYear = JSON.parse(body)[854];
+        adapter.log.debug("DataYear: " + dataYear);
+        adapter.log.debug("Inv. to treat: " + names);
+        var namLeng = names.length;
+
+        adapter.log.debug("Anzahl Elemente: " + namLeng);
+        for (var iy = 0; iy < dataYear.length; iy++) {
+          var year = dataYear[iy][0].slice(-2);
+          for (var inu = 0; inu < names.length; inu++) {
+            if (dataYear[iy][1][inu] != 0) {
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear." + names[inu], {
+                type: 'state',
+                common: {
+                  name: 'yieldyear',
+                  desc: 'Year sum Wh',
+                  type: 'number',
+                  role: "value.yearsum",
+                  read: true,
+                  write: false,
+                  unit: "Wh"
+                },
+                native: {}
+              });
+            }
+          }
+        }
+        for (var iy = 0; iy < dataYear.length; iy++) {
+          var year = dataYear[iy][0].slice(-2);
+          for (var inu = 0; inu < names.length; inu++) {
+            if (dataYear[iy][1][inu] != 0) {
+              adapter.setState('Historic.' + "20" + year + ".yieldyear." + names[inu], dataYear[iy][1][inu], true);
+            }
+          }
+        }
+        adapter.log.debug("END");
+
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler SumYearUZ: " + e.message);
+      }
+      httpsReqDataStandard(cmd, uzimp);
+    });
+
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR SumYearUZ: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+} //End httpsReqSumYearUZ
 
 function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
   var data = '{"801":{"170":null}}';
@@ -412,17 +1036,17 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
         adapter.log.warn("JSON-parse-Fehler DataStandard: " + e.message);
       }
       adapter.log.debug("Batteriestatus: " + battpresent);
-      if (battpresent == "true"){
+      if (battpresent == "true") {
         adapter.log.debug("Batterie vorhanden: " + battpresent);
         httpsReqBattData(cmd, names);
       } else {
         adapter.log.debug("Keine Batterie");
-      adapter.log.debug("InvImp= " + uzimp);
-      if (uzimp == "true") {
-        adapter.log.debug("Unterzaehler importieren");
-        httpsReqDataUZ(cmd, names);
+        adapter.log.debug("InvImp= " + uzimp);
+        if (uzimp == "true") {
+          adapter.log.debug("Unterzaehler importieren");
+          httpsReqDataUZ(cmd, names);
+        }
       }
-    }
     });
   });
 
@@ -438,7 +1062,7 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
 
 } //end httpsReqDataStandard()
 
-function httpsReqBattData(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
+function httpsReqBattData() { //Abfrage der Jahressummen Unterz�hlerwerte
 
   var data = '{"858":null}';
   var options = {
@@ -469,13 +1093,20 @@ function httpsReqBattData(cmd, names) { //Abfrage der Jahressummen Unterz�hler
       // ...und/oder das Gesamtergebnis (body).
       adapter.log.debug("body: " + body);
 
-      try{
+      try {
         battdata = JSON.parse(body)[858];
         adapter.log.debug("Battdata: " + battdata);
-        adapter.setState('BATT.BattLevel', battdata[1], true);
-        adapter.setState('BATT.ChargePower', battdata[2], true);
-        adapter.setState('BATT.DischargePower', battdata[3], true);
-
+        if (battdevicepresent == "true" && battpresent == "true") {
+          adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
+          adapter.setState("INV." + names[battindex[0]] + '.ChargePower', battdata[2], true);
+          adapter.setState("INV." + names[battindex[0]] + '.DischargePower', battdata[3], true);
+        } else if (battdevicepresent == "false" && battpresent == "true") {
+          adapter.setState('INV.Battery.BattLevel', battdata[1], true);
+          adapter.setState('INV.Battery.ChargePower', battdata[2], true);
+          adapter.setState('INV.Battery.DischargePower', battdata[3], true);
+        } else {
+          adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
+        }
         adapter.log.debug("END");
 
       } catch (e) {
@@ -536,8 +1167,10 @@ function httpsReqDataUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
         var namLeng = names.length;
         adapter.log.debug("Anzahl Elemente: " + namLeng);
         for (var uzi = 0; uzi < namLeng; uzi++) {
-          adapter.log.debug("INV." + names[uzi] + ": " + dataJUZ[782][uzi]);
-          adapter.setState("INV." + names[uzi] + ".PAC", dataJUZ[782][uzi], true);
+          if (deviceclasses[uzi] != "Batterie") {
+            adapter.log.debug("INV." + names[uzi] + ": " + dataJUZ[782][uzi]);
+            adapter.setState("INV." + names[uzi] + ".PAC", dataJUZ[782][uzi], true);
+          }
         }
         adapter.log.debug("END");
 
@@ -670,18 +1303,18 @@ function httpsReqDataSumUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
         var daysum = dataSUZ[indexsuz][1];
         adapter.log.debug("Tagessummen: " + daysum);
         for (var suzi = 0; suzi < namLeng; suzi++) {
-          adapter.log.debug("INV." + names[suzi] + ": " + daysum[suzi]);
-          adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
+          if (deviceclasses[suzi] != "Batterie") {
+            adapter.log.debug("INV." + names[suzi] + ": " + daysum[suzi]);
+            adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
+          }
         }
         adapter.log.debug("END");
 
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler DataSUZ: " + e.message);
       }
-
-
+      httpsReqDataSelfCons();
     });
-
   });
 
   req.on('error', function(e) { // Fehler abfangen
@@ -695,17 +1328,8 @@ function httpsReqDataSumUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
   req.end();
 } //End httpsReqDataSumUZ
 
-function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
-  // create Channel Historic
-  adapter.setObjectNotExists('Historic', {
-    type: 'channel',
-    role: '',
-    common: {
-      name: "Historic Data"
-    },
-    native: {}
-  });
-  var data = '{"854":null}';
+function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
+  var data = '{"778":{"0":null}}';
   var options = {
     host: DeviceIpAdress,
     port: Port,
@@ -735,52 +1359,54 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
       adapter.log.debug("body: " + body);
 
       try {
-        var dataYear = JSON.parse(body)[854];
-        adapter.log.debug("DataYear: " + dataYear);
-        adapter.log.debug("Inv. to treat: " + names);
-        var namLeng = names.length;
+        var dataselfcons = JSON.parse(body)[778][0];
+        adapter.log.debug("DataSelfCons: " + dataselfcons);
+        var d = new Date();
+        var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+        adapter.log.debug("Heute: " + heute);
+        for (var isuz = 0; isuz < 31; isuz++) {
+          var indextag = dataselfcons[isuz].indexOf(heute.toString());
+          if (indextag != -1) {
+            var indexsuz = isuz;
+            adapter.log.debug("Index Tageswerte: " + indexsuz);
+            break;
+          }
+        }
+        var dataselfconstoday = dataselfcons[indexsuz];
+        adapter.log.debug("Tageswerte SelfCons: " + dataselfconstoday);
+        var daysum = dataselfcons[indexsuz][1];
+        adapter.log.debug("Tagessumme Eigenverbrauch: " + daysum);
 
-        adapter.log.debug("Anzahl Elemente: " + namLeng);
-        for (var iy = 0; iy < dataYear.length; iy++) {
-          var year = dataYear[iy][0].slice(-2);
-          for (var inu = 0; inu < names.length; inu++) {
-            if (dataYear[iy][1][inu] != 0) {
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear." + names[inu], {
-                type: 'state',
-                common: {
-                  name: 'yieldyear',
-                  desc: 'Year sum Wh',
-                  type: 'number',
-                  role: "value.yearsum",
-                  read: true,
-                  write: false,
-                  unit: "Wh"
-                },
-                native: {}
-              });
-            }
-          }
+
+        adapter.setState("status.consselfconsyieldday", daysum, true);
+        //adapter.log.debug('INV.Battery.BattSelfCons: ' + dataselfconstoday[2]);
+        //adapter.log.debug('INV.Battery.ChargeDaysum: ' + dataselfconstoday[3]);
+        //adapter.log.debug('INV.Battery.ChargeDaysum: ' + dataselfconstoday[4]);
+        if (battdevicepresent == "true" && battpresent == "true") {
+          adapter.setState("INV." + names[battindex[0]] + '.BattSelfCons', dataselfconstoday[2], true);
+          adapter.setState("INV." + names[battindex[0]] + '.ChargeDaysum', dataselfconstoday[3], true);
+          adapter.setState("INV." + names[battindex[0]] + '.DischargeDaysum', dataselfconstoday[4], true);
+        } else if (battdevicepresent == "false" && battpresent == "true") {
+          adapter.setState('INV.Battery.BattSelfCons', dataselfconstoday[2], true);
+          adapter.setState('INV.Battery.ChargeDaysum', dataselfconstoday[3], true);
+          adapter.setState('INV.Battery.ChargeDaysum', dataselfconstoday[4], true);
+        } else if (battdevicepresent == "false" && battpresent == "false") {
+          adapter.log.debug("Keine Batterie vorhanden");
+        } else {
+          adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
         }
-        for (var iy = 0; iy < dataYear.length; iy++) {
-          var year = dataYear[iy][0].slice(-2);
-          for (var inu = 0; inu < names.length; inu++) {
-            if (dataYear[iy][1][inu] != 0) {
-              adapter.setState('Historic.' + "20" + year + ".yieldyear." + names[inu], dataYear[iy][1][inu], true);
-            }
-          }
-        }
+
         adapter.log.debug("END");
 
       } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler SumYearUZ: " + e.message);
+        adapter.log.warn("JSON-parse-Fehler DataSelfCons: " + e.message);
       }
-      httpsReqDataStandard(cmd, uzimp);
-    });
 
+    });
   });
 
   req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR SumYearUZ: ' + e.message, "warn");
+    adapter.log.warn('ERROR DataSelfCons: ' + e.message, "warn");
   });
 
   adapter.log.debug("Data to request body: " + data);
@@ -788,106 +1414,8 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
   (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
 
   req.end();
-} //End httpsReqSumYearUZ
+} //End httpsReqDataSelfCons
 
-function httpsReqBattpresent(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
-
-  var data = '{"858":null}';
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try{
-        battdata = JSON.parse(body)[858];
-        adapter.log.debug("Battdata: " + battdata);
-        if (battdata.length > 0){
-        battpresent="true";
-        adapter.log.debug("Batterie vorhanden, lege Objekte an.");
-        adapter.log.debug("Batteriestatus: " + battpresent);
-        adapter.setObjectNotExists('BATT.' + 'ChargePower', {
-          type: 'state',
-          common: {
-            name: 'chargepower',
-            desc: 'Battery charging power',
-            type: 'number',
-            role: "value.chargepower",
-            read: true,
-            write: false,
-            unit: "W"
-          },
-          native: {}
-        });
-        adapter.setObjectNotExists('BATT.' + 'DischargePower', {
-          type: 'state',
-          common: {
-            name: 'dischargepower',
-            desc: 'Battery discharging power',
-            type: 'number',
-            role: "value.dischargepower",
-            read: true,
-            write: false,
-            unit: "W"
-          },
-          native: {}
-        });
-        adapter.setObjectNotExists('BATT.' + 'BattLevel', {
-          type: 'state',
-          common: {
-            name: 'battlevel',
-            desc: 'Battery Level',
-            type: 'number',
-            role: "value.battlevel",
-            read: true,
-            write: false,
-            unit: "%"
-          },
-          native: {}
-        });
-      }
-
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler httpsReqBattpresent: " + e.message);
-      }
-      httpsReqSumYearUZ(cmd, names);
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR httpsReqBattpresent: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqBattpresent
 
 // If started as allInOne/compact mode => return function to create instance
 if (module && module.parent) {
