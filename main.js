@@ -197,6 +197,7 @@ function httpsReqDevicelist() { //Füllt die Variabe devicelist mit der Gerätel
       'Content-Length': data.length
     }
   };
+
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
@@ -231,7 +232,6 @@ function httpsReqDevicelist() { //Füllt die Variabe devicelist mit der Gerätel
   // write data to request body
   (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
   req.end();
-
 } //end httpsReqDevicelist
 
 function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteliste aus dem solarlog.
@@ -248,6 +248,7 @@ function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteli
       'Content-Length': data.length
     }
   };
+
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
@@ -281,11 +282,9 @@ function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteli
   // write data to request body
   (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
   req.end();
-
 } //end httpsReqBrandlist
 
 function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das Anlegen der Channels/Objekte aus.
-
   var data = '{"740":null}';
   var options = {
     host: DeviceIpAdress,
@@ -353,7 +352,6 @@ function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das 
   // write data to request body
   (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
   req.end();
-
 } //end httpsReqNumInv
 
 function getuznames(numinv) { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
@@ -379,7 +377,6 @@ function getuznames(numinv) { //Schlaufe mit Abfrage der Information pro Unterz�
 
     httpsReqGetUzNames(datauz, options, i);
   }
-
 } //end getuznames
 
 function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
@@ -400,9 +397,6 @@ function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Ob
 
       try {
         var dataJuz = (JSON.parse(bodyuz));
-
-
-
         names.push(dataJuz[141][i.toString()][119]);
         adapter.log.debug("Inverters: " + names);
 
@@ -414,9 +408,7 @@ function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Ob
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler httpsReqGetUzNames: " + e.message);
       }
-
     });
-
   });
 
   req.on('error', function(e) { // Fehler abfangen
@@ -426,7 +418,6 @@ function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Ob
   adapter.log.debug("Data to request body: " + datauz);
   // write data to request body
   (datauz ? req.write(datauz) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
   req.end();
 } //End httpsReqGetUzNames
 
@@ -485,7 +476,6 @@ function httpsReqGetUzDeviceinfo(datauz, options, i) { //erstellt die Channels u
         adapter.log.warn("JSON-parse-Fehler httpsReqGetUzDeviceinfo: " + e.message);
       }
     });
-
   });
 
   req.on('error', function(e) { // Fehler abfangen
@@ -495,12 +485,8 @@ function httpsReqGetUzDeviceinfo(datauz, options, i) { //erstellt die Channels u
   adapter.log.debug("Data to request body: " + datauz);
   // write data to request body
   (datauz ? req.write(datauz) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
   req.end();
 } //End httpsReqGetUzDeviceinfo
-
-
-
 
 function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   var namLeng = names.length;
@@ -521,10 +507,6 @@ function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
 
       adapter.log.debug("INV." + names[y] + ".deviceclass: " + deviceclasslist[(Math.log(devicelist[739][deviceinfos[y]][5]) / Math.LN2)]);
 
-    } else {
-      battdevicepresent = "false";
-      adapter.log.debug("Keine Batterie als Gerät vorhanden");
-
     }
     adapter.log.debug("Batterie als Gerät: " + battdevicepresent);
   }
@@ -533,12 +515,9 @@ function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   adapter.log.debug("Deviceclasses: " + deviceclasses);
 
   httpsReqBattpresent();
-
 } // end defdeviceinfo
 
-
-function httpsReqBattpresent() { //Abfrage der Jahressummen Unterz�hlerwerte
-
+function httpsReqBattpresent() { //Abfrage der Batteriewerte um festzustellen, ob eine solche vorhanden ist.
   var data = '{"858":null}';
   var options = {
     host: DeviceIpAdress,
@@ -1384,12 +1363,12 @@ function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
         //adapter.log.debug('INV.Battery.ChargeDaysum: ' + dataselfconstoday[4]);
         if (battdevicepresent == "true" && battpresent == "true") {
           adapter.setState("INV." + names[battindex[0]] + '.BattSelfCons', dataselfconstoday[2], true);
-          adapter.setState("INV." + names[battindex[0]] + '.ChargeDaysum', dataselfconstoday[3], true);
-          adapter.setState("INV." + names[battindex[0]] + '.DischargeDaysum', dataselfconstoday[4], true);
+          adapter.setState("INV." + names[battindex[0]] + '.BattChargeDaysum', dataselfconstoday[3], true);
+          adapter.setState("INV." + names[battindex[0]] + '.BattDischargeDaysum', dataselfconstoday[4], true);
         } else if (battdevicepresent == "false" && battpresent == "true") {
           adapter.setState('INV.Battery.BattSelfCons', dataselfconstoday[2], true);
-          adapter.setState('INV.Battery.ChargeDaysum', dataselfconstoday[3], true);
-          adapter.setState('INV.Battery.ChargeDaysum', dataselfconstoday[4], true);
+          adapter.setState('INV.Battery.BattChargeDaysum', dataselfconstoday[3], true);
+          adapter.setState('INV.Battery.BattDischargeDaysum', dataselfconstoday[4], true);
         } else if (battdevicepresent == "false" && battpresent == "false") {
           adapter.log.debug("Keine Batterie vorhanden");
         } else {
