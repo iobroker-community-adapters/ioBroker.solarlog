@@ -2,10 +2,9 @@ os:
   - linux
   - osx
   - windows
-sudo: required
-language: node_js
+sudo:            required
+language:        node_js
 node_js:
-  - '6'
   - '8'
   - '10'
   - '12'
@@ -20,8 +19,8 @@ before_script:
   - 'if [ "$IOBROKER" == "1.5.x" ]; then npm install https://github.com/ioBroker/ioBroker.js-controller/tarball/${IOBROKER} --production; fi'
 env:
   - IOBROKER=master
-addons: null
-apt: null
+addons:          null
+apt:             null
 sources:
   - ubuntu-toolchain-r-test
 packages:

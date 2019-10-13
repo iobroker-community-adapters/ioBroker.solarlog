@@ -9,12 +9,10 @@
     "name": "Marcel Adam",
     "email": "marceladam@gmx.ch"
   },
-  "contributors": [
-    {
-      "name": "Marcel Adam",
-      "email": "marceladam@gmx.ch"
-    }
-  ],
+  "contributors": [{
+    "name": "Marcel Adam",
+    "email": "marceladam@gmx.ch"
+  }],
   "homepage": "https://github.com/forelleblau/ioBroker.solarlog",
   "license": "MIT",
   "keywords": [
