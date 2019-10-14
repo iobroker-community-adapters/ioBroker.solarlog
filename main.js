@@ -720,7 +720,7 @@ function setInvObjects() {
         },
         native: {}
       });
-      adapter.setObjectNotExists("INV." + names[i] + 'BattSelfCons', {
+      adapter.setObjectNotExists("INV." + names[i] + '.BattSelfCons', {
         type: 'state',
         common: {
           name: 'battselfcons',
@@ -733,7 +733,7 @@ function setInvObjects() {
         },
         native: {}
       });
-      adapter.setObjectNotExists("INV." + names[i] + 'BattChargeDaysum', {
+      adapter.setObjectNotExists("INV." + names[i] + '.BattChargeDaysum', {
         type: 'state',
         common: {
           name: 'battchargedaysum',
@@ -746,7 +746,7 @@ function setInvObjects() {
         },
         native: {}
       });
-      adapter.setObjectNotExists("INV." + names[i] + 'BattDischargeDaysum', {
+      adapter.setObjectNotExists("INV." + names[i] + '.BattDischargeDaysum', {
         type: 'state',
         common: {
           name: 'battdischargedaysum',
