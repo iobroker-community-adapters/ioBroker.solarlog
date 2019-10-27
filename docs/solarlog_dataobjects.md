@@ -29,6 +29,8 @@ All these requests have benn discovered by analyzing the solarlog webinterface w
 - {"779"::null} monthly consumption/production per inverter/meter.
 - {"854":null} yealry consumption/production per inverter/meter.
 - {"858":null} voltage, level, charge & discharge power of battery. Empty if no battery is connected.
+- {"877":null} monthly values for production (Wh), consuption (Wh) and self-consumption (kWh).
+- {"878":null} monthly values for production (Wh), consuption (Wh) and self-consumption (kWh).
 
 ### Other data
 - {"152"::null} 0-11: monthly % of total production estimated, 161: kWp installed, 162: kWh/kWp p.a. estimated.
