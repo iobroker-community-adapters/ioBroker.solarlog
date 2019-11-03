@@ -1,456 +1,459 @@
 {
-	"common": {
-		"name": "solarlog",
-		"version": "1.0.0",
-		"news": {
-			"1.0.0": {
-				"en": "Reads now devicetypes, -brands and -classes. Sets correct params for batteries. Displays self-consumption @'status'",
-				"de": "Liest jetzt Gerätetypen, -klassen und -marken aus. Legt die richtigen Objekte für Batteriespeicher an. Ziegt im 'status' den Eigenverbrauch an"
-			},
-			"0.1.6": {
-				"en": "Reads now battery data",
-				"de": "Liest jetzt Batteriewerte aus"
-			},
-			"0.1.5": {
-				"en": "Reads now historic data (yearly sum per Inverter), testing update",
-				"de": "Liest jetzt historische Daten (Jahressummen pro Zähler), Testing - Update"
-			},
-			"0.1.4": {
-				"en": "Readme - update",
-				"de": "Readme - Update"
-			},
-			"0.1.3": {
-				"en": "Core Files/Testing Update and introduce adapter-core",
-				"de": "Core Files/Testing Update und adapter-core eingeführt"
-			},
-			"0.1.2": {
-				"en": "Inverter / meter - detection optimized",
-				"de": "Geräteerkennung verbessert"
-			},
-			"0.1.1": {
-				"en": "support for compact mode",
-				"de": "Support für Compact Mode"
-			},
-			"0.1.0": {
-				"en": "optional port specification, readme",
-				"de": "Möglichkeit Port festzulegen (optional), Readme"
-			},
-			"0.0.9": {
-				"en": "another bugfix for daysum function (format date)",
-				"de": "Weiterer Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben (Datumsformat)"
-			},
-			"0.0.8": {
-				"en": "bugfix for daysum function",
-				"de": "Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben"
-			},
-			"0.0.7": {
-				"en": "import of daily sum of production/consumption, connection status indication fixed",
-				"de": "Import der Tagessummen pro Unterzaehler, Anzeige Verbindungsstatus repariert"
-			},
-			"0.0.6": {
-				"en": "optimized evaluation of the number of inverters/meters to import",
-				"de": "Verbesserte Ermittlung der Anzahll Unterzaehler"
-			},
-			"0.0.5": {
-				"en": "better readme,correct labels in config-dialogue",
-				"de": "Erweiterte Readme, Beschriftung im config-menu korrigiert"
-			},
-			"0.0.4": {
-				"en": "better readme, error-logging refers to functions, inverter-import optional",
-				"de": "Erweiterte Readme, Error-logging nennt funktionen, Import der Daten aller Unterzähler optional möglich"
-			},
-			"0.0.3": {
-				"en": "better readme, import data of all inverters and meters",
-				"de": "Erweiterte Readme, Import der Daten aller Unterzähler"
-			},
-			"0.0.2": {
-				"en": "better readme, error - handling, better log",
-				"de": "Erweiterte Readme, Fehlerhandling, Log optimiert"
-			},
-			"0.0.1": {
-				"en": "initial adapter",
-				"de": "Initiale Version"
-			}
-		},
-		"title": "solarlog",
-		"titleLang": {
-			"en": "solarlogMonitor",
-			"de": "SolarlogMonitor"
-		},
-		"desc": {
-			"en": "Monitor your solarlog meter",
-			"de": "Überwache deinen Solarlog Meter"
-		},
-		"authors": [
-			"forelleblau <marceladam@gmx.ch>"
-		],
-		"platform": "Javascript/Node.js",
-		"mode": "daemon",
-		"compact": true,
-		"icon": "solarlog.png",
-		"materialize": true,
-		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/forelleblau/ioBroker.solarlog/master/admin/solarlog.png",
-		"keywords": [
-			"solarlog",
-			"photovoltaics",
-			"solar",
-			"energy",
-			"sun"
-		],
-		"readme": "https://github.com/forelleblau/ioBroker.solarlog/blob/master/README.md",
-		"loglevel": "info",
-		"type": "energy",
-		"license": "MIT",
-		"messagebox": false
-	},
-	"native": {
-		"host": "",
-		"port":80,
-		"pollInterval":300000,
-		"invimp": false,
-		"numinv":0
-	},
-	"objects": [],
-	"instanceObjects": [
-		{
-			"_id": "info",
-			"type": "channel",
-			"common": {
-			"name": "Information"
-			},
-			"native": {
+  "common": {
+    "name": "solarlog",
+    "version": "1.1.0",
+    "news": {
+      "1.1.0": {
+        "en": "Shows detailed information on self - consumption. Imports yearly & monthly historic data.",
+        "de": "Zeigt detaillierte Informationen zum Eigenverbrauch. Importiert jährliche und monatliche historische Werte"
+      },
+      "1.0.0": {
+        "en": "Reads now devicetypes, -brands and -classes. Sets correct params for batteries. Displays self-consumption @'status'",
+        "de": "Liest jetzt Gerätetypen, -klassen und -marken aus. Legt die richtigen Objekte für Batteriespeicher an. Ziegt im 'status' den Eigenverbrauch an"
+      },
+      "0.1.6": {
+        "en": "Reads now battery data",
+        "de": "Liest jetzt Batteriewerte aus"
+      },
+      "0.1.5": {
+        "en": "Reads now historic data (yearly sum per Inverter), testing update",
+        "de": "Liest jetzt historische Daten (Jahressummen pro Zähler), Testing - Update"
+      },
+      "0.1.4": {
+        "en": "Readme - update",
+        "de": "Readme - Update"
+      },
+      "0.1.3": {
+        "en": "Core Files/Testing Update and introduce adapter-core",
+        "de": "Core Files/Testing Update und adapter-core eingeführt"
+      },
+      "0.1.2": {
+        "en": "Inverter / meter - detection optimized",
+        "de": "Geräteerkennung verbessert"
+      },
+      "0.1.1": {
+        "en": "support for compact mode",
+        "de": "Support für Compact Mode"
+      },
+      "0.1.0": {
+        "en": "optional port specification, readme",
+        "de": "Möglichkeit Port festzulegen (optional), Readme"
+      },
+      "0.0.9": {
+        "en": "another bugfix for daysum function (format date)",
+        "de": "Weiterer Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben (Datumsformat)"
+      },
+      "0.0.8": {
+        "en": "bugfix for daysum function",
+        "de": "Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben"
+      },
+      "0.0.7": {
+        "en": "import of daily sum of production/consumption, connection status indication fixed",
+        "de": "Import der Tagessummen pro Unterzaehler, Anzeige Verbindungsstatus repariert"
+      },
+      "0.0.6": {
+        "en": "optimized evaluation of the number of inverters/meters to import",
+        "de": "Verbesserte Ermittlung der Anzahll Unterzaehler"
+      },
+      "0.0.5": {
+        "en": "better readme,correct labels in config-dialogue",
+        "de": "Erweiterte Readme, Beschriftung im config-menu korrigiert"
+      },
+      "0.0.4": {
+        "en": "better readme, error-logging refers to functions, inverter-import optional",
+        "de": "Erweiterte Readme, Error-logging nennt funktionen, Import der Daten aller Unterzähler optional möglich"
+      },
+      "0.0.3": {
+        "en": "better readme, import data of all inverters and meters",
+        "de": "Erweiterte Readme, Import der Daten aller Unterzähler"
+      },
+      "0.0.2": {
+        "en": "better readme, error - handling, better log",
+        "de": "Erweiterte Readme, Fehlerhandling, Log optimiert"
+      },
+      "0.0.1": {
+        "en": "initial adapter",
+        "de": "Initiale Version"
+      }
+    },
+    "title": "solarlog",
+    "titleLang": {
+      "en": "solarlogMonitor",
+      "de": "SolarlogMonitor"
+    },
+    "desc": {
+      "en": "Monitor your solarlog meter",
+      "de": "Überwache deinen Solarlog Meter"
+    },
+    "authors": [
+      "forelleblau <marceladam@gmx.ch>"
+    ],
+    "platform": "Javascript/Node.js",
+    "mode": "daemon",
+    "compact": true,
+    "icon": "solarlog.png",
+    "materialize": true,
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/forelleblau/ioBroker.solarlog/master/admin/solarlog.png",
+    "keywords": [
+      "solarlog",
+      "photovoltaics",
+      "solar",
+      "energy",
+      "sun"
+    ],
+    "readme": "https://github.com/forelleblau/ioBroker.solarlog/blob/master/README.md",
+    "loglevel": "info",
+    "type": "energy",
+    "license": "MIT",
+    "messagebox": false
+  },
+  "native": {
+    "host": "",
+    "port": 80,
+    "pollInterval": 300000,
+    "invimp": false,
+    "numinv": 0
+  },
+  "objects": [],
+  "instanceObjects": [{
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "info.lastSync",
-			"type": "state",
-			"common": {
-				"name": "Last successful sync",
-				"type": "string",
-				"role": "value.datetime",
-				"read": true,
-				"write": false,
-				"desc": "Last successful synchronization"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "info.lastSync",
+      "type": "state",
+      "common": {
+        "name": "Last successful sync",
+        "type": "string",
+        "role": "value.datetime",
+        "read": true,
+        "write": false,
+        "desc": "Last successful synchronization"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "info.numinv",
-			"type": "state",
-			"common": {
-				"name": "Number of inverters",
-				"type": "number",
-				"role": "value.numinv",
-				"read": true,
-				"write": false,
-				"desc": "Total number of inverters and meters"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "info.numinv",
+      "type": "state",
+      "common": {
+        "name": "Number of inverters",
+        "type": "number",
+        "role": "value.numinv",
+        "read": true,
+        "write": false,
+        "desc": "Total number of inverters and meters"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "info.totalPower",
-			"type": "state",
-			"common": {
-				"name": "total power",
-				"type": "number",
-				"role": "value.totalPower",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total installed generator power",
-				"unit": "Wp"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "info.totalPower",
+      "type": "state",
+      "common": {
+        "name": "total power",
+        "type": "number",
+        "role": "value.totalPower",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total installed generator power",
+        "unit": "Wp"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "info.connection",
-			"type": "state",
-			"common": {
-				"name": "solarlog connected",
-				"type": "boolean",
-				"role": "indicator.connected",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Is solarlog connected?"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "name": "solarlog connected",
+        "type": "boolean",
+        "role": "indicator.connected",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Is solarlog connected?"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status",
-			"type": "channel",
-			"common": {
-				"name": "Status"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status",
+      "type": "channel",
+      "common": {
+        "name": "Status"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.pac",
-			"type": "state",
-			"common": {
-				"name": "PowerAC",
-				"type": "number",
-				"role": "value.powerac",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total output PAC from all of the inverters",
-				"unit": "W"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.pac",
+      "type": "state",
+      "common": {
+        "name": "PowerAC",
+        "type": "number",
+        "role": "value.powerac",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total output PAC from all of the inverters",
+        "unit": "W"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.pdc",
-			"type": "state",
-			"common": {
-				"name": "PowerDC",
-				"type": "number",
-				"role": "value.powerdc",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total output PAC from all of the inverters",
-				"unit": "W"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.pdc",
+      "type": "state",
+      "common": {
+        "name": "PowerDC",
+        "type": "number",
+        "role": "value.powerdc",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total output PAC from all of the inverters",
+        "unit": "W"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.uac",
-			"type": "state",
-			"common": {
-				"name": "Voltage AC",
-				"type": "number",
-				"role": "value.uac",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Average voltage UAC from the inverter",
-				"unit": "V"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.uac",
+      "type": "state",
+      "common": {
+        "name": "Voltage AC",
+        "type": "number",
+        "role": "value.uac",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Average voltage UAC from the inverter",
+        "unit": "V"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.udc",
-			"type": "state",
-			"common": {
-				"name": "Voltage DC",
-				"type": "number",
-				"role": "value.udc",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Average voltage UDC from the inverter",
-				"unit": "V"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.udc",
+      "type": "state",
+      "common": {
+        "name": "Voltage DC",
+        "type": "number",
+        "role": "value.udc",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Average voltage UDC from the inverter",
+        "unit": "V"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.conspac",
-			"type": "state",
-			"common": {
-				"name": "Consumption Pac",
-				"type": "number",
-				"role": "value.conspac",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Current total consumption PAC from all of the consumption meters",
-				"unit": "W"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.conspac",
+      "type": "state",
+      "common": {
+        "name": "Consumption Pac",
+        "type": "number",
+        "role": "value.conspac",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Current total consumption PAC from all of the consumption meters",
+        "unit": "W"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.yieldday",
-			"type": "state",
-			"common": {
-				"name": "Yield today",
-				"type": "number",
-				"role": "value.yieldday",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total yield for the day",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.yieldday",
+      "type": "state",
+      "common": {
+        "name": "Yield today",
+        "type": "number",
+        "role": "value.yieldday",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total yield for the day",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.yieldyesterday",
-			"type": "state",
-			"common": {
-				"name": "Yield Yesterday",
-				"type": "number",
-				"role": "value.yieldyesterday",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total yield for the previous day",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.yieldyesterday",
+      "type": "state",
+      "common": {
+        "name": "Yield Yesterday",
+        "type": "number",
+        "role": "value.yieldyesterday",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total yield for the previous day",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.yieldmonth",
-			"type": "state",
-			"common": {
-				"name": "Yield Month",
-				"type": "number",
-				"role": "value.yieldmonth",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total yield for the month",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.yieldmonth",
+      "type": "state",
+      "common": {
+        "name": "Yield Month",
+        "type": "number",
+        "role": "value.yieldmonth",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total yield for the month",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.yieldyear",
-			"type": "state",
-			"common": {
-				"name": "Yield Year",
-				"type": "timestamp",
-				"role": "value.yieldyear",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total yield for the year",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.yieldyear",
+      "type": "state",
+      "common": {
+        "name": "Yield Year",
+        "type": "timestamp",
+        "role": "value.yieldyear",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total yield for the year",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.yieldtotal",
-			"type": "state",
-			"common": {
-				"name": "Total Yield",
-				"type": "number",
-				"role": "value.yieldtotal",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total Yield",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.yieldtotal",
+      "type": "state",
+      "common": {
+        "name": "Total Yield",
+        "type": "number",
+        "role": "value.yieldtotal",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total Yield",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.consyieldday",
-			"type": "state",
-			"common": {
-				"name": "Total consumption today",
-				"type": "number",
-				"role": "value.consyieldday",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total consumption today",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.consyieldday",
+      "type": "state",
+      "common": {
+        "name": "Total consumption today",
+        "type": "number",
+        "role": "value.consyieldday",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total consumption today",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.consyieldyesterday",
-			"type": "state",
-			"common": {
-				"name": "Consumption Yesterday",
-				"type": "number",
-				"role": "value.consyieldyesterday",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total consumption for the previous day",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.consyieldyesterday",
+      "type": "state",
+      "common": {
+        "name": "Consumption Yesterday",
+        "type": "number",
+        "role": "value.consyieldyesterday",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total consumption for the previous day",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.consyieldmonth",
-			"type": "state",
-			"common": {
-				"name": "Consumption Month",
-				"type": "number",
-				"role": "value.consyieldmonth",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total consumption for the month",
-				"unit": "Wh"
+      }
+    },
+    {
+      "_id": "status.consyieldmonth",
+      "type": "state",
+      "common": {
+        "name": "Consumption Month",
+        "type": "number",
+        "role": "value.consyieldmonth",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total consumption for the month",
+        "unit": "Wh"
 
-			},
-			"native": {
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.consyieldyear",
-			"type": "state",
-			"common": {
-				"name": "Consumption year",
-				"type": "number",
-				"role": "value.consyieldyear",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Total consumption for the year",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.consyieldyear",
+      "type": "state",
+      "common": {
+        "name": "Consumption year",
+        "type": "number",
+        "role": "value.consyieldyear",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Total consumption for the year",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		},
-		{
-			"_id": "status.consyieldtotal",
-			"type": "state",
-			"common": {
-				"name": "Total Consumption",
-				"type": "number",
-				"role": "value.consyieldtotal",
-				"read": true,
-				"write": false,
-				"def": false,
-				"desc": "Accumulated total consumption",
-				"unit": "Wh"
-			},
-			"native": {
+      }
+    },
+    {
+      "_id": "status.consyieldtotal",
+      "type": "state",
+      "common": {
+        "name": "Total Consumption",
+        "type": "number",
+        "role": "value.consyieldtotal",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Accumulated total consumption",
+        "unit": "Wh"
+      },
+      "native": {
 
-			}
-		}
-	]
+      }
+    }
+  ]
 }

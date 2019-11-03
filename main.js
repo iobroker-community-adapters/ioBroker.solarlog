@@ -8,6 +8,8 @@
 
 const utils = require('@iobroker/adapter-core'); // Get common adapter utils
 let adapter;
+var schedule = require('node-schedule');
+
 var DeviceIpAdress;
 var Port;
 var https = require('http');
@@ -23,6 +25,10 @@ var deviceinfos = [];
 var devicetypes = [];
 var devicebrands = [];
 var deviceclasses = [];
+
+var json = [];
+var lastdaysumy = 99;
+var lastdayratioy = 99;
 
 var uzimp;
 var battdevicepresent = "false";
@@ -48,10 +54,11 @@ function startAdapter(options) {
   adapter.on('unload', function(callback) {
     try {
       clearInterval(polling);
-      adapter.log.info('[END] Stopping solarlog adapter...');
       adapter.setState('info.connection', false, true);
+      adapter.log && adapter.log.info('[END] Stopping solarlog adapter...');
       callback();
     } catch (e) {
+      adapter.log && adapter.log.warn("[END 7 catch] adapter stopped ")
       callback();
     }
   });
@@ -139,9 +146,14 @@ function main() {
         httpsReqDataStandard(cmd, uzimp);
 
         setTimeout(repeat, pollingTime);
-      }, pollingTime);
+      }, pollingTime)
     } // endIf
   }
+
+  var jedentag = schedule.scheduleJob('0 2 * * *', function() {
+    adapter.log.info('Langzeitwerte abrufen');
+    httpsReqSumYearUZ(cmd, names);
+  });
   // all states changes inside the adapters namespace are subscribed
   adapter.subscribeStates('*');
 } // endMain
@@ -843,16 +855,159 @@ function setInvObjects() {
       native: {}
     });
   }
-  adapter.setObjectNotExists('status.consselfconsyieldday', {
+  adapter.setObjectNotExists('SelfCons.selfconstoday', {
     type: 'state',
     common: {
-      name: 'selfconsyieldday',
+      name: 'selfconstoday',
       desc: 'Total self consumption today',
       type: 'number',
-      role: "value.selfconsyieldday",
+      role: "value.selfconstoday",
       read: true,
       write: false,
       unit: "Wh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsyesterday', {
+    type: 'state',
+    common: {
+      name: 'selfconsyesterday',
+      desc: 'Total self consumption yesterday',
+      type: 'number',
+      role: "value.selfconsyesterday",
+      read: true,
+      write: false,
+      unit: "Wh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsmonth', {
+    type: 'state',
+    common: {
+      name: 'selfconsmonth',
+      desc: 'Total self consumption this month',
+      type: 'number',
+      role: "value.selfconsmonth",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconslastmonth', {
+    type: 'state',
+    common: {
+      name: 'selfconslastmonth',
+      desc: 'Total self consumption last month',
+      type: 'number',
+      role: "value.selfconslastmonth",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsyear', {
+    type: 'state',
+    common: {
+      name: 'selfconslastyear',
+      desc: 'Total self consumption year',
+      type: 'number',
+      role: "value.selfconsyear",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconslastyear', {
+    type: 'state',
+    common: {
+      name: 'selfconslastyear',
+      desc: 'Total self consumption last year',
+      type: 'number',
+      role: "value.selfconslastyear",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsratiotoday', {
+    type: 'state',
+    common: {
+      name: 'selfconsratiotoday',
+      desc: 'Self consumption ratio today',
+      type: 'number',
+      role: "value.selfconsratiotoday",
+      read: true,
+      write: false,
+      unit: "%"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsratioyesterday', {
+    type: 'state',
+    common: {
+      name: 'selfconsratioyesterday',
+      desc: 'self consumption ratio yesterday',
+      type: 'number',
+      role: "value.selfconsratioyesterday",
+      read: true,
+      write: false,
+      unit: "%"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsratiomonth', {
+    type: 'state',
+    common: {
+      name: 'selfconratiosmonth',
+      desc: 'self consumption ratio this month',
+      type: 'number',
+      role: "value.selfconsratiomonth",
+      read: true,
+      write: false,
+      unit: "%"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsratiolastmonth', {
+    type: 'state',
+    common: {
+      name: 'selfconsratiolastmonth',
+      desc: 'self consumption ratio last month',
+      type: 'number',
+      role: "value.selfconsratiolastmonth",
+      read: true,
+      write: false,
+      unit: "%"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsratioyear', {
+    type: 'state',
+    common: {
+      name: 'selfconsratiolastyear',
+      desc: 'self consumption ratio year',
+      type: 'number',
+      role: "value.selfconsratioyear",
+      read: true,
+      write: false,
+      unit: "%"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('SelfCons.selfconsratiolastyear', {
+    type: 'state',
+    common: {
+      name: 'selfconsratiolastyear',
+      desc: 'self consumption ratio last year',
+      type: 'number',
+      role: "value.selfconsratiolastmonth",
+      read: true,
+      write: false,
+      unit: "%"
     },
     native: {}
   });
@@ -864,7 +1019,7 @@ function setdeviceinfo() {
     adapter.setState("INV." + names[i] + ".devicetype", devicetypes[i], true);
     adapter.setState("INV." + names[i] + ".devicebrand", devicebrands[i], true);
   }
-  httpsReqSumYearUZ(cmd, names);
+  httpsReqDataStandard(cmd, uzimp);
 } //End setdeviceinfo
 
 function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
@@ -917,7 +1072,7 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
           var year = dataYear[iy][0].slice(-2);
           for (var inu = 0; inu < names.length; inu++) {
             if (dataYear[iy][1][inu] != 0) {
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear." + names[inu], {
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyearINV." + names[inu], {
                 type: 'state',
                 common: {
                   name: 'yieldyear',
@@ -937,19 +1092,22 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
           var year = dataYear[iy][0].slice(-2);
           for (var inu = 0; inu < names.length; inu++) {
             if (dataYear[iy][1][inu] != 0) {
-              adapter.setState('Historic.' + "20" + year + ".yieldyear." + names[inu], dataYear[iy][1][inu], true);
+              adapter.setState('Historic.' + "20" + year + ".yieldyearINV." + names[inu], dataYear[iy][1][inu], true);
             }
           }
         }
         adapter.log.debug("END");
-
+        httpsReqSumYear(cmd, names);
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler SumYearUZ: " + e.message);
       }
-      httpsReqDataStandard(cmd, uzimp);
+
     });
 
   });
+
+
+
 
   req.on('error', function(e) { // Fehler abfangen
     adapter.log.warn('ERROR SumYearUZ: ' + e.message, "warn");
@@ -961,6 +1119,250 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
 
   req.end();
 } //End httpsReqSumYearUZ
+
+function httpsReqSumYear(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
+  // create Channel Historic
+
+  var data = '{"878":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+
+      try {
+        var dataYeartot = JSON.parse(body)[878];
+        adapter.log.debug("DataYear: " + dataYeartot);
+
+        for (var iy = 0; iy < dataYeartot.length; iy++) {
+          var year = dataYeartot[iy][0].slice(-2);
+
+          adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear", {
+            type: 'state',
+            common: {
+              name: 'yieldyear',
+              desc: 'Year sum producion Wh',
+              type: 'number',
+              role: "value.yearsum",
+              read: true,
+              write: false,
+              unit: "Wh"
+            },
+            native: {}
+          });
+
+          adapter.setObjectNotExists('Historic.' + "20" + year + ".consyear", {
+            type: 'state',
+            common: {
+              name: 'consyear',
+              desc: 'Year sum consumption Wh',
+              type: 'number',
+              role: "value.yearsum",
+              read: true,
+              write: false,
+              unit: "Wh"
+            },
+            native: {}
+          });
+
+          adapter.setObjectNotExists('Historic.' + "20" + year + ".selfconsyear", {
+            type: 'state',
+            common: {
+              name: 'selfconsyear',
+              desc: 'Year sum  self consumption Wh',
+              type: 'number',
+              role: "value.yearsum",
+              read: true,
+              write: false,
+              unit: "kWh"
+            },
+            native: {}
+          });
+
+
+        }
+        for (var iy = 0; iy < dataYeartot.length; iy++) {
+          var year = dataYeartot[iy][0].slice(-2);
+          if (dataYeartot[iy][1] != 0) {
+            adapter.setState('Historic.' + "20" + year + ".yieldyear", dataYeartot[iy][1], true);
+            adapter.setState('Historic.' + "20" + year + ".consyear", dataYeartot[iy][2], true);
+            adapter.setState('Historic.' + "20" + year + ".selfconsyear", dataYeartot[iy][3], true);
+          }
+
+        }
+
+        adapter.setState('SelfCons.selfconsyear', dataYeartot[dataYeartot.length - 1][3], true);
+        adapter.setState('SelfCons.selfconslastyear', dataYeartot[dataYeartot.length - 2][3], true);
+
+        adapter.setState('SelfCons.selfconsratioyear', Math.round((dataYeartot[dataYeartot.length - 1][3] * 1000) / (dataYeartot[dataYeartot.length - 1][2]) * 1000) / 10, true);
+        adapter.setState('SelfCons.selfconsratiolastyear', Math.round((dataYeartot[dataYeartot.length - 2][3] * 1000) / (dataYeartot[dataYeartot.length - 2][2]) * 1000) / 10, true);
+
+        adapter.log.debug("END");
+
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler SumYear: " + e.message);
+      }
+      httpsReqSumMonth(cmd, names);
+    });
+
+  });
+
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR SumYear: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+} //End httpsReqSumYear
+
+function httpsReqSumMonth(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
+  // create Channel Historic
+
+  var data = '{"877":null}';
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+      'Content-Type': 'application/json',
+      'Accept': 'applciation/json',
+      'Content-Length': data.length
+    }
+  };
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
+    var bodyChunks = [];
+    var chunkLine = 0;
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+      // ...und/oder das Gesamtergebnis (body).
+      adapter.log.debug("body: " + body);
+
+      try {
+        var dataMonthtot = JSON.parse(body)[877];
+        adapter.log.debug("DataMonth: " + dataMonthtot);
+
+        for (var iy = 0; iy < dataMonthtot.length; iy++) {
+          var year = dataMonthtot[iy][0].slice(-2);
+          var month = dataMonthtot[iy][0].slice(3, 5);
+
+          adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", {
+            type: 'state',
+            common: {
+              name: 'yieldmonth',
+              desc: 'Month sum producion Wh',
+              type: 'number',
+              role: "value.monthsum",
+              read: true,
+              write: false,
+              unit: "Wh"
+            },
+            native: {}
+          });
+
+          adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".consmonth", {
+            type: 'state',
+            common: {
+              name: 'consmonth',
+              desc: 'Month sum consumption Wh',
+              type: 'number',
+              role: "value.monthsum",
+              read: true,
+              write: false,
+              unit: "Wh"
+            },
+            native: {}
+          });
+
+          adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", {
+            type: 'state',
+            common: {
+              name: 'selfconsmonth',
+              desc: 'Month sum  self consumption Wh',
+              type: 'number',
+              role: "value.monthsum",
+              read: true,
+              write: false,
+              unit: "kWh"
+            },
+            native: {}
+          });
+
+
+        }
+        for (var iy = 0; iy < dataMonthtot.length; iy++) {
+          var year = dataMonthtot[iy][0].slice(-2);
+          var month = dataMonthtot[iy][0].slice(3, 5);
+
+          if (dataMonthtot[iy][1] != 0) {
+            adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", dataMonthtot[iy][1], true);
+            adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".consmonth", dataMonthtot[iy][2], true);
+            adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", dataMonthtot[iy][3], true);
+          }
+
+        }
+        adapter.setState('SelfCons.selfconsmonth', dataMonthtot[dataMonthtot.length - 1][3], true);
+        adapter.setState('SelfCons.selfconslastmonth', dataMonthtot[dataMonthtot.length - 2][3], true);
+
+        adapter.setState('SelfCons.selfconsratiomonth', Math.round((dataMonthtot[dataMonthtot.length - 1][3] * 1000) / (dataMonthtot[dataMonthtot.length - 1][2]) * 1000) / 10, true);
+        adapter.setState('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtot[dataMonthtot.length - 2][3] * 1000) / (dataMonthtot[dataMonthtot.length - 2][2]) * 1000) / 10, true);
+
+        adapter.log.debug("END");
+
+      } catch (e) {
+        adapter.log.warn("JSON-parse-Fehler SumMonth: " + e.message);
+      }
+
+    });
+
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR SumYear: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+} //End httpsReqSumMonth
+
 
 function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
   var data = '{"801":{"170":null}}';
@@ -992,7 +1394,7 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
       // ...und/oder das Gesamtergebnis (body).
 
       try {
-        var json = (JSON.parse(body));
+        json = (JSON.parse(body));
         adapter.log.debug("Body: " + body);
         adapter.setState('info.lastSync', json[801][170][100], true);
         adapter.setState('info.totalPower', json[801][170][116], true);
@@ -1343,6 +1745,8 @@ function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
         var d = new Date();
         var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
         adapter.log.debug("Heute: " + heute);
+        var monatheute = d.getMonth() + 1;
+        adapter.log.debug("Monat heute: " + monatheute);
         for (var isuz = 0; isuz < 31; isuz++) {
           var indextag = dataselfcons[isuz].indexOf(heute.toString());
           if (indextag != -1) {
@@ -1355,12 +1759,41 @@ function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
         adapter.log.debug("Tageswerte SelfCons: " + dataselfconstoday);
         var daysum = dataselfcons[indexsuz][1];
         adapter.log.debug("Tagessumme Eigenverbrauch: " + daysum);
+        var dayratio = Math.round((daysum / json[801][170][105]) * 1000) / 10;
 
 
-        adapter.setState("status.consselfconsyieldday", daysum, true);
-        //adapter.log.debug('INV.Battery.BattSelfCons: ' + dataselfconstoday[2]);
-        //adapter.log.debug('INV.Battery.ChargeDaysum: ' + dataselfconstoday[3]);
-        //adapter.log.debug('INV.Battery.ChargeDaysum: ' + dataselfconstoday[4]);
+        adapter.setState("SelfCons.selfconstoday", daysum, true);
+        adapter.setState("SelfCons.selfconsratiotoday", dayratio, true);
+
+        d.setDate(d.getDate() - 1);
+        var gestern = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+        adapter.log.debug("Gestern: " + gestern);
+        var monatgestern = d.getMonth() + 1;
+        adapter.log.debug("Monat gestern: " + monatgestern);
+        if (monatgestern == monatheute) {
+          for (var iscy = 0; iscy < 31; iscy++) {
+            var indexgestern = dataselfcons[iscy].indexOf(gestern.toString());
+            if (indexgestern != -1) {
+              var indexscy = iscy;
+              adapter.log.debug("Index Tageswerte gestern: " + indexscy);
+              break;
+            }
+          }
+          var dataselfconsyesterday = dataselfcons[indexscy];
+          adapter.log.debug("Gesternwerte SelfCons: " + dataselfconsyesterday);
+          var daysumy = dataselfcons[indexscy][1];
+          adapter.log.debug("Gesternsumme Eigenverbrauch: " + daysumy);
+          var dayratioy = Math.round((daysumy / json[801][170][106]) * 1000) / 10;
+
+          adapter.setState("SelfCons.selfconsyesterday", daysumy, true);
+          adapter.setState("SelfCons.selfconsratioyesterday", dayratioy, true);
+          lastdaysumy = daysum;
+          lastdayratioy = dayratio;
+        } else {
+          adapter.setState("SelfCons.selfconsyesterday", lastdaysumy, true);
+          adapter.setState("SelfCons.selfconsratioyesterday", lastdayratioy, true);
+        }
+
         if (battdevicepresent == "true" && battpresent == "true") {
           adapter.setState("INV." + names[battindex[0]] + '.BattSelfCons', dataselfconstoday[2], true);
           adapter.setState("INV." + names[battindex[0]] + '.BattChargeDaysum', dataselfconstoday[3], true);
