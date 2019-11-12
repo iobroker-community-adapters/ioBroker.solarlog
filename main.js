@@ -1004,7 +1004,7 @@ function setInvObjects() {
       name: 'selfconsratiolastyear',
       desc: 'self consumption ratio last year',
       type: 'number',
-      role: "value.selfconsratiolastmonth",
+      role: "value.selfconsratiolastyear",
       read: true,
       write: false,
       unit: "%"
