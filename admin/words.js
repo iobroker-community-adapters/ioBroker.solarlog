@@ -3,85 +3,53 @@
 'use strict';
 
 systemDictionary = {
-  "Auto": {
-    "en": "Auto",
-    "de": "Auto",
-    "ru": "ÐÐ²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸",
-    "pt": "Auto",
-    "nl": "Auto",
-    "fr": "Auto",
-    "it": "Auto",
-    "es": "Auto"
-  },
-  "Manual": {
-    "en": "Manual",
-    "de": "Manual",
-    "ru": "Ð’Ñ€ÑƒÑ‡Ð½ÑƒÑŽ",
-    "pt": "Manual",
-    "nl": "Met de hand",
-    "fr": "Manuel",
-    "it": "Manuale",
-    "es": "Manual"
-  },
-  "My select": {
-    "en": "My select",
-    "de": "Mein Auswahl",
-    "ru": "Ð’Ñ‹Ð±Ð¾Ñ€",
-    "pt": "Meu selecionado",
-    "nl": "Mijn select",
-    "fr": "Mon choix",
-    "it": "La mia selezione",
-    "es": "Mi seleccion"
-  },
   "on save adapter restarts with new config immediately": {
     "en": "on save adapter restarts with new config immediately",
-    "de": "Beim Speichern von Einstellungen der Adapter wird sofort neu gestartet.",
-    "ru": "ÐŸÑ€Ð¸ ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ð¸ Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐº Ð°Ð´Ð°Ð¿Ñ‚ÐµÑ€Ð° Ð¾Ð½ ÑÑ€Ð°Ð·Ñƒ Ð¶Ðµ Ð¿ÐµÑ€ÐµÐ·Ð°Ð¿ÑƒÑÐºÐ°ÐµÑ‚ÑÑ",
-    "pt": "no adaptador de salvar reinicia com nova configuraÃ§Ã£o imediatamente",
-    "nl": "on save-adapter wordt onmiddellijk opnieuw opgestart met nieuwe config",
-    "fr": "sur l'adaptateur de sauvegarde redÃ©marre avec la nouvelle config immÃ©diatement",
-    "it": "su save adapter si riavvia immediatamente con la nuova configurazione",
-    "es": "en el adaptador de guardar se reinicia con nueva configuraciÃ³n de inmediato"
-  },
-  "template adapter settings": {
-    "en": "template adapter settings",
-    "de": "Beispiel",
-    "ru": "ÐŸÑ€Ð¸Ð¼ÐµÑ€",
-    "pt": "configuraÃ§Ãµes do adaptador de modelo",
-    "nl": "sjabloon-adapterinstellingen",
-    "fr": "paramÃ¨tres de l'adaptateur de modÃ¨le",
-    "it": "impostazioni dell'adattatore del modello",
-    "es": "configuraciÃ³n del adaptador de plantilla"
+    "de": "Beim Speichern wird der Adapter sofort mit der neuen Konfiguration neu gestartet",
+    "ru": "при сохранении адаптер перезапускается с новым конфигом немедленно",
+    "pt": "ao salvar o adaptador reinicia imediatamente com a nova configuração",
+    "nl": "on save adapter wordt onmiddellijk opnieuw gestart met de nieuwe configuratie",
+    "fr": "lors de l'enregistrement, l'adaptateur redémarre avec la nouvelle configuration immédiatement",
+    "it": "on save adapter si riavvia immediatamente con la nuova configurazione",
+    "es": "al guardar el adaptador se reinicia con la nueva configuración inmediatamente",
+    "pl": "po zapisaniu adapter natychmiast uruchamia się ponownie z nową konfiguracją",
+    "zh-cn": "保存适配器上的适配器立即以新配置重新启动"
   },
   "host": {
-    "en": "Solarlog IP:",
-    "de": "Solarlog IP:",
-    "ru": "Solarlog IP:",
-    "pt": "Solarlog IP:",
-    "nl": "Solarlog IP:",
-    "fr": "Solarlog IP:",
-    "it": "Solarlog IP:",
-    "es": "Solarlog IP:"
+    "en": "Host",
+    "de": "Host",
+    "ru": "хозяин",
+    "pt": "Host",
+    "nl": "Host",
+    "fr": "Host",
+    "it": "Host",
+    "es": "Host",
+    "pl": "Host",
+    "zh-cn": "主办"
   },
   "port": {
-    "en": "Port (optional):",
-    "de": "Port (optional):",
-    "ru": "Port (optional):",
-    "pt": "Port (optional):",
-    "nl": "Port (optional):",
-    "fr": "Port (optional):",
-    "it": "Port (optional):",
-    "es": "Port (optional):"
+    "en": "port",
+    "de": "Port",
+    "ru": "порт",
+    "pt": "porta",
+    "nl": "port",
+    "fr": "Port",
+    "it": "porta",
+    "es": "Puerto",
+    "pl": "Port",
+    "zh-cn": "港口"
   },
   "pollInterval": {
-    "en": "Polling - Intervall (ms):",
-    "de": "Abfrage - Intervall (ms):",
-    "ru": "Abfrage - Intervall (ms):",
-    "pt": "Polling - Intervall (ms):",
-    "nl": "Polling - Intervall (ms):",
-    "fr": "Polling - Intervall (ms):",
-    "it": "Polling - Intervall (ms):",
-    "es": "Polling - Intervall (ms):"
+    "en": "polling Interval",
+    "de": "Abrufintervall",
+    "ru": "Интервал опроса",
+    "pt": "Intervalo de votação",
+    "nl": "polling-interval",
+    "fr": "intervalle d'interrogation",
+    "it": "Intervallo di polling",
+    "es": "intervalo de votación",
+    "pl": "Interwał odpytywania",
+    "zh-cn": "轮询间隔"
   },
   "invimp": {
     "en": "inverter/undercounter request. Caution! User-password of Solarlog has to be deactivated",
@@ -310,5 +278,5 @@ systemDictionary = {
     "es": "en kWp, separación deciamal: punto",
     "pl": "w kWp, separacja deciamalna: punkt",
     "zh-cn": "以kWp为单位，蜕膜分离：点"
-  }
+  },
 }

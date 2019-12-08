@@ -68,23 +68,41 @@
   }
 </script>
 
-<!-- you have to put your config page in a div with id adapter-container -->
-<div id="adapter-container">
+<body>
+  <!-- you have to put your config page in a div with id adapter-container -->
+  <div id="adapter-container">
 
-  <table>
-    <tr>
-      <td><img src="solarlog.png" /></td>
-      <td>
-        <h3 class="translate">solarlog adapter settings</h3>
-      </td>
-    </tr>
-  </table>
-  <p>
-    <span><label for="host" class="translate">host</label></span><input class="value" id="host" /><br>
-    <span><label for="port" class="translate">port</label></span><input class="value" id="pollInterval" /><br>
-    <span><label for="pollInterval" class="translate">pollInterval</label></span><input class="value" id="pollInterval" min="10000" /><br>
-    <span><label for="invimp" class="translate">invimp</label></span><input class="value" id="invimp" type="checkbox" /><br>
-  </p>
-  <p class="translate">on save adapter restarts with new config immediately</p>
-
-</div>
+    <table>
+      <tr>
+        <td><img src="solarlog.png" /></td>
+        <td>
+          <h3 class="translate">solarlog adapter settings</h3>
+        </td>
+      </tr>
+    </table>
+    <div id="tabs">
+      <ul>
+        <li><a href="#tabs-1" class="translate">Basic Settings</a></li>
+        <li><a href="#tabs-2" class="translate">Plant Settings</a></li>
+      </ul>
+      <div id="tabs-1">
+        <p>
+          <span><label for="host" class="translate">host</label></span><input class="value" id="host" /><br>
+          <span><label for="port" class="translate">port</label></span><input class="value" id="pollInterval" /><br>
+          <span><label for="pollInterval" class="translate">pollInterval</label></span><input class="value" id="pollInterval" min="10000" /><br>
+          <span><label for="invimp" class="translate">invimp</label></span><input class="value" id="invimp" type="checkbox" /><br>
+        </p>
+        <p class="translate">on save adapter restarts with new config immediately</p>
+      </div>
+      <div id="tabs-2">
+        <p>
+          <span><label for="forecast" class="translate">get forecast:</label></span><input class="value" id="forecast" type="checkbox" /><br>
+          <span><label for="latitude" class="translate">latitude:</label></span><input class="value" id="latitude" /><br>
+          <span><label for="longitude" class="translate">longitude:</label></span><input class="value" id="longitude" /><br>
+          <span><label for="inclination" class="translate">inclination:</label></span><input class="value" id="inclination" /><br>
+          <span><label for="azimuth" class="translate">azimuth:</label></span><input class="value" id="azimuth" /><br>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
