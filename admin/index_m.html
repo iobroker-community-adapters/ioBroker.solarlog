@@ -15,12 +15,13 @@
   <script type="text/javascript" src="words.js"></script>
   <style>
     .m .col .select-wrapper+label {
-   top: -26px;
-  }
-     .m span{
-         font-size: 0.9em;
-     }
- </style>
+      top: -26px;
+    }
+
+    .m span {
+      font-size: 0.9em;
+    }
+  </style>
   <!-- you have to define 2 functions in the global scope: -->
   <script type="text/javascript">
     // the function loadSettings has to exist ...
@@ -68,50 +69,98 @@
 <body>
   <!-- you have to put your config page in a div with id adapter-container -->
   <div class="m adapter-container">
-    <div class="row">
-      <!-- Forms are the standard way to receive user inputted data.
-         Learn more http://materializecss.com/forms.html-->
-      <div class="row">
-        <div class="input-field col s6">
-          <img src="solarlog.png" class="logo">
+    <div class="main-page row">
+      <div class="col s12">
+        <ul class="tabs">
+          <li class="tab col s4"><a href="#tab-main" class="translate active">Basic Settings</a></li>
+          <li class="tab col s4"><a href="#tab-plant" class="translate">Plant Settings</a></li>
+        </ul>
+      </div>
+      <div id="tab-main" class="col s12 page">
+
+        <div class="row">
+          <div class="input-field col s6">
+            <img src="solarlog.png" class="logo">
+          </div>
+        </div>
+        <h6 class="translate sub-title">Connection settings</h6>
+        <div class="row">
+          <div class="input-field col col s3">
+            <input class="value" id="host" type="text" />
+            <label for="host" class="translate">host</label>
+            <span class="translate">host</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="input-field col s12 m6 l4">
+            <input type="number" class="value" id="port" />
+            <label for="port" class="translate">port</label>
+            <!-- Important: label must come directly after input. Label is important. -->
+            <span class="translate">port</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="input-field col s12 m6 l4">
+            <input type="number" class="value" id="pollInterval" min="10000" />
+            <label for="pollInterval" class="translate">pollInterval</label>
+            <!-- Important: label must come directly after input. Label is important. -->
+            <span class="translate">pollInterval</span>
+          </div>
+        </div>
+        <h6 class="translate sub-title">invimp settings</h6>
+        <div class="row">
+          <div class="input-field col col s3">
+            <input class="value" id="invimp" type="checkbox" />
+            <label for="invimp" class="translate">invimp</label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col s12">
+            <p class="translate">on save adapter restarts with new config immediately</p>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="input-field col col s3">
-          <input class="value" id="host" type="text" />
-          <label for="host" class="translate">host</label>
-          <span class="translate">host</span>
+      <div id="tab-plant" class="col s12 page">
+        <div class="row">
+          <div class="col s6">
+            <img src="solarlog.png" class="logo">
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="input-field col s12 m6 l4">
-          <input type="number" class="value" id="port" />
-          <label for="port" class="translate">port</label>
-          <!-- Important: label must come directly after input. Label is important. -->
-          <span class="translate">port</span>
+        <div class="row">
+          <div class="input-field col s12 m6 l3">
+            <input class="value" id="forecast" type="checkbox" />
+            <label for="forecast" class="translate">get forecast:</label>
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="input-field col s12 m6 l4">
-          <input type="number" class="value" id="pollInterval" min="10000" />
-          <label for="pollInterval" class="translate">pollInterval</label>
-          <!-- Important: label must come directly after input. Label is important. -->
-          <span class="translate">pollInterval</span>
+        <h6 class="translate sub-title">location</h6>
+        <div class="row">
+          <div id="latitude" class="input-field col s12 m6 l3">
+            <input id="latitude" type="text" size="17" class="value" />
+            <label for="latitude" class="translate">latitude:</label> (
+            <span class="translate">-90 (south) … 90 (north), deciamal separaion: point</span>)
+          </div>
+          <div id="longitude" class="input-field col s12 m6 l3">
+            <input id="longitude" type="text" size="17" class="value" />
+            <label for="longitude" class="translate">longitude:</label> (
+            <span class="translate"> -180 (west) … 180 (east), deciamal separaion: point</span>)
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="input-field col col s3">
-          <input class="value" id="invimp" type="checkbox" />
-          <label for="invimp" class="translate">invimp</label>
+        <h6 class="translate sub-title">declination</h6>
+        <div class="row">
+          <div id="inclination" class="input-field col s12 m6 l3">
+            <input id="inclination" type="text" size="17" class="value" />
+            <label for="inclination" class="translate">inclination</label> (
+            <span class="translate">0 (horizontal) … 90 (vertical)</span>)
+          </div>
+          <div id="azimuth" class="input-field col s12 m6 l3">
+            <input id="azimuth" type="text" size="17" class="value" />
+            <label for="azimuth" class="translate">azimuth:</label> (
+            <span class="translate">-180 … 180 (-180 = north, -90 = east, 0 = south, 90 = west, 180 = north)</span>)
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="col s12">
-          <p class="translate">on save adapter restarts with new config immediately</p>
-        </div>
+
       </div>
     </div>
-  </div>
 </body>
 
 </html>
