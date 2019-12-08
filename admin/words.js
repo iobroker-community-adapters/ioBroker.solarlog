@@ -89,8 +89,7 @@ systemDictionary = {
     "fr": "paramètres de connexion",
     "it": "impostazioni di connessione",
     "es": "ajustes de conexión",
-    "pl": "ustawienia połączenia",
-    "zh-cn": "连接设置
+    "pl": "ustawienia połączenia"
   },
   "invimp settings": {
     "en": "inverter/submeter settings",
