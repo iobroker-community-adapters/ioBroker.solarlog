@@ -12,8 +12,7 @@ systemDictionary = {
     "fr": "lors de l'enregistrement, l'adaptateur redémarre avec la nouvelle configuration immédiatement",
     "it": "on save adapter si riavvia immediatamente con la nuova configurazione",
     "es": "al guardar el adaptador se reinicia con la nueva configuración inmediatamente",
-    "pl": "po zapisaniu adapter natychmiast uruchamia się ponownie z nową konfiguracją",
-    "zh-cn": "保存适配器上的适配器立即以新配置重新启动"
+    "pl": "po zapisaniu adapter natychmiast uruchamia się ponownie z nową konfiguracją"
   },
   "host": {
     "en": "Host",
@@ -24,8 +23,7 @@ systemDictionary = {
     "fr": "Host",
     "it": "Host",
     "es": "Host",
-    "pl": "Host",
-    "zh-cn": "主办"
+    "pl": "Host"
   },
   "port": {
     "en": "port",
@@ -36,8 +34,7 @@ systemDictionary = {
     "fr": "Port",
     "it": "porta",
     "es": "Puerto",
-    "pl": "Port",
-    "zh-cn": "港口"
+    "pl": "Port"
   },
   "pollInterval": {
     "en": "polling Interval",
@@ -48,8 +45,7 @@ systemDictionary = {
     "fr": "intervalle d'interrogation",
     "it": "Intervallo di polling",
     "es": "intervalo de votación",
-    "pl": "Interwał odpytywania",
-    "zh-cn": "轮询间隔"
+    "pl": "Interwał odpytywania"
   },
   "invimp": {
     "en": "inverter/undercounter request. Caution! User-password of Solarlog has to be deactivated",
@@ -60,8 +56,7 @@ systemDictionary = {
     "fr": "onduleur / demande sous comptoir. Mise en garde! Le mot de passe utilisateur de Solarlog doit être désactivé",
     "it": "richiesta inverter / sottopiano. Attenzione! La password utente di Solarlog deve essere disattivata",
     "es": "solicitud de inversor / bajo mostrador. ¡Precaución! La contraseña de usuario de Solarlog debe estar desactivada",
-    "pl": "zapytanie o falownik / podblat. Uwaga! Hasło użytkownika Solarlog musi zostać dezaktywowane",
-    "zh-cn": "逆变器/台下设备请求。警告！必须禁用Solarlog的用户密码"
+    "pl": "zapytanie o falownik / podblat. Uwaga! Hasło użytkownika Solarlog musi zostać dezaktywowane"
   },
   "Basic Settings": {
     "en": "Basic sessting:",
@@ -72,8 +67,7 @@ systemDictionary = {
     "fr": "Paramètres de base",
     "it": "impostazioni di base",
     "es": "ajustes básicos",
-    "pl": "podstawowe ustawienia",
-    "zh-cn": "基本设置"
+    "pl": "podstawowe ustawienia"
   },
   "Plant Settings": {
     "en": "plant settings",
@@ -84,8 +78,7 @@ systemDictionary = {
     "fr": "paramètres de l'usine",
     "it": "impostazioni dell'impianto",
     "es": "ajustes de la planta",
-    "pl": "ustawienia roślin",
-    "zh-cn": "工厂设置"
+    "pl": "ustawienia roślin"
   },
   "Connection settings": {
     "en": "connection settings",
@@ -97,7 +90,7 @@ systemDictionary = {
     "it": "impostazioni di connessione",
     "es": "ajustes de conexión",
     "pl": "ustawienia połączenia",
-    "zh-cn": "连接设置"
+    "zh-cn": "连接设置
   },
   "invimp settings": {
     "en": "inverter/submeter settings",
@@ -108,8 +101,7 @@ systemDictionary = {
     "fr": "paramètres onduleur / sous comptoir",
     "it": "impostazioni inverter / sottopiano",
     "es": "ajustes del inversor / debajo del mostrador",
-    "pl": "ustawienia falownika / podblatowego",
-    "zh-cn": "逆变器/台下设置"
+    "pl": "ustawienia falownika / podblatowego"
   },
   "get forecast:": {
     "en": "get forecast:",
@@ -120,9 +112,8 @@ systemDictionary = {
     "fr": "obtenir des prévisions:",
     "it": "ottenere previsioni:",
     "es": "obtener pronóstico:",
-    "pl": "uzyskaj prognozę:",
-    "zh-cn": "得到预测："
-  }
+    "pl": "uzyskaj prognozę:"
+  },
   "-90 (south) … 90 (north), deciamal separaion: point": {
     "en": "-90 (south) … 90 (north), deciamal separaion: point",
     "de": "-90 (Süden)… 90 (Norden), Deziamentrennung: Punkt",
@@ -132,8 +123,7 @@ systemDictionary = {
     "fr": "-90 (sud)… 90 (nord), séparation déciamale: point",
     "it": "-90 (sud)… 90 (nord), separaion deciamale: punto",
     "es": "-90 (sur) ... 90 (norte), separación deciamal: punto",
-    "pl": "-90 (południe)… 90 (północ), separacja deciamalna: punkt",
-    "zh-cn": "-90（向南）…90（向北），蜕膜分离：点"
+    "pl": "-90 (południe)… 90 (północ), separacja deciamalna: punkt"
   },
   " -180 (west) … 180 (east), deciamal separaion: point": {
     "en": " -180 (west) … 180 (east), deciamal separaion: point",
@@ -144,8 +134,7 @@ systemDictionary = {
     "fr": " -180 (ouest)… 180 (est), séparation déciamale: point",
     "it": " -180 (ovest)… 180 (est), separazione deciamale: punto",
     "es": " -180 (oeste) ... 180 (este), separación deciamal: punto",
-    "pl": " -180 (zachód)… 180 (wschód), separacja deciamalna: punkt",
-    "zh-cn": " -180（西）…180（东），分离性分裂：点"
+    "pl": " -180 (zachód)… 180 (wschód), separacja deciamalna: punkt"
   },
   "latitude:": {
     "en": "latitude:",
@@ -156,8 +145,7 @@ systemDictionary = {
     "fr": "latitude:",
     "it": "latitudine:",
     "es": "latitud:",
-    "pl": "szerokość:",
-    "zh-cn": "纬度："
+    "pl": "szerokość:"
   },
   "longitude:": {
     "en": "longitude:",
@@ -168,8 +156,7 @@ systemDictionary = {
     "fr": "longitude:",
     "it": "longitudine:",
     "es": "longitud:",
-    "pl": "długość geograficzna:",
-    "zh-cn": "经度："
+    "pl": "długość geograficzna:"
   },
   "location": {
     "en": "location",
@@ -180,8 +167,7 @@ systemDictionary = {
     "fr": "emplacement",
     "it": "Posizione",
     "es": "ubicación",
-    "pl": "Lokalizacja",
-    "zh-cn": "地点"
+    "pl": "Lokalizacja"
   },
   "declination": {
     "en": "declination",
@@ -192,8 +178,7 @@ systemDictionary = {
     "fr": "déclinaison",
     "it": "declinazione",
     "es": "declinación",
-    "pl": "deklinacja",
-    "zh-cn": "磁偏角"
+    "pl": "deklinacja"
   },
   "inclination:": {
     "en": "inclination:",
@@ -204,8 +189,7 @@ systemDictionary = {
     "fr": "inclination:",
     "it": "inclinazione:",
     "es": "inclinación:",
-    "pl": "nachylenie:",
-    "zh-cn": "倾角"
+    "pl": "nachylenie:"
   },
   "azimuth:": {
     "en": "azimuth:",
@@ -216,8 +200,7 @@ systemDictionary = {
     "fr": "azimut:",
     "it": "azimut:",
     "es": "azimut:",
-    "pl": "azymut:",
-    "zh-cn": "方位角"
+    "pl": "azymut:"
   },
   "0 (horizontal) … 90 (vertical)": {
     "en": "0 (horizontal) … 90 (vertical)",
@@ -228,8 +211,7 @@ systemDictionary = {
     "fr": "0 (horizontal)… 90 (vertical)",
     "it": "0 (orizzontale)… 90 (verticale)",
     "es": "0 (horizontal) ... 90 (vertical)",
-    "pl": "0 (poziomo)… 90 (pionowo)",
-    "zh-cn": "0（水平）…90（垂直）"
+    "pl": "0 (poziomo)… 90 (pionowo)"
   },
   "-180 … 180 (-180 = north, -90 = east, 0 = south, 90 = west, 180 = north)": {
     "en": "-180 … 180 (-180 = north, -90 = east, 0 = south, 90 = west, 180 = north)",
@@ -240,8 +222,7 @@ systemDictionary = {
     "fr": "-180… 180 (-180 = nord, -90 = est, 0 = sud, 90 = ouest, 180 = nord)",
     "it": "-180… 180 (-180 = nord, -90 = est, 0 = sud, 90 = ovest, 180 = nord)",
     "es": "-180… 180 (-180 = norte, -90 = este, 0 = sur, 90 = oeste, 180 = norte)",
-    "pl": "-180… 180 (-180 = północ, -90 = wschód, 0 = południe, 90 = zachód, 180 = północ)",
-    "zh-cn": "-180…180（-180 =北方，-90 =东方，0 =南方，90 =西方，180 =北方）"
+    "pl": "-180… 180 (-180 = północ, -90 = wschód, 0 = południe, 90 = zachód, 180 = północ)"
   },
   "modules power": {
     "en": "modules power",
@@ -252,8 +233,7 @@ systemDictionary = {
     "fr": "modules puissance",
     "it": "alimentazione dei moduli",
     "es": "módulos de potencia",
-    "pl": "moc modułów",
-    "zh-cn": "模块电源"
+    "pl": "moc modułów"
   },
   "installed power:": {
     "en": "installed power:",
@@ -264,8 +244,7 @@ systemDictionary = {
     "fr": "alimentation branchée:",
     "it": "potenza installata:",
     "es": "potencia instalada:",
-    "pl": "zainstalowana moc:",
-    "zh-cn": "装机功率"
+    "pl": "zainstalowana moc:"
   },
   "in kWp, deciamal separaion: point": {
     "en": "in kWp, deciamal separaion: point",
@@ -276,7 +255,6 @@ systemDictionary = {
     "fr": "en kWc, séparation déciamale: point",
     "it": "in kWp, separazione decimale: punto",
     "es": "en kWp, separación deciamal: punto",
-    "pl": "w kWp, separacja deciamalna: punkt",
-    "zh-cn": "以kWp为单位，蜕膜分离：点"
+    "pl": "w kWp, separacja deciamalna: punkt"
   }
 }
