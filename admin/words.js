@@ -278,5 +278,5 @@ systemDictionary = {
     "es": "en kWp, separación deciamal: punto",
     "pl": "w kWp, separacja deciamalna: punkt",
     "zh-cn": "以kWp为单位，蜕膜分离：点"
-  },
+  }
 }
