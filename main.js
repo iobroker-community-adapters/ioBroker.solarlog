@@ -7,12 +7,15 @@
 'use strict';
 
 const utils = require('@iobroker/adapter-core'); // Get common adapter utils
+
 let adapter;
-var schedule = require('node-schedule');
 
 var DeviceIpAdress;
 var Port;
 var https = require('http');
+var schedule = require('node-schedule');
+var request = require('request');
+
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 var statusuz = "on";
 var devicelist = [];
@@ -39,6 +42,15 @@ var battdata = [];
 var testend;
 var testj = 0;
 var testi = 0;
+
+var forecast = "false";
+var urlforecast = "https://api.forecast.solar/";
+var cmdforecast;
+var lat;
+var lon;
+var dec;
+var az;
+var kwp;
 
 let polling;
 
@@ -113,6 +125,8 @@ function main() {
   var statusuz = "on";
   numinv = 0;
   uzimp = (adapter.config.invimp).toString();
+  forecast = (adapter.config.forecast).toString();
+
   adapter.log.debug("InvImp: " + adapter.config.invimp);
   adapter.log.debug("uzimp: " + uzimp);
 
@@ -1019,8 +1033,95 @@ function setdeviceinfo() {
     adapter.setState("INV." + names[i] + ".devicetype", devicetypes[i], true);
     adapter.setState("INV." + names[i] + ".devicebrand", devicebrands[i], true);
   }
-  httpsReqDataStandard(cmd, uzimp);
+  if (forecast = "true") {
+    setforecastobjects();
+  } else {
+    httpsReqDataStandard(cmd, uzimp);
+  }
 } //End setdeviceinfo
+
+function setforecastobjects() {
+  adapter.setObjectNotExists('info.latitude', {
+    type: 'state',
+    common: {
+      name: 'latitude',
+      desc: 'plant latitude',
+      type: 'string',
+      role: "value.latitude",
+      read: true,
+      write: false,
+      unit: "°"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.longitude', {
+    type: 'state',
+    common: {
+      name: 'longitude',
+      desc: 'plant longitude',
+      type: 'string',
+      role: "value.longitude",
+      read: true,
+      write: false,
+      unit: "°"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.inclination', {
+    type: 'state',
+    common: {
+      name: 'inclination',
+      desc: 'plant inclination',
+      type: 'string',
+      role: "value.inclination",
+      read: true,
+      write: false,
+      unit: "°"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.azimuth', {
+    type: 'state',
+    common: {
+      name: 'azimuth',
+      desc: 'plant azimuth',
+      type: 'string',
+      role: "value.azimuth",
+      read: true,
+      write: false,
+      unit: "°"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.today', {
+    type: 'state',
+    common: {
+      name: 'forecastToday',
+      desc: 'forecast for todays total kWh',
+      type: 'string',
+      role: "value.forecastToday",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.tomorrow', {
+    type: 'state',
+    common: {
+      name: 'forecastTomorrow',
+      desc: 'forecast for tomorrows total kWh',
+      type: 'string',
+      role: "value.forecastTomorrow",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+
+  httpsReqDataStandard(cmd, uzimp);
+} //end setforecastobjects()
 
 function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
   // create Channel Historic
@@ -1426,6 +1527,10 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
         if (uzimp == "true") {
           adapter.log.debug("Unterzaehler importieren");
           httpsReqDataUZ(cmd, names);
+        } else {
+          if (forecast == "true") {
+            getforecastdata();
+          }
         }
       }
     });
@@ -1497,6 +1602,10 @@ function httpsReqBattData() { //Abfrage der Jahressummen Unterz�hlerwerte
       if (uzimp == "true") {
         adapter.log.debug("Unterzaehler importieren");
         httpsReqDataUZ(cmd, names);
+      } else {
+        if (forecast == "true") {
+          getforecastdata();
+        }
       }
     });
   });
@@ -1814,6 +1923,11 @@ function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
         adapter.log.warn("JSON-parse-Fehler DataSelfCons: " + e.message);
       }
 
+
+      if (forecast == "true") {
+        getforecastdata();
+      }
+
     });
   });
 
@@ -1827,6 +1941,55 @@ function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
 
   req.end();
 } //End httpsReqDataSelfCons
+
+function getforecastdata() {
+  cmdforecast = "estimate/";
+  lat = adapter.config.latitude;
+  lon = adapter.config.longitude;
+  dec = adapter.config.inclination;
+  az = adapter.config.azimuth;
+  adapter.getState("info.totalPower", function(err, obj) {
+    if (obj) {
+      kwp = obj.val / 1000;
+      var options = {
+        url: urlforecast + cmdforecast + lat + "/" + lon + "/" + dec + "/" + az + "/" + kwp,
+        json: true,
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+
+      adapter.log.debug("options: " + JSON.stringify(options));
+
+      request.get(options, function(error, response, body) {
+        if (error) {
+          adapter.log.warn("Error request forecastdata: " + error);
+        } else {
+          try {
+            adapter.log.debug("Response: " + JSON.stringify(response));
+            var watthoursday = response["body"]["result"]["watt_hours_day"];
+            adapter.log.debug("WatthoursDay = " + json.stringify(watthoursday));
+            var watthourstoday = response["body"]["result"]["watt_hours_day"][new Date().toISOString().slice(0, 10)];
+            adapter.log.debug("Vorhersage für heute, " + new Date().toISOString().slice(0, 10) + ": " + watthourstoday);
+            var tomorrow = new Date();
+            tomorrow.setDate(new Date().getDate() + 1);
+            var watthourstomorrow = response["body"]["result"]["watt_hours_day"][tomorrow.toISOString().slice(0, 10)];
+            adapter.log.debug("Vorhersage für morgen, " + tomorrow.toISOString().slice(0, 10) + ": " + watthourstomorrow);
+
+            adapter.setState('forecast.today', watthourstoday, true);
+            adapter.setState('forecast.tomorrow', watthourstomorrow, true);
+
+          } catch (e) {
+            adapter.log.warn("Getforecastdata - Error: " + e);
+          }
+
+        }
+      });
+    } else {
+      adapter.log.warn("Prognosefehler: Anlageleistung nicht verfügbar");
+    }
+  });
+} //end getforecastdata()
 
 
 // If started as allInOne/compact mode => return function to create instance

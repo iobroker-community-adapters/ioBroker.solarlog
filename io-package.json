@@ -113,7 +113,12 @@
     "port": 80,
     "pollInterval": 300000,
     "invimp": false,
-    "numinv": 0
+    "numinv": 0,
+    "forecast": false,
+    "latitude": "",
+    "longitude": "",
+    "inclination": "",
+    "azimuth": ""
   },
   "objects": [],
   "instanceObjects": [{
