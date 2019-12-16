@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "news": {
+      "1.2.0": {
+        "en": "Shows now forecast data: todays and tomorrows total kWh.",
+        "de": "Enthält nun eine Prognose: heutige und morgige Produktion in kWh."
+      },
       "1.1.0": {
         "en": "Shows detailed information on self - consumption. Imports yearly & monthly historic data.",
         "de": "Zeigt detaillierte Informationen zum Eigenverbrauch. Importiert jährliche und monatliche historische Werte"

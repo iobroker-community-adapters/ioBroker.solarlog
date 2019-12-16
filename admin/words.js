@@ -37,15 +37,15 @@ systemDictionary = {
     "pl": "Port"
   },
   "pollInterval": {
-    "en": "polling Interval",
-    "de": "Abrufintervall",
-    "ru": "Интервал опроса",
-    "pt": "Intervalo de votação",
-    "nl": "polling-interval",
-    "fr": "intervalle d'interrogation",
-    "it": "Intervallo di polling",
-    "es": "intervalo de votación",
-    "pl": "Interwał odpytywania"
+    "en": "polling Interval (ms)",
+    "de": "Abrufintervall (ms)",
+    "ru": "Интервал опроса (ms)",
+    "pt": "Intervalo de votação (ms)",
+    "nl": "polling-interval (ms)",
+    "fr": "intervalle d'interrogation (ms)",
+    "it": "Intervallo di polling (ms)",
+    "es": "intervalo de votación (ms)",
+    "pl": "Interwał odpytywania (ms)"
   },
   "invimp": {
     "en": "inverter/undercounter request. Caution! User-password of Solarlog has to be deactivated",
@@ -113,27 +113,27 @@ systemDictionary = {
     "es": "obtener pronóstico:",
     "pl": "uzyskaj prognozę:"
   },
-  "-90 (south) … 90 (north), deciamal separaion: point": {
-    "en": "-90 (south) … 90 (north), deciamal separaion: point",
-    "de": "-90 (Süden)… 90 (Norden), Deziamentrennung: Punkt",
+  "-90 (south) … 90 (north), decimal separation: point": {
+    "en": "-90 (south) … 90 (north), decimal separaion: point",
+    "de": "-90 (Süden)… 90 (Norden), Dezimaltrennung: Punkt",
     "ru": "-90 (юг)… 90 (север), десятичное разделение: точка",
-    "pt": "-90 (sul)… 90 (norte), separação deciamal: ponto",
-    "nl": "-90 (zuiden) ... 90 (noorden), deciamale scheiding: punt",
-    "fr": "-90 (sud)… 90 (nord), séparation déciamale: point",
-    "it": "-90 (sud)… 90 (nord), separaion deciamale: punto",
-    "es": "-90 (sur) ... 90 (norte), separación deciamal: punto",
-    "pl": "-90 (południe)… 90 (północ), separacja deciamalna: punkt"
+    "pt": "-90 (sul)… 90 (norte), separação decimal: ponto",
+    "nl": "-90 (zuiden) ... 90 (noorden), decimale scheiding: punt",
+    "fr": "-90 (sud)… 90 (nord), séparation décimale: point",
+    "it": "-90 (sud)… 90 (nord), separaion decimale: punto",
+    "es": "-90 (sur) ... 90 (norte), separación decimal: punto",
+    "pl": "-90 (południe)… 90 (północ), separacja decimalna: punkt"
   },
-  " -180 (west) … 180 (east), deciamal separaion: point": {
-    "en": " -180 (west) … 180 (east), deciamal separaion: point",
-    "de": " -180 (Westen)… 180 (Osten), Deziamaltrennung: Punkt",
+  " -180 (west) … 180 (east), decimal separation: point": {
+    "en": " -180 (west) … 180 (east), decimal separaion: point",
+    "de": " -180 (Westen)… 180 (Osten), Dezimaltrennung: Punkt",
     "ru": " -180 (запад)… 180 (восток), десятичное разделение: точка",
-    "pt": " -180 (oeste)… 180 (leste), separação deciamal: ponto",
-    "nl": " -180 (west) ... 180 (oost), deciamale scheiding: punt",
-    "fr": " -180 (ouest)… 180 (est), séparation déciamale: point",
-    "it": " -180 (ovest)… 180 (est), separazione deciamale: punto",
-    "es": " -180 (oeste) ... 180 (este), separación deciamal: punto",
-    "pl": " -180 (zachód)… 180 (wschód), separacja deciamalna: punkt"
+    "pt": " -180 (oeste)… 180 (leste), separação decimal: ponto",
+    "nl": " -180 (west) ... 180 (oost), decimale scheiding: punt",
+    "fr": " -180 (ouest)… 180 (est), séparation décimale: point",
+    "it": " -180 (ovest)… 180 (est), separazione decimale: punto",
+    "es": " -180 (oeste) ... 180 (este), separación decimal: punto",
+    "pl": " -180 (zachód)… 180 (wschód), separacja decimalna: punkt"
   },
   "latitude:": {
     "en": "latitude:",

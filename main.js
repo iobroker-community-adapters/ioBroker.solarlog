@@ -152,7 +152,11 @@ function main() {
   } else {
     adapter.log.debug("uzimp: " + uzimp);
     adapter.log.debug("WR nicht Importieren");
-    httpsReqDataStandard(cmd, uzimp);
+    if (forecast = "true") {
+      setforecastobjects();
+    } else {
+      httpsReqDataStandard(cmd, uzimp);
+    }
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
@@ -168,6 +172,14 @@ function main() {
     adapter.log.info('Langzeitwerte abrufen');
     httpsReqSumYearUZ(cmd, names);
   });
+
+  var jedestunde = schedule.scheduleJob('25 * * * *', function() {
+    adapter.log.warn('Forecast-Daten abrufen - später auf debug');
+    if (forecast == "true") {
+      getforecastdata();
+    }
+  });
+
   // all states changes inside the adapters namespace are subscribed
   adapter.subscribeStates('*');
 } // endMain
@@ -1002,7 +1014,7 @@ function setInvObjects() {
   adapter.setObjectNotExists('SelfCons.selfconsratioyear', {
     type: 'state',
     common: {
-      name: 'selfconsratiolastyear',
+      name: 'selfconsratioyear',
       desc: 'self consumption ratio year',
       type: 'number',
       role: "value.selfconsratioyear",
@@ -1102,7 +1114,7 @@ function setforecastobjects() {
       role: "value.forecastToday",
       read: true,
       write: false,
-      unit: "kWh"
+      unit: "Wh"
     },
     native: {}
   });
@@ -1115,12 +1127,15 @@ function setforecastobjects() {
       role: "value.forecastTomorrow",
       read: true,
       write: false,
-      unit: "kWh"
+      unit: "Wh"
     },
     native: {}
   });
+  getforecastdata();
+  setTimeout(function() {
+    httpsReqDataStandard(cmd, uzimp);
+  }, 1000);
 
-  httpsReqDataStandard(cmd, uzimp);
 } //end setforecastobjects()
 
 function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
@@ -1527,12 +1542,9 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
         if (uzimp == "true") {
           adapter.log.debug("Unterzaehler importieren");
           httpsReqDataUZ(cmd, names);
-        } else {
-          if (forecast == "true") {
-            getforecastdata();
-          }
         }
       }
+
     });
   });
 
@@ -1602,10 +1614,6 @@ function httpsReqBattData() { //Abfrage der Jahressummen Unterz�hlerwerte
       if (uzimp == "true") {
         adapter.log.debug("Unterzaehler importieren");
         httpsReqDataUZ(cmd, names);
-      } else {
-        if (forecast == "true") {
-          getforecastdata();
-        }
       }
     });
   });
@@ -1923,11 +1931,6 @@ function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
         adapter.log.warn("JSON-parse-Fehler DataSelfCons: " + e.message);
       }
 
-
-      if (forecast == "true") {
-        getforecastdata();
-      }
-
     });
   });
 
@@ -1968,16 +1971,20 @@ function getforecastdata() {
           try {
             adapter.log.debug("Response: " + JSON.stringify(response));
             var watthoursday = response["body"]["result"]["watt_hours_day"];
-            adapter.log.debug("WatthoursDay = " + json.stringify(watthoursday));
-            var watthourstoday = response["body"]["result"]["watt_hours_day"][new Date().toISOString().slice(0, 10)];
+            adapter.log.debug("WatthoursDay = " + JSON.stringify(watthoursday));
+            var watthourstoday = parseInt(response["body"]["result"]["watt_hours_day"][new Date().toISOString().slice(0, 10)]);
             adapter.log.debug("Vorhersage für heute, " + new Date().toISOString().slice(0, 10) + ": " + watthourstoday);
             var tomorrow = new Date();
             tomorrow.setDate(new Date().getDate() + 1);
-            var watthourstomorrow = response["body"]["result"]["watt_hours_day"][tomorrow.toISOString().slice(0, 10)];
+            var watthourstomorrow = parseInt(response["body"]["result"]["watt_hours_day"][tomorrow.toISOString().slice(0, 10)]);
             adapter.log.debug("Vorhersage für morgen, " + tomorrow.toISOString().slice(0, 10) + ": " + watthourstomorrow);
 
             adapter.setState('forecast.today', watthourstoday, true);
             adapter.setState('forecast.tomorrow', watthourstomorrow, true);
+            adapter.setState('info.latitude', lat, true);
+            adapter.setState('info.longitude', lon, true);
+            adapter.setState('info.inclination', dec, true);
+            adapter.setState('info.azimuth', az, true);
 
           } catch (e) {
             adapter.log.warn("Getforecastdata - Error: " + e);
