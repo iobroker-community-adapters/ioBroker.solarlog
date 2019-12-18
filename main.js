@@ -174,7 +174,7 @@ function main() {
   });
 
   var jedestunde = schedule.scheduleJob('25 * * * *', function() {
-    adapter.log.warn('Forecast-Daten abrufen - später auf debug');
+    adapter.log.debug('Forecast-Daten werden abgerufen');
     if (forecast == "true") {
       getforecastdata();
     }
