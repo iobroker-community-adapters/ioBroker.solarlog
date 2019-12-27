@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "request": "^2.87.0",
-    "@iobroker/adapter-core": "^1.0.3",
+    "@iobroker/adapter-core": "^2.0.0",
     "node-schedule": "1.3.2"
   },
   "devDependencies": {
