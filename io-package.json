@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "news": {
+      "1.2.1": {
+        "en": "'Forecast' - bug fixed (forecast request now only sumbitted if forecast is activated), dependencies updated.",
+        "de": "Bugfix: Forecast-request nur bei aktivierter Funktion, Dependencies aktualisiert."
+      },
       "1.2.0": {
         "en": "Shows now forecast data: todays and tomorrows total kWh.",
         "de": "Enthält nun eine Prognose: heutige und morgige Produktion in kWh."

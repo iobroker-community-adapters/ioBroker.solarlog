@@ -129,7 +129,7 @@ function main() {
 
   adapter.log.debug("InvImp: " + adapter.config.invimp);
   adapter.log.debug("uzimp: " + uzimp);
-
+  adapter.log.debug("Forecast: " + forecast);
   const pollingTime = adapter.config.pollInterval || 300000;
   adapter.log.debug('[INFO] Configured polling interval: ' + pollingTime);
   adapter.log.debug('[START] Started Adapter with: ' + adapter.config.host);
@@ -152,7 +152,7 @@ function main() {
   } else {
     adapter.log.debug("uzimp: " + uzimp);
     adapter.log.debug("WR nicht Importieren");
-    if (forecast = "true") {
+    if (forecast == "true") {
       setforecastobjects();
     } else {
       httpsReqDataStandard(cmd, uzimp);
@@ -1045,7 +1045,7 @@ function setdeviceinfo() {
     adapter.setState("INV." + names[i] + ".devicetype", devicetypes[i], true);
     adapter.setState("INV." + names[i] + ".devicebrand", devicebrands[i], true);
   }
-  if (forecast = "true") {
+  if (forecast == "true") {
     setforecastobjects();
   } else {
     httpsReqDataStandard(cmd, uzimp);
@@ -1053,6 +1053,7 @@ function setdeviceinfo() {
 } //End setdeviceinfo
 
 function setforecastobjects() {
+  adapter.log.debug("Lege Objekt für Forecast an");
   adapter.setObjectNotExists('info.latitude', {
     type: 'state',
     common: {
@@ -1946,6 +1947,7 @@ function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
 } //End httpsReqDataSelfCons
 
 function getforecastdata() {
+  adapter.log.debug("Rufe Forcastdaten ab");
   cmdforecast = "estimate/";
   lat = adapter.config.latitude;
   lon = adapter.config.longitude;
