@@ -18,6 +18,7 @@ var request = require('request');
 
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 var statusuz = "on";
+var solarlogtoken = "";
 var devicelist = [];
 var brandlist = [];
 var deviceclasslist = ["Wechselrichter", "Sensor", "Zähler", "Hybrid-System", "Batterie", "Intelligente Verbraucher", "Schalter", "Wärmepumpe", "Heizstab", "Ladestation"];
@@ -42,6 +43,9 @@ var battdata = [];
 var testend;
 var testj = 0;
 var testi = 0;
+
+var historic = "false";
+var histcron = "0 0 * * *"
 
 var forecast = "false";
 var urlforecast = "https://api.forecast.solar/";
@@ -126,9 +130,16 @@ function main() {
   numinv = 0;
   uzimp = (adapter.config.invimp).toString();
   forecast = (adapter.config.forecast).toString();
+  historic = (adapter.config.historic).toString();
+  histcron = (adapter.config.histmin) + " " + (adapter.config.histhour) + " * * *"
 
   adapter.log.debug("InvImp: " + adapter.config.invimp);
   adapter.log.debug("uzimp: " + uzimp);
+  if (historic == "true") {
+    adapter.log.debug("Rufe historische Daten um " + histcron + " ab");
+  } else {
+    adapter.log.debug("Historische Daten werden nicht abgerufen");
+  }
   adapter.log.debug("Forecast: " + forecast);
   const pollingTime = adapter.config.pollInterval || 300000;
   adapter.log.debug('[INFO] Configured polling interval: ' + pollingTime);
@@ -139,6 +150,7 @@ function main() {
     adapter.log.debug("WR Importieren");
 
     httpsReqDevicelist();
+
 
     testend = setInterval(test, 3000); //�berpr�fen ob alle Channels angelegt sind.
 
@@ -165,12 +177,16 @@ function main() {
 
         setTimeout(repeat, pollingTime);
       }, pollingTime)
-    } // endIf
+    }
   }
 
-  var jedentag = schedule.scheduleJob('0 2 * * *', function() {
-    adapter.log.info('Langzeitwerte abrufen');
-    httpsReqSumYearUZ(cmd, names);
+  var jedentag = schedule.scheduleJob(histcron, function() {
+    if (historic == "true") {
+      adapter.log.info('Langzeitwerte abrufen');
+      httpsReqSumYearUZ(cmd, names);
+    } else {
+      adapter.log.debug("Abruf historische Werte nich aktiviert");
+    }
   });
 
   var jedestunde = schedule.scheduleJob('25 * * * *', function() {

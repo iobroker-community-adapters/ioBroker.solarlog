@@ -73,7 +73,7 @@
       <div class="col s12">
         <ul class="tabs">
           <li class="tab col s4"><a href="#tab-main" class="translate active">Basic Settings</a></li>
-          <li class="tab col s4"><a href="#tab-plant" class="translate">Plant Settings</a></li>
+          <li class="tab col s4"><a href="#tab-advanced" class="translate">Advanced Settings</a></li>
         </ul>
       </div>
       <div id="tab-main" class="col s12 page">
@@ -107,23 +107,49 @@
             <span class="translate">pollInterval</span>
           </div>
         </div>
-        <h6 class="translate sub-title">invimp settings</h6>
-        <div class="row">
-          <div class="input-field col col s3">
-            <input class="value" id="invimp" type="checkbox" />
-            <label for="invimp" class="translate">invimp</label>
-          </div>
-        </div>
+
         <div class="row">
           <div class="col s12">
             <p class="translate">on save adapter restarts with new config immediately</p>
           </div>
         </div>
       </div>
-      <div id="tab-plant" class="col s12 page">
+      <div id="tab-advanced" class="col s12 page">
         <div class="row">
           <div class="col s6">
             <img src="solarlog.png" class="logo">
+          </div>
+        </div>
+        <div class="row">
+          <div class="input-field col s12 m6 l3">
+            <input class="value" id="invimp" type="checkbox" />
+            <label for="invimp" class="translate">invimp</label>
+          </div>
+          <!--div id="user" class="input-field col s12 m6 l3">
+            <input id="user" type="text" size="17" class="value" />
+            <label for="user" class="translate">user</label> (
+            <span class="translate">user</span>)
+          </div>
+          <div id="password" class="input-field col s12 m6 l3">
+            <input id="password" type="text" size="17" class="value" />
+            <label for="password" class="translate">password</label> (
+            <span class="translate">password</span>)
+          </div-->
+        </div>
+        <div class="row">
+          <div class="input-field col s12 m6 l3">
+            <input class="value" id="historc" type="checkbox" />
+            <label for="historic" class="translate">historic</label>
+          </div>
+          <div id="histhour" class="input-field col s12 m6 l3">
+            <input id="histhour" type="number" size="2" class="value" max="24" />
+            <label for="histhour" class="translate">histhour</label> (
+            <span class="translate">histhour</span>)
+          </div>
+          <div id="histmin" class="input-field col s12 m6 l3">
+            <input id="histmin" type="number" size="2" class="value" max="60" />
+            <label for="histmin" class="translate">histmin</label> (
+            <span class="translate">histmin</span>)
           </div>
         </div>
         <div class="row">

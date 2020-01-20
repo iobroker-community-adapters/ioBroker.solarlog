@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "news": {
+      "1.2.2": {
+        "en": " It is now possible to set the time when historic data is requested.",
+        "de": "Der Zeitpunkt für die Abfrage der historischen Werte kann nun festgelegt werden."
+      },
       "1.2.1": {
         "en": "'Forecast' - bug fixed (forecast request now only sumbitted if forecast is activated), dependencies updated.",
         "de": "Bugfix: Forecast-request nur bei aktivierter Funktion, Dependencies aktualisiert."
@@ -126,7 +130,10 @@
     "latitude": "",
     "longitude": "",
     "inclination": "",
-    "azimuth": ""
+    "azimuth": "",
+    "historic": false,
+    "histhour": 0,
+    "histmin": 0
   },
   "objects": [],
   "instanceObjects": [{

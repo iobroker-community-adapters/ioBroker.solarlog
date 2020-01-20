@@ -69,16 +69,16 @@ systemDictionary = {
     "es": "ajustes básicos",
     "pl": "podstawowe ustawienia"
   },
-  "Plant Settings": {
-    "en": "plant settings",
-    "de": "Anlageneinstellungen",
-    "ru": "заводские настройки",
-    "pt": "configurações da planta",
-    "nl": "plant instellingen",
-    "fr": "paramètres de l'usine",
-    "it": "impostazioni dell'impianto",
-    "es": "ajustes de la planta",
-    "pl": "ustawienia roślin"
+  "Advanced Settings": {
+    "en": "Advanced Settings",
+    "de": "Erweiterte Einstellungen",
+    "ru": "Расширенные настройки",
+    "pt": "Configurações avançadas",
+    "nl": "Geavanceerde instellingen",
+    "fr": "Réglages avancés",
+    "it": "Impostazioni avanzate",
+    "es": "Ajustes avanzados",
+    "pl": "Zaawansowane ustawienia"
   },
   "Connection settings": {
     "en": "connection settings",
@@ -255,5 +255,60 @@ systemDictionary = {
     "it": "in kWp, separazione decimale: punto",
     "es": "en kWp, separación deciamal: punto",
     "pl": "w kWp, separacja deciamalna: punkt"
+  },
+  "user": {
+    "en": "user",
+    "de": "Benutzer",
+    "ru": "пользователь",
+    "pt": "do utilizador",
+    "nl": "gebruiker",
+    "fr": "utilisateur",
+    "it": "utente",
+    "es": "usuario",
+    "pl": "użytkownik"
+  },
+  "password": {
+    "en": "password",
+    "de": "Passwort",
+    "ru": "пароль",
+    "pt": "senha",
+    "nl": "wachtwoord",
+    "fr": "mot de passe",
+    "it": "parola d'ordine",
+    "es": "contraseña",
+    "pl": "hasło"
+  },
+  "historic": {
+    "en": "get historic values",
+    "de": "historische Werte abrufen",
+    "ru": "получить исторические ценности",
+    "pt": "obter valores históricos",
+    "nl": "historische waarden verkrijgen",
+    "fr": "obtenir des valeurs historiques",
+    "it": "ottenere valori storici",
+    "es": "obtener valores históricos",
+    "pl": "uzyskać historyczne wartości"
+  },
+  "histhour": {
+    "en": "at hour",
+    "de": "zur Stunde",
+    "ru": "в час",
+    "pt": "às horas",
+    "nl": "op uur",
+    "fr": "à l'heure",
+    "it": "all'ora",
+    "es": "a la hora",
+    "pl": "o godzinie"
+  },
+  "minute": {
+    "en": "minute",
+    "de": "Minute",
+    "ru": "минут",
+    "pt": "minuto",
+    "nl": "minuut",
+    "fr": "minute",
+    "it": "minuto",
+    "es": "minuto",
+    "pl": "minuta"
   }
 }
