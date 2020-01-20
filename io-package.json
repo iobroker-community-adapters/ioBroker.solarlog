@@ -50,42 +50,6 @@
       "0.1.0": {
         "en": "optional port specification, readme",
         "de": "Möglichkeit Port festzulegen (optional), Readme"
-      },
-      "0.0.9": {
-        "en": "another bugfix for daysum function (format date)",
-        "de": "Weiterer Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben (Datumsformat)"
-      },
-      "0.0.8": {
-        "en": "bugfix for daysum function",
-        "de": "Feher bei der Importfunktion der Tagessummen pro Unterzaehler behoben"
-      },
-      "0.0.7": {
-        "en": "import of daily sum of production/consumption, connection status indication fixed",
-        "de": "Import der Tagessummen pro Unterzaehler, Anzeige Verbindungsstatus repariert"
-      },
-      "0.0.6": {
-        "en": "optimized evaluation of the number of inverters/meters to import",
-        "de": "Verbesserte Ermittlung der Anzahll Unterzaehler"
-      },
-      "0.0.5": {
-        "en": "better readme,correct labels in config-dialogue",
-        "de": "Erweiterte Readme, Beschriftung im config-menu korrigiert"
-      },
-      "0.0.4": {
-        "en": "better readme, error-logging refers to functions, inverter-import optional",
-        "de": "Erweiterte Readme, Error-logging nennt funktionen, Import der Daten aller Unterzähler optional möglich"
-      },
-      "0.0.3": {
-        "en": "better readme, import data of all inverters and meters",
-        "de": "Erweiterte Readme, Import der Daten aller Unterzähler"
-      },
-      "0.0.2": {
-        "en": "better readme, error - handling, better log",
-        "de": "Erweiterte Readme, Fehlerhandling, Log optimiert"
-      },
-      "0.0.1": {
-        "en": "initial adapter",
-        "de": "Initiale Version"
       }
     },
     "title": "solarlog",
