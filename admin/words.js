@@ -279,28 +279,28 @@ systemDictionary = {
     "pl": "hasło"
   },
   "historic": {
-    "en": "get historic values",
-    "de": "historische Werte abrufen",
-    "ru": "получить исторические ценности",
-    "pt": "obter valores históricos",
-    "nl": "historische waarden verkrijgen",
-    "fr": "obtenir des valeurs historiques",
-    "it": "ottenere valori storici",
-    "es": "obtener valores históricos",
-    "pl": "uzyskać historyczne wartości"
+    "en": "retrieve historic values.   time:",
+    "de": "historische Werte abrufen.    Zeit:",
+    "ru": "восстановить исторические ценности.   время:",
+    "pt": "recuperar valores históricos.   Tempo:",
+    "nl": "historische waarden ophalen.   tijd:",
+    "fr": "récupérer des valeurs historiques.   temps:",
+    "it": "recuperare valori storici.   tempo:",
+    "es": "recuperar valores históricos   hora:",
+    "pl": "odzyskać historyczne wartości.   czas:"
   },
   "histhour": {
-    "en": "at hour",
-    "de": "zur Stunde",
-    "ru": "в час",
-    "pt": "às horas",
-    "nl": "op uur",
-    "fr": "à l'heure",
-    "it": "all'ora",
-    "es": "a la hora",
-    "pl": "o godzinie"
+    "en": "hour",
+    "de": "Stunde",
+    "ru": "час",
+    "pt": "hora",
+    "nl": "uur",
+    "fr": "heure",
+    "it": "ora",
+    "es": "hora",
+    "pl": "godzina"
   },
-  "minute": {
+  "histmin": {
     "en": "minute",
     "de": "Minute",
     "ru": "минут",
