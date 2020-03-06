@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "news": {
+      "1.2.2": {
+        "en": "Readme / License update.",
+        "de": "Readme / License update."
+      },
       "1.2.2": {
         "en": " It is now possible to set the time when historic data is requested.",
         "de": "Der Zeitpunkt für die Abfrage der historischen Werte kann nun festgelegt werden."
