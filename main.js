@@ -69,7 +69,7 @@ function startAdapter(options) {
   // when adapter shuts down
   adapter.on('unload', function(callback) {
     try {
-      clearInterval(polling);
+      clearTimeout(polling);
       adapter.setState('info.connection', false, true);
       adapter.log && adapter.log.info('[END] Stopping solarlog adapter...');
       callback();
