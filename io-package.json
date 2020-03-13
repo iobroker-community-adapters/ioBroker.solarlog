@@ -1,9 +1,13 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "news": {
-      "1.2.2": {
+      "1.2.4": {
+        "en": ".npmignore and .gitignore added, small bugfix.",
+        "de": ".npmignore and .gitignore ergänzt, kleine Fehlerbehebung"
+      },
+      "1.2.3": {
         "en": "Readme / License update.",
         "de": "Readme / License update."
       },
