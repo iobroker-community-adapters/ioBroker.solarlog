@@ -56,6 +56,11 @@ var dec;
 var az;
 var kwp;
 
+var userpass = "false";
+var logindata = "";
+var token = "";
+var datatoken = "";
+
 let polling;
 
 function startAdapter(options) {
@@ -132,6 +137,9 @@ function main() {
   forecast = (adapter.config.forecast).toString();
   historic = (adapter.config.historic).toString();
   histcron = (adapter.config.histmin) + " " + (adapter.config.histhour) + " * * *"
+  userpass = "true"; //(adapter.config.userpass).toString();
+  logindata = "u=user&p=62166216" // + adapter.conifg.userpw;
+
 
   adapter.log.debug("InvImp: " + adapter.config.invimp);
   adapter.log.debug("uzimp: " + uzimp);
@@ -145,18 +153,28 @@ function main() {
   adapter.log.debug('[INFO] Configured polling interval: ' + pollingTime);
   adapter.log.debug('[START] Started Adapter with: ' + adapter.config.host);
 
+  if (userpass == "true") {
+    login();
+  }
+
   if (uzimp == "true") {
     adapter.log.debug("uzimp: " + uzimp);
     adapter.log.debug("WR Importieren");
 
-    httpsReqDevicelist();
+    setTimeout(function() {
+      logcheck(function() {
+        httpsReqDevicelist();
+      });
+    }, 500);
 
 
     testend = setInterval(test, 3000); //�berpr�fen ob alle Channels angelegt sind.
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
-        httpsReqDataStandard(cmd, uzimp);
+        logcheck(function() {
+          httpsReqDataStandard(cmd, uzimp);
+        });
         setTimeout(repeat, pollingTime);
       }, pollingTime);
     } // endIf
@@ -167,13 +185,17 @@ function main() {
     if (forecast == "true") {
       setforecastobjects();
     } else {
-      httpsReqDataStandard(cmd, uzimp);
+      logcheck(function() {
+        httpsReqDataStandard(cmd, uzimp);
+      });
     }
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
 
-        httpsReqDataStandard(cmd, uzimp);
+        logcheck(function() {
+          httpsReqDataStandard(cmd, uzimp);
+        });
 
         setTimeout(repeat, pollingTime);
       }, pollingTime)
@@ -183,7 +205,9 @@ function main() {
   var jedentag = schedule.scheduleJob(histcron, function() {
     if (historic == "true") {
       adapter.log.info('Langzeitwerte abrufen');
-      httpsReqSumYearUZ(cmd, names);
+      logcheck(function() {
+        httpsReqSumYearUZ(cmd, names);
+      });
     } else {
       adapter.log.debug("Abruf historische Werte nich aktiviert");
     }
@@ -239,16 +263,26 @@ function check(uz) {
 
 function httpsReqDevicelist() { //Füllt die Variabe devicelist mit der Geräteliste aus dem solarlog.
   var data = '{"739":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"739":null}'
+  }
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -274,7 +308,9 @@ function httpsReqDevicelist() { //Füllt die Variabe devicelist mit der Gerätel
       }
 
       adapter.log.debug("END Request: " + JSON.stringify(data));
-      httpsReqBrandlist();
+      logcheck(function() {
+        httpsReqBrandlist();
+      });
 
     });
   });
@@ -290,16 +326,26 @@ function httpsReqDevicelist() { //Füllt die Variabe devicelist mit der Gerätel
 
 function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteliste aus dem solarlog.
   var data = '{"744":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"744":null}'
+  }
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -325,7 +371,9 @@ function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteli
 
       adapter.log.debug("END Request: " + JSON.stringify(data));
 
-      httpsReqNumInv(); //Anlegen eines Channels pro Unterz�hler mit den Objekten Wert und Status
+      logcheck(function() {
+        httpsReqNumInv();
+      }); //Anlegen eines Channels pro Unterz�hler mit den Objekten Wert und Status
     });
   });
   req.on('error', function(e) { // Fehler abfangen
@@ -340,16 +388,26 @@ function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteli
 
 function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das Anlegen der Channels/Objekte aus.
   var data = '{"740":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"740":null}'
+  }
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
   adapter.log.debug("Options: " + JSON.stringify(options));
@@ -395,7 +453,10 @@ function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das 
         native: {}
       });
 
-      getuznames(numinv);
+      logcheck(function() {
+        getuznames();
+      });
+
     });
   });
   req.on('error', function(e) { // Fehler abfangen
@@ -408,28 +469,40 @@ function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das 
   req.end();
 } //end httpsReqNumInv
 
-function getuznames(numinv) { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
+function getuznames() { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
   for (var i = 0; i < (numinv - 1); i++) {
     var data1 = '{"141":{"';
     var data2 = '":{"119":null}}}';
     var datauz = data1 + i.toString() + data2;
+    if (userpass == 'true') {
+      datauz = 'token=' + datatoken + ';' + data1 + i.toString() + data2
+    }
     var options = {
       host: DeviceIpAdress,
       port: Port,
       path: cmd,
       method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-        'Content-Type': 'application/json',
-        'Accept': 'applciation/json',
-        'Content-Length': datauz.length
+        'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Content-Length': datauz.length,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Referer': 'http://' + DeviceIpAdress + '/',
+        'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+        'Accept-Encoding': 'gzip, deflate',
+        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
       }
     };
 
     adapter.log.debug("Options: " + JSON.stringify(options));
     adapter.log.debug("Data: " + JSON.stringify(datauz));
 
+
     httpsReqGetUzNames(datauz, options, i);
+
   }
 } //end getuznames
 
@@ -456,7 +529,9 @@ function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Ob
 
         if (i == (numinv - 2)) {
           adapter.log.debug("Lese Geräteinformationen");
-          getuzdeviceinfo();
+          logcheck(function() {
+            getuzdeviceinfo();
+          });
         }
 
       } catch (e) {
@@ -480,23 +555,35 @@ function getuzdeviceinfo() { //Schlaufe mit Abfrage der Information pro Unterz�
     var data1 = '{"141":{"';
     var data2 = '":{"162":null}}}';
     var datauz = data1 + i.toString() + data2;
+    if (userpass == 'true') {
+      datauz = 'token=' + datatoken + ';' + data1 + i.toString() + data2
+    }
     var options = {
       host: DeviceIpAdress,
       port: Port,
       path: cmd,
       method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-        'Content-Type': 'application/json',
-        'Accept': 'applciation/json',
-        'Content-Length': datauz.length
+        'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Content-Length': datauz.length,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Referer': 'http://' + DeviceIpAdress + '/',
+        'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+        'Accept-Encoding': 'gzip, deflate',
+        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
       }
     };
 
     adapter.log.debug("Options: " + JSON.stringify(options));
     adapter.log.debug("Data: " + JSON.stringify(datauz));
 
+
     httpsReqGetUzDeviceinfo(datauz, options, i);
+
   }
 
 } //end getuzdeviceinfo
@@ -524,7 +611,9 @@ function httpsReqGetUzDeviceinfo(datauz, options, i) { //erstellt die Channels u
         adapter.log.debug("Deviceinfos: " + deviceinfos);
 
         if (i == (numinv - 2)) {
-          defdeviceinfo();
+          logcheck(function() {
+            defdeviceinfo();
+          });
         }
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler httpsReqGetUzDeviceinfo: " + e.message);
@@ -568,21 +657,33 @@ function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   adapter.log.debug("Devicebrands: " + devicebrands);
   adapter.log.debug("Deviceclasses: " + deviceclasses);
 
-  httpsReqBattpresent();
+  logcheck(function() {
+    httpsReqBattpresent();
+  });
 } // end defdeviceinfo
 
 function httpsReqBattpresent() { //Abfrage der Batteriewerte um festzustellen, ob eine solche vorhanden ist.
   var data = '{"858":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"858":null}'
+  }
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -619,7 +720,9 @@ function httpsReqBattpresent() { //Abfrage der Batteriewerte um festzustellen, o
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler httpsReqBattpresent: " + e.message);
       }
-      setInvObjects();
+      logcheck(function() {
+        setInvObjects();
+      });
 
     });
   });
@@ -1064,7 +1167,9 @@ function setdeviceinfo() {
   if (forecast == "true") {
     setforecastobjects();
   } else {
-    httpsReqDataStandard(cmd, uzimp);
+    logcheck(function() {
+      httpsReqDataStandard(cmd, uzimp);
+    });
   }
 } //End setdeviceinfo
 
@@ -1150,7 +1255,9 @@ function setforecastobjects() {
   });
   getforecastdata();
   setTimeout(function() {
-    httpsReqDataStandard(cmd, uzimp);
+    logcheck(function() {
+      httpsReqDataStandard(cmd, uzimp);
+    });
   }, 1000);
 
 } //end setforecastobjects()
@@ -1172,10 +1279,17 @@ function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hle
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -1257,16 +1371,26 @@ function httpsReqSumYear(cmd, names) { //Abfrage der Jahressummen Unterz�hlerw
   // create Channel Historic
 
   var data = '{"878":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"878":null}'
+  };
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -1357,7 +1481,9 @@ function httpsReqSumYear(cmd, names) { //Abfrage der Jahressummen Unterz�hlerw
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler SumYear: " + e.message);
       }
-      httpsReqSumMonth(cmd, names);
+      logcheck(function() {
+        httpsReqSumMonth(cmd, names);
+      });
     });
 
   });
@@ -1378,16 +1504,26 @@ function httpsReqSumMonth(cmd, names) { //Abfrage der Jahressummen Unterz�hler
   // create Channel Historic
 
   var data = '{"877":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"877":null}'
+  };
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -1552,13 +1688,17 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
       adapter.log.debug("Batteriestatus: " + battpresent);
       if (battpresent == "true") {
         adapter.log.debug("Batterie vorhanden: " + battpresent);
-        httpsReqBattData(cmd, names);
+        logcheck(function() {
+          httpsReqBattData(cmd, names);
+        });
       } else {
         adapter.log.debug("Keine Batterie");
         adapter.log.debug("InvImp= " + uzimp);
         if (uzimp == "true") {
           adapter.log.debug("Unterzaehler importieren");
-          httpsReqDataUZ(cmd, names);
+          logcheck(function() {
+            httpsReqDataUZ(cmd, names);
+          });
         }
       }
 
@@ -1580,16 +1720,26 @@ function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
 function httpsReqBattData() { //Abfrage der Jahressummen Unterz�hlerwerte
 
   var data = '{"858":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"858":null}'
+  };
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -1630,7 +1780,9 @@ function httpsReqBattData() { //Abfrage der Jahressummen Unterz�hlerwerte
       adapter.log.debug("InvImp= " + uzimp);
       if (uzimp == "true") {
         adapter.log.debug("Unterzaehler importieren");
-        httpsReqDataUZ(cmd, names);
+        logcheck(function() {
+          httpsReqDataUZ(cmd, names);
+        });
       }
     });
   });
@@ -1648,16 +1800,26 @@ function httpsReqBattData() { //Abfrage der Jahressummen Unterz�hlerwerte
 
 function httpsReqDataUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
   var data = '{"782":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"782":null}'
+  };
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -1692,7 +1854,9 @@ function httpsReqDataUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler DataUZ: " + e.message);
       }
-      httpsReqStatUZ(cmd, names);
+      logcheck(function() {
+        httpsReqStatUZ(cmd, names);
+      });
 
     });
 
@@ -1711,16 +1875,26 @@ function httpsReqDataUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
 
 function httpsReqStatUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
   var data = '{"608":null}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"608":null}'
+  };
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -1752,7 +1926,9 @@ function httpsReqStatUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler StatUZ: " + e.message);
       }
-      httpsReqDataSumUZ(cmd, names);
+      logcheck(function() {
+        httpsReqDataSumUZ(cmd, names);
+      });
     });
 
   });
@@ -1770,16 +1946,26 @@ function httpsReqStatUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
 
 function httpsReqDataSumUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
   var data = '{"777":{"0":null}}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"777":{"0":null}}'
+  };
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -1828,7 +2014,9 @@ function httpsReqDataSumUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler DataSUZ: " + e.message);
       }
-      httpsReqDataSelfCons();
+      logcheck(function() {
+        httpsReqDataSelfCons();
+      });
     });
   });
 
@@ -1845,16 +2033,26 @@ function httpsReqDataSumUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
 
 function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
   var data = '{"778":{"0":null}}';
+  if (userpass == 'true') {
+    data = 'token=' + datatoken + ';{"778":{"0":null}}'
+  };
   var options = {
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
 
@@ -2015,6 +2213,139 @@ function getforecastdata() {
     }
   });
 } //end getforecastdata()
+
+function login() {
+  var data = logindata;
+  var options = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: "/login",
+    method: 'POST',
+    headers: {
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false'
+    }
+  };
+
+  adapter.log.debug("Options: " + JSON.stringify(options));
+  adapter.log.debug("starte LOGIN");
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    adapter.log.debug('COOKIE: ' + JSON.stringify(res.headers["set-cookie"]));
+    try {
+      token = JSON.stringify(res.headers["set-cookie"].toString());
+      datatoken = token.slice(10, -1);
+      adapter.log.debug("TOKEN: " + token);
+      adapter.log.debug("DATATOKEN: " + datatoken);
+      var bodyChunks = [];
+      var chunkLine = 0;
+    } catch (e) {
+      adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
+    }
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier können die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+    });
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body LI: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+}; //END login
+
+function logcheck(fu) {
+  if (userpass == "false") {
+    fu()
+  } else {
+    var data = ""
+    var options = {
+      host: DeviceIpAdress,
+      port: Port,
+      path: "/logcheck?",
+      method: 'POST',
+      headers: {
+        'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Content-Length': data.length,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Referer': 'http://' + DeviceIpAdress + '/',
+        'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+        'Accept-Encoding': 'gzip, deflate',
+        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
+      }
+    };
+
+    adapter.log.debug("Options: " + JSON.stringify(options));
+    adapter.log.debug("Starte Logcheck");
+
+    var req = https.request(options, function(res) {
+      adapter.log.debug("http Status: " + res.statusCode);
+      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+
+      var bodyChunks = [];
+      var chunkLine = 0;
+      res.on('data', function(chunk) {
+        chunkLine = chunkLine + 1;
+        // Hier können die einzelnen Zeilen verarbeitet werden...
+        bodyChunks.push(chunk);
+
+      }).on('end', function() {
+        var body = Buffer.concat(bodyChunks);
+        var bodystring = body.toString();
+        var bodyarray = bodystring.split(";");
+
+        adapter.log.debug("bodyraw: " + body);
+        adapter.log.debug("bodyarray0= " + bodyarray[0]);
+
+        //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
+        if (bodyarray[0] != 0) {
+          adapter.log.debug("login OK, starte Funktion");
+          fu();
+        } else {
+          adapter.log.warn("login NICHT OK, starte zuerst Login, dann Funktion");
+          login();
+          setTimeout(function() {
+            logcheck(fu);
+          }, 2000)
+        }
+      });;
+    });
+
+    req.on('error', function(e) { // Fehler abfangen
+      adapter.log.warn('ERROR: ' + e.message, "warn");
+    });
+
+    adapter.log.debug("Data to request body LC: " + data);
+    // write data to request body
+    (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
+
+    req.end();
+  }
+}; //logcheck END
 
 
 // If started as allInOne/compact mode => return function to create instance

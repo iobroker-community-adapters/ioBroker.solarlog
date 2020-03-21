@@ -310,5 +310,27 @@ systemDictionary = {
     "it": "minuto",
     "es": "minuto",
     "pl": "minuta"
+  },
+  "userpass": {
+    "en": "user password activated",
+    "de": "Benutzerpasswort aktiviert",
+    "ru": "пароль пользователя активирован",
+    "pt": "senha de usuário ativada",
+    "nl": "gebruikerswachtwoord geactiveerd",
+    "fr": "mot de passe utilisateur activé",
+    "it": "password utente attivata",
+    "es": "contraseña de usuario activada",
+    "pl": "hasło użytkownika zostało aktywowane"
+  },
+  "user password": {
+    "en": "user password",
+    "de": "Benutzer-Passwort",
+    "ru": "пользовательский пароль",
+    "pt": "senha do usuário",
+    "nl": "gebruikerswachtwoord",
+    "fr": "mot de passe de l'utilisateur",
+    "it": "password utente",
+    "es": "contraseña de usuario",
+    "pl": "hasło użytkownika"
   }
 }
