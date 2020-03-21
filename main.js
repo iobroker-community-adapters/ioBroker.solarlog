@@ -137,8 +137,8 @@ function main() {
   forecast = (adapter.config.forecast).toString();
   historic = (adapter.config.historic).toString();
   histcron = (adapter.config.histmin) + " " + (adapter.config.histhour) + " * * *"
-  userpass = "true"; //(adapter.config.userpass).toString();
-  logindata = "u=user&p=62166216" // + adapter.conifg.userpw;
+  userpass = (adapter.config.userpass).toString();
+  logindata = "u=user&p=" + adapter.conifg.userpw;
 
 
   adapter.log.debug("InvImp: " + adapter.config.invimp);
