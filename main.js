@@ -139,7 +139,7 @@ function main() {
   historic = (adapter.config.historic).toString();
   histcron = (adapter.config.histmin) + " " + (adapter.config.histhour) + " * * *"
   userpass = (adapter.config.userpass).toString();
-  logindata = "u=user&p=" + (adapter.conifg.userpw);
+  logindata = "u=user&p=" + (adapter.config.userpw);
 
 
   adapter.log.debug("InvImp: " + adapter.config.invimp);
