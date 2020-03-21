@@ -322,7 +322,7 @@ systemDictionary = {
     "es": "contraseña de usuario activada",
     "pl": "hasło użytkownika zostało aktywowane"
   },
-  "user password": {
+  "userpw": {
     "en": "user password",
     "de": "Benutzer-Passwort",
     "ru": "пользовательский пароль",
