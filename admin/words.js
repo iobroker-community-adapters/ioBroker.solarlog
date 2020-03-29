@@ -49,7 +49,7 @@ systemDictionary = {
   },
   "invimp": {
     "en": "Import of inverter and other devices data",
-    "de": "Importieren von Wechselrichter- und andere Gerätedaten",
+    "de": "Importieren von Wechselrichter- und anderen Gerätedaten",
     "ru": "Импорт данных инвертора и других устройств",
     "pt": "Inversor de importação e outros dados de dispositivos",
     "nl": "Importeer gegevens van omvormers en andere apparaten",
