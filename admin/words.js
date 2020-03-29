@@ -48,8 +48,8 @@ systemDictionary = {
     "pl": "Interwał odpytywania (ms)"
   },
   "invimp": {
-    "en": "Import inverter and other devices data",
-    "de": "Importieren Sie Wechselrichter- und andere Gerätedaten",
+    "en": "Import of inverter and other devices data",
+    "de": "Importieren von Wechselrichter- und andere Gerätedaten",
     "ru": "Импорт данных инвертора и других устройств",
     "pt": "Inversor de importação e outros dados de dispositivos",
     "nl": "Importeer gegevens van omvormers en andere apparaten",
@@ -280,7 +280,7 @@ systemDictionary = {
   },
   "historic": {
     "en": "retrieve historic values.   time:",
-    "de": "historische Werte abrufen.    Zeit:",
+    "de": "Historische Werte abrufen.    Zeit:",
     "ru": "восстановить исторические ценности.   время:",
     "pt": "recuperar valores históricos.   Tempo:",
     "nl": "historische waarden ophalen.   tijd:",
