@@ -17,8 +17,12 @@ var schedule = require('node-schedule');
 var request = require('request');
 
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
+
+var datatoken = "";
+
+var optionsdefault = {};
 var statusuz = "on";
-var solarlogtoken = "";
+
 var devicelist = [];
 var brandlist = [];
 var deviceclasslist = ["Wechselrichter", "Sensor", "Zähler", "Hybrid-System", "Batterie", "Intelligente Verbraucher", "Schalter", "Wärmepumpe", "Heizstab", "Ladestation"];
@@ -60,7 +64,28 @@ var userpass = "false";
 var userpw = "";
 var logindata = "";
 var token = "";
-var datatoken = "";
+
+var reqdata;
+var startupDataArray = [
+  '{"739":null}', // get devicelist
+  '{"744":null}', //get brandlist
+  '{"740":null}' // get number of inverters
+];
+var inverterDataArray = [];
+var pollingDataArray = [
+  '{"801":{"170":null}}', //standard data request (open JSON interface)
+  '{"858":null}', //battery data
+  '{"782":null}', //data inverters
+  '{"608":null}', //status data inverters
+  '{"777":{"0":null}}', //sum data inverters
+  '{"778":{"0":null}}' //self consuption
+];
+var historicDataArray = [
+  '{"854":null}', //historic sum data inverters
+  '{"878":null}', //historic sum data
+  '{"877":null}' //historic monthly data
+];
+
 
 let polling;
 
@@ -95,7 +120,6 @@ function startAdapter(options) {
   adapter.on('stateChange', function(id, state) {
     // Warning, state can be null if it was deleted
     adapter.log.debug('stateChange ' + id + ' ' + JSON.stringify(state));
-
     // you can use the ack flag to detect if it is status (true) or command (false)
     if (state && !state.ack) {
       adapter.log.info('ack is not set!');
@@ -140,16 +164,36 @@ function main() {
   histcron = (adapter.config.histmin) + " " + (adapter.config.histhour) + " * * *"
   userpass = (adapter.config.userpass).toString();
   logindata = "u=user&p=" + (adapter.config.userpw);
+  optionsdefault = {
+    host: DeviceIpAdress,
+    port: Port,
+    path: cmd,
+    method: 'POST',
+    headers: {
+      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'Connection': 'keep-alive',
+      //'Content-Length': data.length,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Accept-Encoding': 'gzip, deflate',
+      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
+    }
+  };
 
+  adapter.log.debug("LOVE - Ich liebe euch!"); //eingefügt auf Wunsch von meiner Tochter)
 
-  adapter.log.debug("InvImp: " + adapter.config.invimp);
+  adapter.log.info("Unterzähler - Import: " + adapter.config.invimp);
   adapter.log.debug("uzimp: " + uzimp);
   if (historic == "true") {
-    adapter.log.debug("Rufe historische Daten um " + histcron + " ab");
+    adapter.log.info("Rufe historische Daten um " + histcron + " ab");
   } else {
-    adapter.log.debug("Historische Daten werden nicht abgerufen");
+    adapter.log.info("Historische Daten werden nicht abgerufen");
   }
-  adapter.log.debug("Forecast: " + forecast);
+  adapter.log.info("Forecast - Datenabruf: " + forecast);
   const pollingTime = adapter.config.pollInterval || 300000;
   adapter.log.debug('[INFO] Configured polling interval: ' + pollingTime);
   adapter.log.debug('[START] Started Adapter with: ' + adapter.config.host);
@@ -163,9 +207,7 @@ function main() {
     adapter.log.debug("WR Importieren");
 
     setTimeout(function() {
-      logcheck(function() {
-        httpsReqDevicelist();
-      });
+      logcheckarray(startupDataArray);
     }, 500);
 
 
@@ -173,9 +215,7 @@ function main() {
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
-        logcheck(function() {
-          httpsReqDataStandard(cmd, uzimp);
-        });
+        logcheckarray(pollingDataArray);
         setTimeout(repeat, pollingTime);
       }, pollingTime);
     } // endIf
@@ -186,18 +226,12 @@ function main() {
     if (forecast == "true") {
       setforecastobjects();
     } else {
-      logcheck(function() {
-        httpsReqDataStandard(cmd, uzimp);
-      });
+      logcheckarray(['{"801":{"170":null}}']);
     }
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
-
-        logcheck(function() {
-          httpsReqDataStandard(cmd, uzimp);
-        });
-
+        logcheckarray(['{"801":{"170":null}}']);
         setTimeout(repeat, pollingTime);
       }, pollingTime)
     }
@@ -206,9 +240,7 @@ function main() {
   var jedentag = schedule.scheduleJob(histcron, function() {
     if (historic == "true") {
       adapter.log.info('Langzeitwerte abrufen');
-      logcheck(function() {
-        httpsReqSumYearUZ(cmd, names);
-      });
+      logcheckarray(historicDataArray);
     } else {
       adapter.log.debug("Abruf historische Werte nich aktiviert");
     }
@@ -243,7 +275,7 @@ function test() {
         adapter.log.warn("Nicht alle WR/Meter gefunden");
         testj++;
         if (testj > 3) {
-          adapter.log.warn("Fehler, noch nicht alle Unterz�hler angelegt");
+          adapter.log.warn("Fehler, noch nicht alle Unterzaehler angelegt");
           clearInterval(testend);
         }
       }
@@ -262,157 +294,183 @@ function check(uz) {
   });
 } // END check()
 
-function httpsReqDevicelist() { //Füllt die Variabe devicelist mit der Geräteliste aus dem solarlog.
-  var data = '{"739":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"739":null}'
-  }
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
+function login() {
+  var data = logindata;
+  var options = optionsdefault;
+  options.path = "/login";
+  options.headers['Cookie'] = 'banner_hidden=false';
+  options.headers['Content-Length'] = data.length;
 
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier können die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-      try {
-        devicelist = JSON.parse(body);
-        adapter.log.debug("Devicelist: " + devicelist);
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler devicelist: " + e.message);
-      }
-
-      adapter.log.debug("END Request: " + JSON.stringify(data));
-      logcheck(function() {
-        httpsReqBrandlist();
-      });
-
-    });
-  });
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR devicelist: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-  req.end();
-} //end httpsReqDevicelist
-
-function httpsReqBrandlist() { //Füllt die Variabe devicelist mit der Geräteliste aus dem solarlog.
-  var data = '{"744":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"744":null}'
-  }
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier können die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-      try {
-        brandlist = JSON.parse(body);
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler brandlist: " + e.message);
-      }
-
-      adapter.log.debug("END Request: " + JSON.stringify(data));
-
-      logcheck(function() {
-        httpsReqNumInv();
-      }); //Anlegen eines Channels pro Unterz�hler mit den Objekten Wert und Status
-    });
-  });
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR brandlist: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-  req.end();
-} //end httpsReqBrandlist
-
-function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das Anlegen der Channels/Objekte aus.
-  var data = '{"740":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"740":null}'
-  }
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
   adapter.log.debug("Options: " + JSON.stringify(options));
-  adapter.log.debug("Data: " + JSON.stringify(data));
+  adapter.log.debug("starte LOGIN");
+
+  var req = https.request(options, function(res) {
+    adapter.log.debug("http Status: " + res.statusCode);
+    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+    adapter.log.debug('COOKIE: ' + JSON.stringify(res.headers["set-cookie"]));
+    try {
+      token = JSON.stringify(res.headers["set-cookie"].toString());
+      datatoken = token.slice(10, -1);
+      adapter.log.debug("TOKEN: " + token);
+      adapter.log.debug("DATATOKEN: " + datatoken);
+      var bodyChunks = [];
+      var chunkLine = 0;
+    } catch (e) {
+      adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
+    }
+    res.on('data', function(chunk) {
+      chunkLine = chunkLine + 1;
+      // Hier können die einzelnen Zeilen verarbeitet werden...
+      bodyChunks.push(chunk);
+
+    }).on('end', function() {
+      var body = Buffer.concat(bodyChunks);
+    });
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body LI: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();
+}; //END login
+
+function logcheckfunc(fu) {
+  if (userpass == "false") {
+    fu()
+  } else {
+    var data = ""
+    var options = optionsdefault;
+    options.path = "/logcheck?";
+    options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
+    options.headers['Content-Length'] = data.length;
+
+    adapter.log.debug("Options: " + JSON.stringify(options));
+    adapter.log.debug("Starte Logcheck");
+
+    var req = https.request(options, function(res) {
+      adapter.log.debug("http Status: " + res.statusCode);
+      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+
+      var bodyChunks = [];
+      var chunkLine = 0;
+      res.on('data', function(chunk) {
+        chunkLine = chunkLine + 1;
+        // Hier können die einzelnen Zeilen verarbeitet werden...
+        bodyChunks.push(chunk);
+
+      }).on('end', function() {
+        var bodyl = Buffer.concat(bodyChunks);
+        var bodystring = bodyl.toString();
+        var bodyarray = bodystring.split(";");
+
+        adapter.log.debug("bodyraw: " + bodyl);
+        adapter.log.debug("bodyarray0= " + bodyarray[0]);
+
+        //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
+        if (bodyarray[0] != 0) {
+          adapter.log.debug("login OK, starte Funktion");
+          fu();
+        } else {
+          adapter.log.warn("login NICHT OK, starte zuerst Login, dann Funktion");
+          login();
+          setTimeout(function() {
+            logcheck(fu);
+          }, 2000)
+        }
+      });;
+    });
+
+    req.on('error', function(e) { // Fehler abfangen
+      adapter.log.warn('ERROR: ' + e.message, "warn");
+    });
+
+    adapter.log.debug("Data to request body LC: " + data);
+    // write data to request body
+    (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
+
+    req.end();
+  }
+}; //logcheck END
+
+function logcheckarray(reqarray) {
+  if (userpass == "false") {
+    for (var i = 0; i < reqarray.length; i++) {
+      httpsRequest(reqarray[i]);
+      adapter.log.debug("ANFRAGE: " + reqarray[i]);
+    };
+  } else {
+    var data = ""
+    var options = optionsdefault;
+    options.path = "/logcheck?";
+    options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
+    options.headers['Content-Length'] = data.length;
+
+    adapter.log.debug("Options: " + JSON.stringify(options));
+    adapter.log.debug("Starte Logcheck");
+
+    var req = https.request(options, function(res) {
+      adapter.log.debug("http Status: " + res.statusCode);
+      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+
+      var bodylChunks = [];
+      var chunkLine = 0;
+      res.on('data', function(chunk) {
+        chunkLine = chunkLine + 1;
+        // Hier können die einzelnen Zeilen verarbeitet werden...
+        bodylChunks.push(chunk);
+
+      }).on('end', function() {
+        var bodyl = Buffer.concat(bodylChunks);
+        var bodylstring = bodyl.toString();
+        var bodylarray = bodylstring.split(";");
+
+        adapter.log.debug("bodyraw: " + bodyl);
+        adapter.log.debug("bodyarray0= " + bodylarray[0]);
+
+        //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
+        if (bodylarray[0] != 0) {
+          adapter.log.debug("login OK, starte Funktion");
+          for (var i = 0; i < reqarray.length; i++) {
+            httpsRequest(reqarray[i]);
+            adapter.log.debug("ANFRAGE: " + reqarray[i]);
+          };
+        } else {
+          adapter.log.warn("login NICHT OK, starte zuerst Login, dann Funktion");
+          login();
+          setTimeout(function() {
+            logcheckarray(reqarray);
+          }, 2000)
+        }
+      });;
+    });
+
+    req.on('error', function(e) { // Fehler abfangen
+      adapter.log.warn('ERROR: ' + e.message, "warn");
+    });
+
+    adapter.log.debug("Data to request body LC: " + data);
+    // write data to request body
+    (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
+
+    req.end();
+  }
+} //end logcheckarray
+
+function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
+
+  var data = 'token=' + datatoken + ';' + reqdata;
+
+  adapter.log.debug("DATA: " + data + "DATALENGTH: " + data.length)
+  var options = optionsdefault;
+  options.path = cmd;
+  options.headers['Content-Length'] = data.length;
+
+  adapter.log.debug("OPTIONS: " + JSON.stringify(options));
 
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
@@ -425,89 +483,539 @@ function httpsReqNumInv() { //Ermittelt die Anzahl Unterz�hler und l�st das 
       bodyChunks.push(chunk);
 
     }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
+      var bodyr = Buffer.concat(bodyChunks);
       // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
+      adapter.log.debug("body: " + bodyr);
       try {
-        var dataJ = JSON.parse(body);
-
-        while (statusuz != "Err" && numinv < 100) {
-          statusuz = (dataJ[740][numinv.toString()]);
-          //if (statusuz != "OFFLINE") {
-          //   adapter.log.debug(dataJ[609][numinv.toString()]);
-          //}
-          numinv++;
-        }
+        readSolarlogData(reqdata, bodyr);
       } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler NumInv: " + e.message);
+        adapter.log.warn("JSON-parse-Fehler httpsRequest: " + e.message);
       }
-      adapter.setState('info.numinv' /*numinv*/ , numinv - 1, true);
-      adapter.log.debug("Numer of Inverters/Meters :" + (numinv - 1));
+
       adapter.log.debug("END Request: " + JSON.stringify(data));
-
-      adapter.setObjectNotExists('INV', {
-        type: 'device',
-        role: '',
-        common: {
-          name: "Inverter"
-        },
-        native: {}
-      });
-
-      logcheck(function() {
-        getuznames();
-      });
 
     });
   });
   req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR ReqNumInv: ' + e.message, "warn");
+    adapter.log.warn('ERROR httpsRequest: ' + e.message, "warn");
   });
 
   adapter.log.debug("Data to request body: " + data);
   // write data to request body
   (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
   req.end();
-} //end httpsReqNumInv
+} //end httpsRequest
 
-function getuznames() { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
+function readSolarlogData(reqdata, resdata) {
+  try {
+    adapter.log.debug("Verarbeite Daten");
+    adapter.log.debug("Datensatz: " + reqdata);
+    adapter.log.debug("Auswertedaten: " + resdata);
+
+    if (reqdata.slice(0, 6) == '{"141"') {
+      switch (reqdata.slice(-14)) {
+
+        case '{"119":null}}}': // inverter names
+          try {
+            var key = reqdata.slice(9, 10);
+            var dataJuz = (JSON.parse(resdata));
+            names.push(dataJuz[141][key][119]);
+            adapter.log.debug("Inverters: " + names);
+
+          } catch (e) {
+            adapter.log.warn("JSON-parse-Fehler inverter names: " + e.message);
+            throw e;
+          }
+          break;
+
+        case '{"162":null}}}': //inverter information
+          try {
+            var key = reqdata.slice(9, 10);
+            var dataJuz = (JSON.parse(resdata));
+            deviceinfos.push(dataJuz[141][key][162]);
+            adapter.log.debug("Inverters: " + names);
+
+            if (parseInt(key) == (numinv - 2)) {
+              defdeviceinfo();
+            }
+
+          } catch (e) {
+            adapter.log.warn("JSON-parse-Fehler inverter info: " + e.message);
+            throw e;
+          }
+          break;
+      }
+    } else {
+
+      switch (reqdata) {
+
+        case '{"801":{"170":null}}': //standard data request (open JSON interface)
+          try {
+            json = (JSON.parse(resdata));
+            adapter.log.debug("Body: " + resdata);
+            adapter.setState('info.lastSync', json[801][170][100], true);
+            adapter.setState('info.totalPower', json[801][170][116], true);
+            adapter.setState('status.pac', json[801][170][101], true);
+            adapter.setState('status.pdc', json[801][170][102], true);
+            adapter.setState('status.uac', json[801][170][103], true);
+            adapter.setState('status.udc', json[801][170][104], true);
+            adapter.setState('status.conspac', json[801][170][110], true);
+            adapter.setState('status.yieldday', json[801][170][105], true);
+            adapter.setState('status.yieldyesterday', json[801][170][106], true);
+            adapter.setState('status.yieldmonth', json[801][170][107], true);
+            adapter.setState('status.yieldyear', json[801][170][108], true);
+            adapter.setState('status.yieldtotal', json[801][170][109], true);
+            adapter.setState('status.consyieldday', json[801][170][111], true);
+            adapter.setState('status.consyieldyesterday', json[801][170][112], true);
+            adapter.setState('status.consyieldmonth', json[801][170][113], true);
+            adapter.setState('status.consyieldyear', json[801][170][114], true);
+            adapter.setState('status.consyieldtotal', json[801][170][115], true);
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in standard data request: " + e);
+            throw e;
+          }
+          break;
+
+        case '{"858":null}': //battery data
+          try {
+            battdata = JSON.parse(resdata)[858];
+            adapter.log.debug("Battdata: " + battdata);
+            if (battdevicepresent == "true" && battpresent == "true") {
+              adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
+              adapter.setState("INV." + names[battindex[0]] + '.ChargePower', battdata[2], true);
+              adapter.setState("INV." + names[battindex[0]] + '.DischargePower', battdata[3], true);
+            } else if (battdevicepresent == "false" && battpresent == "true") {
+              adapter.setState('INV.Battery.BattLevel', battdata[1], true);
+              adapter.setState('INV.Battery.ChargePower', battdata[2], true);
+              adapter.setState('INV.Battery.DischargePower', battdata[3], true);
+            } else if (battdevicepresent == "false" && battpresent == "false") {
+              adapter.log.debug("Keine Batterie vorhanden")
+            } else {
+              adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
+            }
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in battery data: " + e);
+            throw e
+          }
+          break;
+
+        case '{"782":null}': //data inverters
+          try {
+            var dataJUZ = (JSON.parse(resdata));
+            adapter.log.debug("Inv. to treat: " + names);
+            var namLeng = names.length;
+            adapter.log.debug("Anzahl Elemente: " + namLeng);
+            for (var uzi = 0; uzi < namLeng; uzi++) {
+              if (deviceclasses[uzi] != "Batterie") {
+                adapter.log.debug("INV." + names[uzi] + ": " + dataJUZ[782][uzi]);
+                adapter.setState("INV." + names[uzi] + ".PAC", dataJUZ[782][uzi], true);
+              }
+            }
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in data inverters: " + e);
+            throw e
+          }
+          break;
+
+        case '{"608":null}': //status data inverters
+          try {
+            var dataJSUZ = (JSON.parse(resdata));
+            adapter.log.debug("Inv. to treat: " + names);
+            var namLeng = names.length;
+            adapter.log.debug("Anzahl Elemente: " + namLeng);
+            for (var uzj = 0; uzj < namLeng; uzj++) {
+              adapter.log.debug("INV." + names[uzj] + ": " + dataJSUZ[608][uzj]);
+              adapter.setState("INV." + names[uzj] + ".status", dataJSUZ[608][uzj], true);
+            }
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in status data inverters: " + e);
+            throw e
+          }
+          break;
+
+        case '{"777":{"0":null}}': //sum data inverters
+          try {
+            var dataSUZ = JSON.parse(resdata)[777][0];
+            adapter.log.debug("DataSUZ: " + dataSUZ);
+            adapter.log.debug("Inv. to treat: " + names);
+            var namLeng = names.length;
+            adapter.log.debug("Anzahl Elemente: " + namLeng);
+            var d = new Date();
+            var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+            adapter.log.debug("Heute: " + heute);
+            for (var isuz = 0; isuz < 31; isuz++) {
+              var indextag = dataSUZ[isuz].indexOf(heute.toString());
+              if (indextag != -1) {
+                var indexsuz = isuz;
+                adapter.log.debug("Index Tageswerte: " + indexsuz);
+                break;
+              }
+            }
+            var daysum = dataSUZ[indexsuz][1];
+            adapter.log.debug("Tagessummen: " + daysum);
+            for (var suzi = 0; suzi < namLeng; suzi++) {
+              if (deviceclasses[suzi] != "Batterie") {
+                adapter.log.debug("INV." + names[suzi] + ": " + daysum[suzi]);
+                adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
+              }
+            }
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in sum data inverters: " + e);
+            throw e
+          }
+          break;
+
+        case '{"778":{"0":null}}': //self consumption
+          try {
+            var dataselfcons = JSON.parse(resdata)[778][0];
+            adapter.log.debug("DataSelfCons: " + dataselfcons);
+            var d = new Date();
+            var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+            adapter.log.debug("Heute: " + heute);
+            var monatheute = d.getMonth() + 1;
+            adapter.log.debug("Monat heute: " + monatheute);
+            for (var isuz = 0; isuz < 31; isuz++) {
+              var indextag = dataselfcons[isuz].indexOf(heute.toString());
+              if (indextag != -1) {
+                var indexsuz = isuz;
+                adapter.log.debug("Index Tageswerte: " + indexsuz);
+                break;
+              }
+            }
+            var dataselfconstoday = dataselfcons[indexsuz];
+            adapter.log.debug("Tageswerte SelfCons: " + dataselfconstoday);
+            var daysum = dataselfcons[indexsuz][1];
+            adapter.log.debug("Tagessumme Eigenverbrauch: " + daysum);
+            var dayratio = Math.round((daysum / json[801][170][105]) * 1000) / 10;
+
+
+            adapter.setState("SelfCons.selfconstoday", daysum, true);
+            adapter.setState("SelfCons.selfconsratiotoday", dayratio, true);
+
+            d.setDate(d.getDate() - 1);
+            var gestern = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+            adapter.log.debug("Gestern: " + gestern);
+            var monatgestern = d.getMonth() + 1;
+            adapter.log.debug("Monat gestern: " + monatgestern);
+            if (monatgestern == monatheute) {
+              for (var iscy = 0; iscy < 31; iscy++) {
+                var indexgestern = dataselfcons[iscy].indexOf(gestern.toString());
+                if (indexgestern != -1) {
+                  var indexscy = iscy;
+                  adapter.log.debug("Index Tageswerte gestern: " + indexscy);
+                  break;
+                }
+              }
+              var dataselfconsyesterday = dataselfcons[indexscy];
+              adapter.log.debug("Gesternwerte SelfCons: " + dataselfconsyesterday);
+              var daysumy = dataselfcons[indexscy][1];
+              adapter.log.debug("Gesternsumme Eigenverbrauch: " + daysumy);
+              var dayratioy = Math.round((daysumy / json[801][170][106]) * 1000) / 10;
+
+              adapter.setState("SelfCons.selfconsyesterday", daysumy, true);
+              adapter.setState("SelfCons.selfconsratioyesterday", dayratioy, true);
+              lastdaysumy = daysum;
+              lastdayratioy = dayratio;
+            } else {
+              adapter.setState("SelfCons.selfconsyesterday", lastdaysumy, true);
+              adapter.setState("SelfCons.selfconsratioyesterday", lastdayratioy, true);
+            }
+
+            if (battdevicepresent == "true" && battpresent == "true") {
+              adapter.setState("INV." + names[battindex[0]] + '.BattSelfCons', dataselfconstoday[2], true);
+              adapter.setState("INV." + names[battindex[0]] + '.BattChargeDaysum', dataselfconstoday[3], true);
+              adapter.setState("INV." + names[battindex[0]] + '.BattDischargeDaysum', dataselfconstoday[4], true);
+            } else if (battdevicepresent == "false" && battpresent == "true") {
+              adapter.setState('INV.Battery.BattSelfCons', dataselfconstoday[2], true);
+              adapter.setState('INV.Battery.BattChargeDaysum', dataselfconstoday[3], true);
+              adapter.setState('INV.Battery.BattDischargeDaysum', dataselfconstoday[4], true);
+            } else if (battdevicepresent == "false" && battpresent == "false") {
+              adapter.log.debug("Keine Batterie vorhanden");
+            } else {
+              adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
+            }
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in self consumtion: " + e);
+            throw e
+          }
+          break;
+
+        case '{"877":null}': //historic monthly data
+          try {
+            var dataMonthtot = JSON.parse(resdata)[877];
+            adapter.log.debug("DataMonth: " + dataMonthtot);
+
+            for (var iy = 0; iy < dataMonthtot.length; iy++) {
+              var year = dataMonthtot[iy][0].slice(-2);
+              var month = dataMonthtot[iy][0].slice(3, 5);
+
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", {
+                type: 'state',
+                common: {
+                  name: 'yieldmonth',
+                  desc: 'Month sum producion Wh',
+                  type: 'number',
+                  role: "value.monthsum",
+                  read: true,
+                  write: false,
+                  unit: "Wh"
+                },
+                native: {}
+              });
+
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".consmonth", {
+                type: 'state',
+                common: {
+                  name: 'consmonth',
+                  desc: 'Month sum consumption Wh',
+                  type: 'number',
+                  role: "value.monthsum",
+                  read: true,
+                  write: false,
+                  unit: "Wh"
+                },
+                native: {}
+              });
+
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", {
+                type: 'state',
+                common: {
+                  name: 'selfconsmonth',
+                  desc: 'Month sum  self consumption Wh',
+                  type: 'number',
+                  role: "value.monthsum",
+                  read: true,
+                  write: false,
+                  unit: "kWh"
+                },
+                native: {}
+              });
+            }
+
+            for (var iy = 0; iy < dataMonthtot.length; iy++) {
+              var year = dataMonthtot[iy][0].slice(-2);
+              var month = dataMonthtot[iy][0].slice(3, 5);
+
+              if (dataMonthtot[iy][1] != 0) {
+                adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", dataMonthtot[iy][1], true);
+                adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".consmonth", dataMonthtot[iy][2], true);
+                adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", dataMonthtot[iy][3], true);
+              }
+            }
+
+            adapter.setState('SelfCons.selfconsmonth', dataMonthtot[dataMonthtot.length - 1][3], true);
+            adapter.setState('SelfCons.selfconslastmonth', dataMonthtot[dataMonthtot.length - 2][3], true);
+
+            adapter.setState('SelfCons.selfconsratiomonth', Math.round((dataMonthtot[dataMonthtot.length - 1][3] * 1000) / (dataMonthtot[dataMonthtot.length - 1][2]) * 1000) / 10, true);
+            adapter.setState('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtot[dataMonthtot.length - 2][3] * 1000) / (dataMonthtot[dataMonthtot.length - 2][2]) * 1000) / 10, true);
+
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in historic monthly: " + e);
+            throw e
+          }
+          break;
+
+        case '{"878":null}': //historic sum data
+          try {
+            var dataYeartot = JSON.parse(resdata)[878];
+            adapter.log.debug("DataYear: " + dataYeartot);
+
+            for (var iy = 0; iy < dataYeartot.length; iy++) {
+              var year = dataYeartot[iy][0].slice(-2);
+
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear", {
+                type: 'state',
+                common: {
+                  name: 'yieldyear',
+                  desc: 'Year sum producion Wh',
+                  type: 'number',
+                  role: "value.yearsum",
+                  read: true,
+                  write: false,
+                  unit: "Wh"
+                },
+                native: {}
+              });
+
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".consyear", {
+                type: 'state',
+                common: {
+                  name: 'consyear',
+                  desc: 'Year sum consumption Wh',
+                  type: 'number',
+                  role: "value.yearsum",
+                  read: true,
+                  write: false,
+                  unit: "Wh"
+                },
+                native: {}
+              });
+
+              adapter.setObjectNotExists('Historic.' + "20" + year + ".selfconsyear", {
+                type: 'state',
+                common: {
+                  name: 'selfconsyear',
+                  desc: 'Year sum  self consumption Wh',
+                  type: 'number',
+                  role: "value.yearsum",
+                  read: true,
+                  write: false,
+                  unit: "kWh"
+                },
+                native: {}
+              });
+
+
+            }
+            for (var iy = 0; iy < dataYeartot.length; iy++) {
+              var year = dataYeartot[iy][0].slice(-2);
+              if (dataYeartot[iy][1] != 0) {
+                adapter.setState('Historic.' + "20" + year + ".yieldyear", dataYeartot[iy][1], true);
+                adapter.setState('Historic.' + "20" + year + ".consyear", dataYeartot[iy][2], true);
+                adapter.setState('Historic.' + "20" + year + ".selfconsyear", dataYeartot[iy][3], true);
+              }
+
+            }
+
+            adapter.setState('SelfCons.selfconsyear', dataYeartot[dataYeartot.length - 1][3], true);
+            adapter.setState('SelfCons.selfconslastyear', dataYeartot[dataYeartot.length - 2][3], true);
+
+            adapter.setState('SelfCons.selfconsratioyear', Math.round((dataYeartot[dataYeartot.length - 1][3] * 1000) / (dataYeartot[dataYeartot.length - 1][2]) * 1000) / 10, true);
+            adapter.setState('SelfCons.selfconsratiolastyear', Math.round((dataYeartot[dataYeartot.length - 2][3] * 1000) / (dataYeartot[dataYeartot.length - 2][2]) * 1000) / 10, true);
+
+
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in status historic sum data: " + e);
+            throw e
+          }
+          break;
+
+        case '{"854":null}': //historic sum data inverters
+          try {
+            var dataYear = JSON.parse(resdata)[854];
+            adapter.log.debug("DataYear: " + dataYear);
+            adapter.log.debug("Inv. to treat: " + names);
+            var namLeng = names.length;
+
+            adapter.log.debug("Anzahl Elemente: " + namLeng);
+            for (var iy = 0; iy < dataYear.length; iy++) {
+              var year = dataYear[iy][0].slice(-2);
+              for (var inu = 0; inu < names.length; inu++) {
+                if (dataYear[iy][1][inu] != 0) {
+                  adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyearINV." + names[inu], {
+                    type: 'state',
+                    common: {
+                      name: 'yieldyear',
+                      desc: 'Year sum Wh',
+                      type: 'number',
+                      role: "value.yearsum",
+                      read: true,
+                      write: false,
+                      unit: "Wh"
+                    },
+                    native: {}
+                  });
+                }
+              }
+            }
+            for (var iy = 0; iy < dataYear.length; iy++) {
+              var year = dataYear[iy][0].slice(-2);
+              for (var inu = 0; inu < names.length; inu++) {
+                if (dataYear[iy][1][inu] != 0) {
+                  adapter.setState('Historic.' + "20" + year + ".yieldyearINV." + names[inu], dataYear[iy][1][inu], true);
+                }
+              }
+            }
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in status data inverters: " + e);
+            throw e
+          }
+          break;
+
+        case '{"739":null}': //get devicelist
+          try {
+            devicelist = JSON.parse(resdata);
+            adapter.log.debug("Devicelist: " + devicelist);
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in get devicelist: " + e);
+            throw e
+          }
+          break;
+
+        case '{"744":null}': //get devicelist
+          try {
+            brandlist = JSON.parse(resdata);
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in get brandlist: " + e);
+            throw e
+          }
+          break;
+
+        case '{"740":null}': //get numinv
+          try {
+            var dataJ = JSON.parse(resdata);
+
+            while (statusuz != "Err" && numinv < 100) {
+              statusuz = (dataJ[740][numinv.toString()]);
+              numinv++;
+            }
+            adapter.setState('info.numinv' /*numinv*/ , numinv - 1, true);
+            adapter.log.debug("Numer of Inverters/Meters :" + (numinv - 1));
+
+            for (var i = 0; i < (numinv - 1); i++) {
+              var datafront = '{"141":{"';
+              var dataname = '":{"119":null}}}';
+              inverterDataArray.push(datafront + i.toString() + dataname);
+              //var data = 'token=' + datatoken + ';' + data1 + i.toString() + data2
+
+              var datainfo = '":{"162":null}}}';
+              inverterDataArray.push(datafront + i.toString() + datainfo);
+
+              /*var options = optionsdefault;
+              options.path = cmd;
+
+              adapter.log.debug("Options: " + JSON.stringify(options));
+              adapter.log.debug("Data: " + JSON.stringify(data));
+
+              httpsReqGetUzNames(data, options, i);*/
+            }
+
+            logcheckarray(inverterDataArray);
+
+          } catch (e) {
+            adapter.log.warn("readSolarlogData - Fehler in get numinv: " + e);
+            throw e
+          }
+          break;
+
+        default:
+          adapter.log.warn("Fehler: Problem bei der Solarlog-Datenauswertung, kein Datensatz erkannt");
+      }
+    }
+  } catch (e) {
+    adapter.log.warn("readSolarlogData - Fehler : " + e);
+
+  }
+
+} //end readSolarlogData
+
+/*function getuznames() { //Schlaufe mit Abfrage der Information pro Unterzaehler und auslesen der Objekterstellung
   for (var i = 0; i < (numinv - 1); i++) {
     var data1 = '{"141":{"';
     var data2 = '":{"119":null}}}';
-    var datauz = data1 + i.toString() + data2;
-    if (userpass == 'true') {
-      datauz = 'token=' + datatoken + ';' + data1 + i.toString() + data2
-    }
-    var options = {
-      host: DeviceIpAdress,
-      port: Port,
-      path: cmd,
-      method: 'POST',
-      headers: {
-        'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Accept': '*/*',
-        'Connection': 'keep-alive',
-        'Content-Length': datauz.length,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Referer': 'http://' + DeviceIpAdress + '/',
-        'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-        'Accept-Encoding': 'gzip, deflate',
-        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-      }
-    };
+    var data = 'token=' + datatoken + ';' + data1 + i.toString() + data2
+
+    var options = optionsdefault;
+    options.path = cmd;
 
     adapter.log.debug("Options: " + JSON.stringify(options));
-    adapter.log.debug("Data: " + JSON.stringify(datauz));
+    adapter.log.debug("Data: " + JSON.stringify(data));
 
-
-    httpsReqGetUzNames(datauz, options, i);
-
+    httpsReqGetUzNames(data, options, i);
   }
-} //end getuznames
+} //end getuznames*/
 
-function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
+/*function httpsReqGetUzNames(data, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
@@ -530,7 +1038,7 @@ function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Ob
 
         if (i == (numinv - 2)) {
           adapter.log.debug("Lese Geräteinformationen");
-          logcheck(function() {
+          logcheckfunc(function() {
             getuzdeviceinfo();
           });
         }
@@ -545,51 +1053,29 @@ function httpsReqGetUzNames(datauz, options, i) { //erstellt die Channels und Ob
     adapter.log.warn('ERROR httpsReqGetUzNames: ' + e.message, "warn");
   });
 
-  adapter.log.debug("Data to request body: " + datauz);
+  adapter.log.debug("Data to request body: " + data);
   // write data to request body
-  (datauz ? req.write(datauz) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
   req.end();
-} //End httpsReqGetUzNames
+} //End httpsReqGetUzNames*/
 
-function getuzdeviceinfo() { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
+/*function getuzdeviceinfo() { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
   for (var i = 0; i < (numinv - 1); i++) {
     var data1 = '{"141":{"';
     var data2 = '":{"162":null}}}';
-    var datauz = data1 + i.toString() + data2;
-    if (userpass == 'true') {
-      datauz = 'token=' + datatoken + ';' + data1 + i.toString() + data2
-    }
-    var options = {
-      host: DeviceIpAdress,
-      port: Port,
-      path: cmd,
-      method: 'POST',
-      headers: {
-        'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Accept': '*/*',
-        'Connection': 'keep-alive',
-        'Content-Length': datauz.length,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Referer': 'http://' + DeviceIpAdress + '/',
-        'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-        'Accept-Encoding': 'gzip, deflate',
-        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-      }
-    };
+    var data = 'token=' + datatoken + ';' + data1 + i.toString() + data2
+
+    var options = optionsdefault;
+    options.path = cmd;
 
     adapter.log.debug("Options: " + JSON.stringify(options));
-    adapter.log.debug("Data: " + JSON.stringify(datauz));
+    adapter.log.debug("Data: " + JSON.stringify(data));
 
-
-    httpsReqGetUzDeviceinfo(datauz, options, i);
-
+    httpsReqGetUzDeviceinfo(data, options, i);
   }
+} //end getuzdeviceinfo */
 
-} //end getuzdeviceinfo
-
-function httpsReqGetUzDeviceinfo(datauz, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
+/*function httpsReqGetUzDeviceinfo(data, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
@@ -612,9 +1098,7 @@ function httpsReqGetUzDeviceinfo(datauz, options, i) { //erstellt die Channels u
         adapter.log.debug("Deviceinfos: " + deviceinfos);
 
         if (i == (numinv - 2)) {
-          logcheck(function() {
-            defdeviceinfo();
-          });
+          defdeviceinfo();
         }
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler httpsReqGetUzDeviceinfo: " + e.message);
@@ -626,11 +1110,11 @@ function httpsReqGetUzDeviceinfo(datauz, options, i) { //erstellt die Channels u
     adapter.log.warn('ERROR httpsReqGetUzDeviceinfo: ' + e.message, "warn");
   });
 
-  adapter.log.debug("Data to request body: " + datauz);
+  adapter.log.debug("Data to request body: " + data);
   // write data to request body
-  (datauz ? req.write(datauz) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
   req.end();
-} //End httpsReqGetUzDeviceinfo
+} //End httpsReqGetUzDeviceinfo*/
 
 function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   var namLeng = names.length;
@@ -658,35 +1142,17 @@ function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   adapter.log.debug("Devicebrands: " + devicebrands);
   adapter.log.debug("Deviceclasses: " + deviceclasses);
 
-  logcheck(function() {
-    httpsReqBattpresent();
-  });
+
+  httpsReqBattpresent();
+
 } // end defdeviceinfo
 
 function httpsReqBattpresent() { //Abfrage der Batteriewerte um festzustellen, ob eine solche vorhanden ist.
-  var data = '{"858":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"858":null}'
-  }
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
+  var data = 'token=' + datatoken + ';{"858":null}';
+
+  var options = optionsdefault;
+  options.path = cmd;
+  options.headers['Content-Length'] = data.length;
 
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
@@ -721,10 +1187,8 @@ function httpsReqBattpresent() { //Abfrage der Batteriewerte um festzustellen, o
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler httpsReqBattpresent: " + e.message);
       }
-      logcheck(function() {
-        setInvObjects();
-      });
 
+      setInvObjects();
     });
   });
 
@@ -1168,9 +1632,7 @@ function setdeviceinfo() {
   if (forecast == "true") {
     setforecastobjects();
   } else {
-    logcheck(function() {
-      httpsReqDataStandard(cmd, uzimp);
-    });
+    logcheckarray(pollingDataArray);
   }
 } //End setdeviceinfo
 
@@ -1254,912 +1716,17 @@ function setforecastobjects() {
     },
     native: {}
   });
+
   getforecastdata();
+
   setTimeout(function() {
-    logcheck(function() {
-      httpsReqDataStandard(cmd, uzimp);
-    });
+    if (uzimp == "true") {
+      logcheckarray(pollingDataArray);
+    } else {
+      logcheckarray(['{"801":{"170":null}}']);
+    }
   }, 1000);
-
 } //end setforecastobjects()
-
-function httpsReqSumYearUZ(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
-  // create Channel Historic
-  adapter.setObjectNotExists('Historic', {
-    type: 'channel',
-    role: '',
-    common: {
-      name: "Historic Data"
-    },
-    native: {}
-  });
-  var data = '{"854":null}';
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        var dataYear = JSON.parse(body)[854];
-        adapter.log.debug("DataYear: " + dataYear);
-        adapter.log.debug("Inv. to treat: " + names);
-        var namLeng = names.length;
-
-        adapter.log.debug("Anzahl Elemente: " + namLeng);
-        for (var iy = 0; iy < dataYear.length; iy++) {
-          var year = dataYear[iy][0].slice(-2);
-          for (var inu = 0; inu < names.length; inu++) {
-            if (dataYear[iy][1][inu] != 0) {
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyearINV." + names[inu], {
-                type: 'state',
-                common: {
-                  name: 'yieldyear',
-                  desc: 'Year sum Wh',
-                  type: 'number',
-                  role: "value.yearsum",
-                  read: true,
-                  write: false,
-                  unit: "Wh"
-                },
-                native: {}
-              });
-            }
-          }
-        }
-        for (var iy = 0; iy < dataYear.length; iy++) {
-          var year = dataYear[iy][0].slice(-2);
-          for (var inu = 0; inu < names.length; inu++) {
-            if (dataYear[iy][1][inu] != 0) {
-              adapter.setState('Historic.' + "20" + year + ".yieldyearINV." + names[inu], dataYear[iy][1][inu], true);
-            }
-          }
-        }
-        adapter.log.debug("END");
-        httpsReqSumYear(cmd, names);
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler SumYearUZ: " + e.message);
-      }
-
-    });
-
-  });
-
-
-
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR SumYearUZ: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqSumYearUZ
-
-function httpsReqSumYear(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
-  // create Channel Historic
-
-  var data = '{"878":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"878":null}'
-  };
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        var dataYeartot = JSON.parse(body)[878];
-        adapter.log.debug("DataYear: " + dataYeartot);
-
-        for (var iy = 0; iy < dataYeartot.length; iy++) {
-          var year = dataYeartot[iy][0].slice(-2);
-
-          adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear", {
-            type: 'state',
-            common: {
-              name: 'yieldyear',
-              desc: 'Year sum producion Wh',
-              type: 'number',
-              role: "value.yearsum",
-              read: true,
-              write: false,
-              unit: "Wh"
-            },
-            native: {}
-          });
-
-          adapter.setObjectNotExists('Historic.' + "20" + year + ".consyear", {
-            type: 'state',
-            common: {
-              name: 'consyear',
-              desc: 'Year sum consumption Wh',
-              type: 'number',
-              role: "value.yearsum",
-              read: true,
-              write: false,
-              unit: "Wh"
-            },
-            native: {}
-          });
-
-          adapter.setObjectNotExists('Historic.' + "20" + year + ".selfconsyear", {
-            type: 'state',
-            common: {
-              name: 'selfconsyear',
-              desc: 'Year sum  self consumption Wh',
-              type: 'number',
-              role: "value.yearsum",
-              read: true,
-              write: false,
-              unit: "kWh"
-            },
-            native: {}
-          });
-
-
-        }
-        for (var iy = 0; iy < dataYeartot.length; iy++) {
-          var year = dataYeartot[iy][0].slice(-2);
-          if (dataYeartot[iy][1] != 0) {
-            adapter.setState('Historic.' + "20" + year + ".yieldyear", dataYeartot[iy][1], true);
-            adapter.setState('Historic.' + "20" + year + ".consyear", dataYeartot[iy][2], true);
-            adapter.setState('Historic.' + "20" + year + ".selfconsyear", dataYeartot[iy][3], true);
-          }
-
-        }
-
-        adapter.setState('SelfCons.selfconsyear', dataYeartot[dataYeartot.length - 1][3], true);
-        adapter.setState('SelfCons.selfconslastyear', dataYeartot[dataYeartot.length - 2][3], true);
-
-        adapter.setState('SelfCons.selfconsratioyear', Math.round((dataYeartot[dataYeartot.length - 1][3] * 1000) / (dataYeartot[dataYeartot.length - 1][2]) * 1000) / 10, true);
-        adapter.setState('SelfCons.selfconsratiolastyear', Math.round((dataYeartot[dataYeartot.length - 2][3] * 1000) / (dataYeartot[dataYeartot.length - 2][2]) * 1000) / 10, true);
-
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler SumYear: " + e.message);
-      }
-      logcheck(function() {
-        httpsReqSumMonth(cmd, names);
-      });
-    });
-
-  });
-
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR SumYear: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqSumYear
-
-function httpsReqSumMonth(cmd, names) { //Abfrage der Jahressummen Unterz�hlerwerte
-  // create Channel Historic
-
-  var data = '{"877":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"877":null}'
-  };
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        var dataMonthtot = JSON.parse(body)[877];
-        adapter.log.debug("DataMonth: " + dataMonthtot);
-
-        for (var iy = 0; iy < dataMonthtot.length; iy++) {
-          var year = dataMonthtot[iy][0].slice(-2);
-          var month = dataMonthtot[iy][0].slice(3, 5);
-
-          adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", {
-            type: 'state',
-            common: {
-              name: 'yieldmonth',
-              desc: 'Month sum producion Wh',
-              type: 'number',
-              role: "value.monthsum",
-              read: true,
-              write: false,
-              unit: "Wh"
-            },
-            native: {}
-          });
-
-          adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".consmonth", {
-            type: 'state',
-            common: {
-              name: 'consmonth',
-              desc: 'Month sum consumption Wh',
-              type: 'number',
-              role: "value.monthsum",
-              read: true,
-              write: false,
-              unit: "Wh"
-            },
-            native: {}
-          });
-
-          adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", {
-            type: 'state',
-            common: {
-              name: 'selfconsmonth',
-              desc: 'Month sum  self consumption Wh',
-              type: 'number',
-              role: "value.monthsum",
-              read: true,
-              write: false,
-              unit: "kWh"
-            },
-            native: {}
-          });
-
-
-        }
-        for (var iy = 0; iy < dataMonthtot.length; iy++) {
-          var year = dataMonthtot[iy][0].slice(-2);
-          var month = dataMonthtot[iy][0].slice(3, 5);
-
-          if (dataMonthtot[iy][1] != 0) {
-            adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", dataMonthtot[iy][1], true);
-            adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".consmonth", dataMonthtot[iy][2], true);
-            adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", dataMonthtot[iy][3], true);
-          }
-
-        }
-        adapter.setState('SelfCons.selfconsmonth', dataMonthtot[dataMonthtot.length - 1][3], true);
-        adapter.setState('SelfCons.selfconslastmonth', dataMonthtot[dataMonthtot.length - 2][3], true);
-
-        adapter.setState('SelfCons.selfconsratiomonth', Math.round((dataMonthtot[dataMonthtot.length - 1][3] * 1000) / (dataMonthtot[dataMonthtot.length - 1][2]) * 1000) / 10, true);
-        adapter.setState('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtot[dataMonthtot.length - 2][3] * 1000) / (dataMonthtot[dataMonthtot.length - 2][2]) * 1000) / 10, true);
-
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler SumMonth: " + e.message);
-      }
-
-    });
-
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR SumYear: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqSumMonth
-
-
-function httpsReqDataStandard(cmd) { //Abfrage der Standardwerte
-  var data = '{"801":{"170":null}}';
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-      'Content-Type': 'application/json',
-      'Accept': 'applciation/json',
-      'Content-Length': data.length
-    }
-  };
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-    }).on('end', function() {
-      adapter.log.debug("no more date in response");
-
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-
-      try {
-        json = (JSON.parse(body));
-        adapter.log.debug("Body: " + body);
-        adapter.setState('info.lastSync', json[801][170][100], true);
-        adapter.setState('info.totalPower', json[801][170][116], true);
-        adapter.setState('status.pac', json[801][170][101], true);
-        adapter.setState('status.pdc', json[801][170][102], true);
-        adapter.setState('status.uac', json[801][170][103], true);
-        adapter.setState('status.udc', json[801][170][104], true);
-        adapter.setState('status.conspac', json[801][170][110], true);
-        adapter.setState('status.yieldday', json[801][170][105], true);
-        adapter.setState('status.yieldyesterday', json[801][170][106], true);
-        adapter.setState('status.yieldmonth', json[801][170][107], true);
-        adapter.setState('status.yieldyear', json[801][170][108], true);
-        adapter.setState('status.yieldtotal', json[801][170][109], true);
-        adapter.setState('status.consyieldday', json[801][170][111], true);
-        adapter.setState('status.consyieldyesterday', json[801][170][112], true);
-        adapter.setState('status.consyieldmonth', json[801][170][113], true);
-        adapter.setState('status.consyieldyear', json[801][170][114], true);
-        adapter.setState('status.consyieldtotal', json[801][170][115], true);
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler DataStandard: " + e.message);
-      }
-      adapter.log.debug("Batteriestatus: " + battpresent);
-      if (battpresent == "true") {
-        adapter.log.debug("Batterie vorhanden: " + battpresent);
-        logcheck(function() {
-          httpsReqBattData(cmd, names);
-        });
-      } else {
-        adapter.log.debug("Keine Batterie");
-        adapter.log.debug("InvImp= " + uzimp);
-        if (uzimp == "true") {
-          adapter.log.debug("Unterzaehler importieren");
-          logcheck(function() {
-            httpsReqDataUZ(cmd, names);
-          });
-        }
-      }
-
-    });
-  });
-
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR ReqDataStandard: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-  req.end();
-
-} //end httpsReqDataStandard()
-
-function httpsReqBattData() { //Abfrage der Jahressummen Unterz�hlerwerte
-
-  var data = '{"858":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"858":null}'
-  };
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        battdata = JSON.parse(body)[858];
-        adapter.log.debug("Battdata: " + battdata);
-        if (battdevicepresent == "true" && battpresent == "true") {
-          adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
-          adapter.setState("INV." + names[battindex[0]] + '.ChargePower', battdata[2], true);
-          adapter.setState("INV." + names[battindex[0]] + '.DischargePower', battdata[3], true);
-        } else if (battdevicepresent == "false" && battpresent == "true") {
-          adapter.setState('INV.Battery.BattLevel', battdata[1], true);
-          adapter.setState('INV.Battery.ChargePower', battdata[2], true);
-          adapter.setState('INV.Battery.DischargePower', battdata[3], true);
-        } else {
-          adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
-        }
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler httpsReqBattdata: " + e.message);
-      }
-      adapter.log.debug("InvImp= " + uzimp);
-      if (uzimp == "true") {
-        adapter.log.debug("Unterzaehler importieren");
-        logcheck(function() {
-          httpsReqDataUZ(cmd, names);
-        });
-      }
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR httpsReqBattdata: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqBattData
-
-function httpsReqDataUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
-  var data = '{"782":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"782":null}'
-  };
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        var dataJUZ = (JSON.parse(body));
-        adapter.log.debug("Inv. to treat: " + names);
-        var namLeng = names.length;
-        adapter.log.debug("Anzahl Elemente: " + namLeng);
-        for (var uzi = 0; uzi < namLeng; uzi++) {
-          if (deviceclasses[uzi] != "Batterie") {
-            adapter.log.debug("INV." + names[uzi] + ": " + dataJUZ[782][uzi]);
-            adapter.setState("INV." + names[uzi] + ".PAC", dataJUZ[782][uzi], true);
-          }
-        }
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler DataUZ: " + e.message);
-      }
-      logcheck(function() {
-        httpsReqStatUZ(cmd, names);
-      });
-
-    });
-
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR ReqDataUZ: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqDataUZ
-
-function httpsReqStatUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
-  var data = '{"608":null}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"608":null}'
-  };
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-      try {
-        var dataJSUZ = (JSON.parse(body));
-        adapter.log.debug("Inv. to treat: " + names);
-        var namLeng = names.length;
-        adapter.log.debug("Anzahl Elemente: " + namLeng);
-        for (var uzj = 0; uzj < namLeng; uzj++) {
-          adapter.log.debug("INV." + names[uzj] + ": " + dataJSUZ[608][uzj]);
-          adapter.setState("INV." + names[uzj] + ".status", dataJSUZ[608][uzj], true);
-        }
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler StatUZ: " + e.message);
-      }
-      logcheck(function() {
-        httpsReqDataSumUZ(cmd, names);
-      });
-    });
-
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.debug('ERROR ReqStatUZ: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqStatUZ
-
-function httpsReqDataSumUZ(cmd, names) { //Abfrage der Unterz�hlerwerte
-  var data = '{"777":{"0":null}}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"777":{"0":null}}'
-  };
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        var dataSUZ = JSON.parse(body)[777][0];
-        adapter.log.debug("DataSUZ: " + dataSUZ);
-        adapter.log.debug("Inv. to treat: " + names);
-        var namLeng = names.length;
-        adapter.log.debug("Anzahl Elemente: " + namLeng);
-        var d = new Date();
-        var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
-        adapter.log.debug("Heute: " + heute);
-        for (var isuz = 0; isuz < 31; isuz++) {
-          var indextag = dataSUZ[isuz].indexOf(heute.toString());
-          if (indextag != -1) {
-            var indexsuz = isuz;
-            adapter.log.debug("Index Tageswerte: " + indexsuz);
-            break;
-          }
-        }
-        var daysum = dataSUZ[indexsuz][1];
-        adapter.log.debug("Tagessummen: " + daysum);
-        for (var suzi = 0; suzi < namLeng; suzi++) {
-          if (deviceclasses[suzi] != "Batterie") {
-            adapter.log.debug("INV." + names[suzi] + ": " + daysum[suzi]);
-            adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
-          }
-        }
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler DataSUZ: " + e.message);
-      }
-      logcheck(function() {
-        httpsReqDataSelfCons();
-      });
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR ReqDataUZ: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqDataSumUZ
-
-function httpsReqDataSelfCons() { //Abfrage der Unterz�hlerwerte
-  var data = '{"778":{"0":null}}';
-  if (userpass == 'true') {
-    data = 'token=' + datatoken + ';{"778":{"0":null}}'
-  };
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-    }
-  };
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        var dataselfcons = JSON.parse(body)[778][0];
-        adapter.log.debug("DataSelfCons: " + dataselfcons);
-        var d = new Date();
-        var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
-        adapter.log.debug("Heute: " + heute);
-        var monatheute = d.getMonth() + 1;
-        adapter.log.debug("Monat heute: " + monatheute);
-        for (var isuz = 0; isuz < 31; isuz++) {
-          var indextag = dataselfcons[isuz].indexOf(heute.toString());
-          if (indextag != -1) {
-            var indexsuz = isuz;
-            adapter.log.debug("Index Tageswerte: " + indexsuz);
-            break;
-          }
-        }
-        var dataselfconstoday = dataselfcons[indexsuz];
-        adapter.log.debug("Tageswerte SelfCons: " + dataselfconstoday);
-        var daysum = dataselfcons[indexsuz][1];
-        adapter.log.debug("Tagessumme Eigenverbrauch: " + daysum);
-        var dayratio = Math.round((daysum / json[801][170][105]) * 1000) / 10;
-
-
-        adapter.setState("SelfCons.selfconstoday", daysum, true);
-        adapter.setState("SelfCons.selfconsratiotoday", dayratio, true);
-
-        d.setDate(d.getDate() - 1);
-        var gestern = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
-        adapter.log.debug("Gestern: " + gestern);
-        var monatgestern = d.getMonth() + 1;
-        adapter.log.debug("Monat gestern: " + monatgestern);
-        if (monatgestern == monatheute) {
-          for (var iscy = 0; iscy < 31; iscy++) {
-            var indexgestern = dataselfcons[iscy].indexOf(gestern.toString());
-            if (indexgestern != -1) {
-              var indexscy = iscy;
-              adapter.log.debug("Index Tageswerte gestern: " + indexscy);
-              break;
-            }
-          }
-          var dataselfconsyesterday = dataselfcons[indexscy];
-          adapter.log.debug("Gesternwerte SelfCons: " + dataselfconsyesterday);
-          var daysumy = dataselfcons[indexscy][1];
-          adapter.log.debug("Gesternsumme Eigenverbrauch: " + daysumy);
-          var dayratioy = Math.round((daysumy / json[801][170][106]) * 1000) / 10;
-
-          adapter.setState("SelfCons.selfconsyesterday", daysumy, true);
-          adapter.setState("SelfCons.selfconsratioyesterday", dayratioy, true);
-          lastdaysumy = daysum;
-          lastdayratioy = dayratio;
-        } else {
-          adapter.setState("SelfCons.selfconsyesterday", lastdaysumy, true);
-          adapter.setState("SelfCons.selfconsratioyesterday", lastdayratioy, true);
-        }
-
-        if (battdevicepresent == "true" && battpresent == "true") {
-          adapter.setState("INV." + names[battindex[0]] + '.BattSelfCons', dataselfconstoday[2], true);
-          adapter.setState("INV." + names[battindex[0]] + '.BattChargeDaysum', dataselfconstoday[3], true);
-          adapter.setState("INV." + names[battindex[0]] + '.BattDischargeDaysum', dataselfconstoday[4], true);
-        } else if (battdevicepresent == "false" && battpresent == "true") {
-          adapter.setState('INV.Battery.BattSelfCons', dataselfconstoday[2], true);
-          adapter.setState('INV.Battery.BattChargeDaysum', dataselfconstoday[3], true);
-          adapter.setState('INV.Battery.BattDischargeDaysum', dataselfconstoday[4], true);
-        } else if (battdevicepresent == "false" && battpresent == "false") {
-          adapter.log.debug("Keine Batterie vorhanden");
-        } else {
-          adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
-        }
-
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler DataSelfCons: " + e.message);
-      }
-
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR DataSelfCons: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqDataSelfCons
 
 function getforecastdata() {
   adapter.log.debug("Rufe Forcastdaten ab");
@@ -2214,139 +1781,6 @@ function getforecastdata() {
     }
   });
 } //end getforecastdata()
-
-function login() {
-  var data = logindata;
-  var options = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: "/login",
-    method: 'POST',
-    headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
-      'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'banner_hidden=false'
-    }
-  };
-
-  adapter.log.debug("Options: " + JSON.stringify(options));
-  adapter.log.debug("starte LOGIN");
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-    adapter.log.debug('COOKIE: ' + JSON.stringify(res.headers["set-cookie"]));
-    try {
-      token = JSON.stringify(res.headers["set-cookie"].toString());
-      datatoken = token.slice(10, -1);
-      adapter.log.debug("TOKEN: " + token);
-      adapter.log.debug("DATATOKEN: " + datatoken);
-      var bodyChunks = [];
-      var chunkLine = 0;
-    } catch (e) {
-      adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
-    }
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier können die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body LI: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-}; //END login
-
-function logcheck(fu) {
-  if (userpass == "false") {
-    fu()
-  } else {
-    var data = ""
-    var options = {
-      host: DeviceIpAdress,
-      port: Port,
-      path: "/logcheck?",
-      method: 'POST',
-      headers: {
-        'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Accept': '*/*',
-        'Connection': 'keep-alive',
-        'Content-Length': data.length,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Referer': 'http://' + DeviceIpAdress + '/',
-        'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-        'Accept-Encoding': 'gzip, deflate',
-        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
-      }
-    };
-
-    adapter.log.debug("Options: " + JSON.stringify(options));
-    adapter.log.debug("Starte Logcheck");
-
-    var req = https.request(options, function(res) {
-      adapter.log.debug("http Status: " + res.statusCode);
-      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-
-      var bodyChunks = [];
-      var chunkLine = 0;
-      res.on('data', function(chunk) {
-        chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
-        bodyChunks.push(chunk);
-
-      }).on('end', function() {
-        var body = Buffer.concat(bodyChunks);
-        var bodystring = body.toString();
-        var bodyarray = bodystring.split(";");
-
-        adapter.log.debug("bodyraw: " + body);
-        adapter.log.debug("bodyarray0= " + bodyarray[0]);
-
-        //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
-        if (bodyarray[0] != 0) {
-          adapter.log.debug("login OK, starte Funktion");
-          fu();
-        } else {
-          adapter.log.warn("login NICHT OK, starte zuerst Login, dann Funktion");
-          login();
-          setTimeout(function() {
-            logcheck(fu);
-          }, 2000)
-        }
-      });;
-    });
-
-    req.on('error', function(e) { // Fehler abfangen
-      adapter.log.warn('ERROR: ' + e.message, "warn");
-    });
-
-    adapter.log.debug("Data to request body LC: " + data);
-    // write data to request body
-    (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-
-    req.end();
-  }
-}; //logcheck END
 
 
 // If started as allInOne/compact mode => return function to create instance

@@ -48,15 +48,15 @@ systemDictionary = {
     "pl": "Interwał odpytywania (ms)"
   },
   "invimp": {
-    "en": "inverter/undercounter request. Caution! User-password of Solarlog has to be deactivated",
-    "de": "Wechselrichter- / Unterzähleranforderung. Vorsicht! Das Benutzerpasswort von Solarlog muss deaktiviert sein",
-    "ru": "запрос инвертора / пониженной нагрузки. Внимание! Пароль пользователя Solarlog должен быть деактивирован",
-    "pt": "solicitação do inversor / sub-contador. Cuidado! A senha do usuário do Solarlog deve ser desativada",
-    "nl": "verzoek omvormer / onderbouw. Voorzichtigheid! Het gebruikerswachtwoord van Solarlog moet worden gedeactiveerd",
-    "fr": "onduleur / demande sous comptoir. Mise en garde! Le mot de passe utilisateur de Solarlog doit être désactivé",
-    "it": "richiesta inverter / sottopiano. Attenzione! La password utente di Solarlog deve essere disattivata",
-    "es": "solicitud de inversor / bajo mostrador. ¡Precaución! La contraseña de usuario de Solarlog debe estar desactivada",
-    "pl": "zapytanie o falownik / podblat. Uwaga! Hasło użytkownika Solarlog musi zostać dezaktywowane"
+    "en": "Import inverter and other devices data",
+    "de": "Importieren Sie Wechselrichter- und andere Gerätedaten",
+    "ru": "Импорт данных инвертора и других устройств",
+    "pt": "Inversor de importação e outros dados de dispositivos",
+    "nl": "Importeer gegevens van omvormers en andere apparaten",
+    "fr": "Importer les données de l'onduleur et d'autres appareils",
+    "it": "Importa i dati dell'inverter e di altri dispositivi",
+    "es": "Importar datos del inversor y otros dispositivos",
+    "pl": "Importuj dane falownika i innych urządzeń"
   },
   "Basic Settings": {
     "en": "Basic sessting:",
