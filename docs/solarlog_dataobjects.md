@@ -32,6 +32,25 @@ All these requests have benn discovered by analyzing the solarlog webinterface w
 -   {"877":null} monthly values for production (Wh), consuption (Wh) and self-consumption (kWh).
 -   {"878":null} yearly values for production (Wh), consuption (Wh) and self-consumption (kWh).
 
+### Smart energy data
+
+-   {"447":null} defined switching groups (Schaltgruppen): 100: name, 102: manual set states,
+-   {"449":null} cofiguration of switching groups: 103: switching levels
+
 ### Other data
 
 -   {"152"::null} 0-11: monthly % of total production estimated, 161: kWp installed, 162: kWh/kWp p.a. estimated.
+-   {"141":{"i":{"708/709/710"}}} list of events per device: 708: list of possible events, 709: error codes,
+    710: 100 last events (timestamps start, end, 0, eventcode, errorcode)
+
+### System information
+
+-   {"610":null} RTOS,
+-   {"611":null} CLIB,
+-   {"617":null} MAC - address,
+-   {"706":null} Serial number,
+-   {"800":{"100":null}} Model (Number),
+-   {"800":{"160":null}} Installation Date,
+-   {"801":{"101":null}} Firmware version,
+-   {"801":{"102":null}} Firmware version realease day,
+-   {"895":{"100 - 105":null}} SD-Card info, displayed [101|103|102|100] - 104(month)/105(year)
