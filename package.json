@@ -2,7 +2,7 @@
   "name": "iobroker.solarlog",
   "version": "2.0.0",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=10.0.0"
   },
   "description": "solarlog",
   "author": {
