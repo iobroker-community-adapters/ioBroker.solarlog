@@ -4,8 +4,8 @@
     "version": "2.0.0",
     "news": {
       "2.0.0": {
-        "en": "complete code redesign.",
-        "de": "Vollständiges Code - Redesign."
+        "en": "Complete code redesign to reduce traffic between adapter and solarlog. NEW: System informations (info) and solarlogs setpoint-values for year, current and all month and current day (forecast).",
+        "de": "Vollständiges Code - Redesign zur Reduktion den Anzahl Abfragen beim Solarlog. NEU: System - infos (info) und Produktions - Sollwerte aus dem Solarlog für laufenden Tag/Monat/Jahr und für jeden Monat."
       },
       "1.3.0": {
         "en": "user-login possibility added.",

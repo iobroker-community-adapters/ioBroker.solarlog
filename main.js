@@ -18,6 +18,7 @@ var request = require('request');
 
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 
+var requestcounter = 0;
 var datatoken = "";
 
 var optionsdefault = {};
@@ -66,26 +67,11 @@ var logindata = "";
 var token = "";
 
 var reqdata;
-var startupDataArray = [
-  '{"739":null}', // get devicelist
-  '{"744":null}', //get brandlist
-  '{"740":null}' // get number of inverters
-];
-var inverterDataArray = [];
-var pollingDataArray = [
-  '{"801":{"170":null}}', //standard data request (open JSON interface)
-  '{"858":null}', //battery data
-  '{"782":null}', //data inverters
-  '{"608":null}', //status data inverters
-  '{"777":{"0":null}}', //sum data inverters
-  '{"778":{"0":null}}' //self consuption
-];
-var historicDataArray = [
-  '{"854":null}', //historic sum data inverters
-  '{"878":null}', //historic sum data
-  '{"877":null}' //historic monthly data
-];
 
+var startupData = '{"152":null,"161":null,"162":null,"610":null,"611":null,"617":null,"706":null,"739":null,"740":null,"744":null,"800":{"100":null,"160":null},"801":{"101":null,"102":null},"858":null,"895":{"100":null,"101":null,"102":null,"103":null,"104":null,"105":null}}';
+var inverterDataArray = [];
+var pollingData = '{"608":null,"777":{"0":null},"778":{"0":null},"782":null,"801":{"170":null},"858":null}';
+var historicData = '{"854":null,"877":null,"878":null}';
 
 let polling;
 
@@ -170,16 +156,16 @@ function main() {
     path: cmd,
     method: 'POST',
     headers: {
-      'User-Agent': 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       'Accept': '*/*',
-      'Connection': 'keep-alive',
-      //'Content-Length': data.length,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
       'Accept-Encoding': 'gzip, deflate',
       //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Connection': 'keep-alive',
+      //'Content-Length': data.length,
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Referer': 'http://' + DeviceIpAdress + '/',
+      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+      'X-Requested-With': 'XMLHttpRequest',
       'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
     }
   };
@@ -189,7 +175,7 @@ function main() {
   adapter.log.info("Unterzähler - Import: " + adapter.config.invimp);
   adapter.log.debug("uzimp: " + uzimp);
   if (historic == "true") {
-    adapter.log.info("Rufe historische Daten um " + histcron + " ab");
+    adapter.log.info("Rufe historische Daten um " + adapter.config.histhour + ":" + adapter.config.histmin + " ab");
   } else {
     adapter.log.info("Historische Daten werden nicht abgerufen");
   }
@@ -207,15 +193,15 @@ function main() {
     adapter.log.debug("WR Importieren");
 
     setTimeout(function() {
-      logcheckarray(startupDataArray);
+      logcheck(startupData);
     }, 500);
 
 
-    testend = setInterval(test, 3000); //�berpr�fen ob alle Channels angelegt sind.
+    testend = setInterval(test, 2000); //�berpr�fen ob alle Channels angelegt sind.
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
-        logcheckarray(pollingDataArray);
+        logcheck(pollingData);
         setTimeout(repeat, pollingTime);
       }, pollingTime);
     } // endIf
@@ -226,12 +212,12 @@ function main() {
     if (forecast == "true") {
       setforecastobjects();
     } else {
-      logcheckarray(['{"801":{"170":null}}']);
+      logcheck('{"801":{"170":null}}');
     }
 
     if (!polling) {
       polling = setTimeout(function repeat() { // poll states every [30] seconds
-        logcheckarray(['{"801":{"170":null}}']);
+        logcheck('{"801":{"170":null}}');
         setTimeout(repeat, pollingTime);
       }, pollingTime)
     }
@@ -240,7 +226,7 @@ function main() {
   var jedentag = schedule.scheduleJob(histcron, function() {
     if (historic == "true") {
       adapter.log.info('Langzeitwerte abrufen');
-      logcheckarray(historicDataArray);
+      logcheck(historicData);
     } else {
       adapter.log.debug("Abruf historische Werte nich aktiviert");
     }
@@ -267,12 +253,12 @@ function test() {
       adapter.log.debug("Anzahl positiv: " + testi);
       if (testi == numbinv) {
         clearInterval(testend);
-        adapter.log.info("Alle WR/Meter gefunden");
+        adapter.log.info("Alle WR/Zaehler gefunden");
         adapter.log.debug("Names: " + names);
         setdeviceinfo(names);
       } else {
         testi = 0;
-        adapter.log.warn("Nicht alle WR/Meter gefunden");
+        adapter.log.warn("Nicht alle WR/Zaehler gefunden");
         testj++;
         if (testj > 3) {
           adapter.log.warn("Fehler, noch nicht alle Unterzaehler angelegt");
@@ -308,6 +294,7 @@ function login() {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
     adapter.log.debug('COOKIE: ' + JSON.stringify(res.headers["set-cookie"]));
+
     try {
       token = JSON.stringify(res.headers["set-cookie"].toString());
       datatoken = token.slice(10, -1);
@@ -321,10 +308,17 @@ function login() {
     res.on('data', function(chunk) {
       chunkLine = chunkLine + 1;
       // Hier können die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
+      try {
+        bodyChunks.push(chunk);
+      } catch (e) {
+        adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
+      }
     }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
+      try {
+        var body = Buffer.concat(bodyChunks);
+      } catch (e) {
+        adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
+      }
     });
   });
 
@@ -339,9 +333,9 @@ function login() {
   req.end();
 }; //END login
 
-function logcheckfunc(fu) {
+function logcheck(datalc) {
   if (userpass == "false") {
-    fu()
+    httpsRequest(datalc);
   } else {
     var data = ""
     var options = optionsdefault;
@@ -373,13 +367,13 @@ function logcheckfunc(fu) {
 
         //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
         if (bodyarray[0] != 0) {
-          adapter.log.debug("login OK, starte Funktion");
-          fu();
+          adapter.log.debug("login OK, starte Request");
+          httpsRequest(datalc);
         } else {
-          adapter.log.warn("login NICHT OK, starte zuerst Login, dann Funktion");
+          adapter.log.warn("login NICHT OK, starte zuerst Login, danach Request");
           login();
           setTimeout(function() {
-            logcheck(fu);
+            logcheck(datalc);
           }, 2000)
         }
       });;
@@ -397,73 +391,9 @@ function logcheckfunc(fu) {
   }
 }; //logcheck END
 
-function logcheckarray(reqarray) {
-  if (userpass == "false") {
-    for (var i = 0; i < reqarray.length; i++) {
-      httpsRequest(reqarray[i]);
-      adapter.log.debug("ANFRAGE: " + reqarray[i]);
-    };
-  } else {
-    var data = ""
-    var options = optionsdefault;
-    options.path = "/logcheck?";
-    options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
-    options.headers['Content-Length'] = data.length;
-
-    adapter.log.debug("Options: " + JSON.stringify(options));
-    adapter.log.debug("Starte Logcheck");
-
-    var req = https.request(options, function(res) {
-      adapter.log.debug("http Status: " + res.statusCode);
-      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-
-      var bodylChunks = [];
-      var chunkLine = 0;
-      res.on('data', function(chunk) {
-        chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
-        bodylChunks.push(chunk);
-
-      }).on('end', function() {
-        var bodyl = Buffer.concat(bodylChunks);
-        var bodylstring = bodyl.toString();
-        var bodylarray = bodylstring.split(";");
-
-        adapter.log.debug("bodyraw: " + bodyl);
-        adapter.log.debug("bodyarray0= " + bodylarray[0]);
-
-        //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
-        if (bodylarray[0] != 0) {
-          adapter.log.debug("login OK, starte Funktion");
-          for (var i = 0; i < reqarray.length; i++) {
-            httpsRequest(reqarray[i]);
-            adapter.log.debug("ANFRAGE: " + reqarray[i]);
-          };
-        } else {
-          adapter.log.warn("login NICHT OK, starte zuerst Login, dann Funktion");
-          login();
-          setTimeout(function() {
-            logcheckarray(reqarray);
-          }, 2000)
-        }
-      });;
-    });
-
-    req.on('error', function(e) { // Fehler abfangen
-      adapter.log.warn('ERROR: ' + e.message, "warn");
-    });
-
-    adapter.log.debug("Data to request body LC: " + data);
-    // write data to request body
-    (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-
-    req.end();
-  }
-} //end logcheckarray
-
 function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
 
-  var data = 'token=' + datatoken + ';' + reqdata;
+  var data = 'token=' + datatoken + ';preval=none;' + reqdata;
 
   adapter.log.debug("DATA: " + data + "DATALENGTH: " + data.length)
   var options = optionsdefault;
@@ -487,7 +417,19 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
       // ...und/oder das Gesamtergebnis (body).
       adapter.log.debug("body: " + bodyr);
       try {
-        readSolarlogData(reqdata, bodyr);
+        if (res.statusCode == 200) {
+          requestcounter = 0;
+          readSolarlogData(reqdata, bodyr);
+        } else {
+          if (requestcounter > 3) {
+            adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
+            restartAdapter();
+          } else {
+            adapter.log.info('Fehler beim http-request: Statuscode:' + res.statusCode + '. Führe Request erneut aus.')
+            requestcounter++;
+            httpsRequest(reqdata);
+          }
+        }
       } catch (e) {
         adapter.log.warn("JSON-parse-Fehler httpsRequest: " + e.message);
       }
@@ -512,628 +454,565 @@ function readSolarlogData(reqdata, resdata) {
     adapter.log.debug("Datensatz: " + reqdata);
     adapter.log.debug("Auswertedaten: " + resdata);
 
-    if (reqdata.slice(0, 6) == '{"141"') {
-      switch (reqdata.slice(-14)) {
+    switch (reqdata.slice(0, 6)) {
+      case '{"141"': //inverter names and deviceinfo-code
+        try {
+          var dataJuzna = JSON.parse(resdata)[141];
 
-        case '{"119":null}}}': // inverter names
-          try {
-            var key = reqdata.slice(9, 10);
-            var dataJuz = (JSON.parse(resdata));
-            names.push(dataJuz[141][key][119]);
+          for (var y = 0; y < (numinv - 1); y++) {
+            names.push(dataJuzna[y][119]);
             adapter.log.debug("Inverters: " + names);
-
-          } catch (e) {
-            adapter.log.warn("JSON-parse-Fehler inverter names: " + e.message);
-            throw e;
+            deviceinfos.push(dataJuzna[y][162]);
+            adapter.log.debug("Deviceinfos: " + deviceinfos);
           }
-          break;
 
-        case '{"162":null}}}': //inverter information
-          try {
-            var key = reqdata.slice(9, 10);
-            var dataJuz = (JSON.parse(resdata));
-            deviceinfos.push(dataJuz[141][key][162]);
-            adapter.log.debug("Inverters: " + names);
+          defdeviceinfo();
 
-            if (parseInt(key) == (numinv - 2)) {
-              defdeviceinfo();
+        } catch (e) {
+          adapter.log.warn("JSON-parse-Fehler inverter names/deviceinfo: " + e.message);
+          throw e;
+        }
+
+        break;
+
+      case '{"152"': //var startupData = '{"152":null,"161":null,"162":null,"706":null,"739":null,"740":null,"744":null,"610":null,"611":null,"617":null,"800":{"100":null,"160":null},"801":{"101":null,"102":null},"858":null,"895":{"100":null,"101":null,"102":null,"103":null,"104":null,"105":null}}';
+
+        try { //"739":null,"744":null
+          devicelist = JSON.parse(resdata)[739];
+          adapter.log.debug("Devicelist: " + devicelist);
+          brandlist = JSON.parse(resdata)[744];
+          adapter.log.debug("Brandlist: " + brandlist);
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in get devicelist/brandlist: " + e);
+          throw e
+        }
+
+        try { //"740":null
+          var dataJ = JSON.parse(resdata)[740];
+          adapter.log.debug("List of Inverters: " + dataJ);
+          while (statusuz != "Err" && numinv < 100) {
+            statusuz = (dataJ[numinv.toString()]);
+            numinv++;
+          }
+          adapter.setState('info.numinv' /*numinv*/ , numinv - 1, true);
+          adapter.log.debug("Numer of inverters/meters :" + (numinv - 1));
+
+
+          for (var i = 0; i < (numinv - 1); i++) {
+            var datafront = '{"141":{';
+            var dataelements = '":{"119":null,"162":null}';
+            inverterDataArray.push('"' + i.toString() + dataelements);
+          }
+
+          var inverterData = datafront + inverterDataArray.toString() + '}}';
+
+          logcheck(inverterData);
+
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in get numinv: " + e);
+          throw e
+        }
+
+        try { //"610":null,"611":null,"617":null,"706":null,"800":{"100":null,"160":null},"801":{"101":null,"102":null},"858":null,"895":{"100":null,"101":null,"102":null,"103":null,"104":null,"105":null}
+
+          adapter.setState('info.RTOS', JSON.parse(resdata)[610], true);
+          adapter.setState('info.CLIB', JSON.parse(resdata)[611], true);
+          adapter.setState('info.MAC', JSON.parse(resdata)[617], true);
+          adapter.setState('info.SN', JSON.parse(resdata)[706], true);
+          adapter.setState('info.Model', JSON.parse(resdata)[800][100], true);
+          adapter.setState('info.InstDate', JSON.parse(resdata)[800][160], true);
+          adapter.setState('info.FW', JSON.parse(resdata)[801][101], true);
+          adapter.setState('info.FWrelD', JSON.parse(resdata)[801][102], true);
+          var sdinfo = JSON.parse(resdata)[895];
+          adapter.setState('info.SD', '[' + sdinfo[101] + '|' + sdinfo[103] + '|' + sdinfo[102] + '|' + sdinfo[100] + '] - ' + sdinfo[104] + '/' + sdinfo[105], true);
+
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in system information: " + e);
+          throw e
+        }
+
+        try { //"152":null,"161":null,"162":null
+
+          var effizienz = JSON.parse(resdata)[162];
+          var leistung = JSON.parse(resdata)[161];
+          var setpointY = effizienz * (leistung / 1000);
+
+          adapter.setState('forecast.setpointYear', setpointY, true);
+
+          adapter.setState('forecast.setpointMonth.01', (JSON.parse(resdata)[152][0] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.02', (JSON.parse(resdata)[152][1] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.03', (JSON.parse(resdata)[152][2] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.04', (JSON.parse(resdata)[152][3] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.05', (JSON.parse(resdata)[152][4] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.06', (JSON.parse(resdata)[152][5] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.07', (JSON.parse(resdata)[152][6] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.08', (JSON.parse(resdata)[152][7] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.09', (JSON.parse(resdata)[152][8] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.10', (JSON.parse(resdata)[152][9] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.11', (JSON.parse(resdata)[152][10] / 100) * setpointY, true);
+          adapter.setState('forecast.setpointMonth.12', (JSON.parse(resdata)[152][11] / 100) * setpointY, true);
+
+          var ds = new Date();
+          var m = ds.getMonth();
+          adapter.setState('forecast.setpointCurrMonth', ((JSON.parse(resdata)[152][m] / 100) * setpointY), true);
+          adapter.setState('forecast.setpointToday', ((JSON.parse(resdata)[152][m] / 100) * setpointY) / 30, true);
+
+
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in setpoint: " + e);
+          throw e
+        }
+
+
+
+        try { //"858":null
+          battdata = JSON.parse(resdata)[858];
+          adapter.log.debug("Battdata: " + battdata);
+          if (battdata.length > 0) {
+            battpresent = "true";
+            adapter.log.debug("Batterie vorhanden, lege Objekte an.");
+            adapter.log.debug("Batteriestatus: " + battpresent);
+
+          } else {
+            adapter.log.debug("Keine Batterie vorhanden.");
+            adapter.log.debug("Batteriestatus: " + battpresent);
+          }
+
+          adapter.log.debug("END");
+
+        } catch (e) {
+          adapter.log.warn("JSON-parse-Fehler Battpresent: " + e.message);
+          throw e
+        }
+        setInvObjects();
+        break;
+
+      case '{"608"': //var pollingData = '{"608":null,"777":{"0":null},"778":{"0":null},"782":null,"801":{"170":null},"858":null}';
+
+        try { //"608":null
+          var dataJSUZ = (JSON.parse(resdata)[608]);
+          adapter.log.debug("Inv. to treat: " + names);
+          var namLeng = names.length;
+          adapter.log.debug("Anzahl Elemente: " + namLeng);
+          for (var uzj = 0; uzj < namLeng; uzj++) {
+            adapter.log.debug("INV." + names[uzj] + ": " + dataJSUZ[uzj]);
+            adapter.setState("INV." + names[uzj] + ".status", dataJSUZ[uzj], true);
+          }
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in status data inverters: " + e);
+          throw e
+        }
+
+        try { //"782":null
+          var dataJUZn = (JSON.parse(resdata)[782]);
+          adapter.log.debug("Inv. to treat: " + names);
+          var namLeng = names.length;
+          adapter.log.debug("Anzahl Elemente: " + namLeng);
+          for (var uzi = 0; uzi < namLeng; uzi++) {
+            if (deviceclasses[uzi] != "Batterie") {
+              adapter.log.debug("INV." + names[uzi] + ": " + dataJUZn[uzi]);
+              adapter.setState("INV." + names[uzi] + ".PAC", dataJUZn[uzi], true);
             }
-
-          } catch (e) {
-            adapter.log.warn("JSON-parse-Fehler inverter info: " + e.message);
-            throw e;
           }
-          break;
-      }
-    } else {
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in data inverters: " + e);
+          throw e
+        }
 
-      switch (reqdata) {
+        try { //"801":{"170":null}
+          json = (JSON.parse(resdata)[801][170]);
+          adapter.log.debug("Data801_170: " + json);
+          adapter.setState('info.lastSync', json[100], true);
+          adapter.setState('info.totalPower', json[116], true);
+          adapter.setState('status.pac', json[101], true);
+          adapter.setState('status.pdc', json[102], true);
+          adapter.setState('status.uac', json[103], true);
+          adapter.setState('status.udc', json[104], true);
+          adapter.setState('status.conspac', json[110], true);
+          adapter.setState('status.yieldday', json[105], true);
+          adapter.setState('status.yieldyesterday', json[106], true);
+          adapter.setState('status.yieldmonth', json[107], true);
+          adapter.setState('status.yieldyear', json[108], true);
+          adapter.setState('status.yieldtotal', json[109], true);
+          adapter.setState('status.consyieldday', json[111], true);
+          adapter.setState('status.consyieldyesterday', json[112], true);
+          adapter.setState('status.consyieldmonth', json[113], true);
+          adapter.setState('status.consyieldyear', json[114], true);
+          adapter.setState('status.consyieldtotal', json[115], true);
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in standard data request: " + e);
+          throw e;
+        }
 
-        case '{"801":{"170":null}}': //standard data request (open JSON interface)
-          try {
-            json = (JSON.parse(resdata));
-            adapter.log.debug("Body: " + resdata);
-            adapter.setState('info.lastSync', json[801][170][100], true);
-            adapter.setState('info.totalPower', json[801][170][116], true);
-            adapter.setState('status.pac', json[801][170][101], true);
-            adapter.setState('status.pdc', json[801][170][102], true);
-            adapter.setState('status.uac', json[801][170][103], true);
-            adapter.setState('status.udc', json[801][170][104], true);
-            adapter.setState('status.conspac', json[801][170][110], true);
-            adapter.setState('status.yieldday', json[801][170][105], true);
-            adapter.setState('status.yieldyesterday', json[801][170][106], true);
-            adapter.setState('status.yieldmonth', json[801][170][107], true);
-            adapter.setState('status.yieldyear', json[801][170][108], true);
-            adapter.setState('status.yieldtotal', json[801][170][109], true);
-            adapter.setState('status.consyieldday', json[801][170][111], true);
-            adapter.setState('status.consyieldyesterday', json[801][170][112], true);
-            adapter.setState('status.consyieldmonth', json[801][170][113], true);
-            adapter.setState('status.consyieldyear', json[801][170][114], true);
-            adapter.setState('status.consyieldtotal', json[801][170][115], true);
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in standard data request: " + e);
-            throw e;
+        try { //"858":null
+          battdata = JSON.parse(resdata)[858];
+          adapter.log.debug("Battdata: " + battdata);
+          if (battdevicepresent == "true" && battpresent == "true") {
+            adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
+            adapter.setState("INV." + names[battindex[0]] + '.ChargePower', battdata[2], true);
+            adapter.setState("INV." + names[battindex[0]] + '.DischargePower', battdata[3], true);
+          } else if (battdevicepresent == "false" && battpresent == "true") {
+            adapter.setState('INV.Battery.BattLevel', battdata[1], true);
+            adapter.setState('INV.Battery.ChargePower', battdata[2], true);
+            adapter.setState('INV.Battery.DischargePower', battdata[3], true);
+          } else if (battdevicepresent == "false" && battpresent == "false") {
+            adapter.log.debug("Keine Batterie vorhanden")
+          } else {
+            adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
           }
-          break;
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in battery data: " + e);
+          throw e
+        }
 
-        case '{"858":null}': //battery data
-          try {
-            battdata = JSON.parse(resdata)[858];
-            adapter.log.debug("Battdata: " + battdata);
-            if (battdevicepresent == "true" && battpresent == "true") {
-              adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
-              adapter.setState("INV." + names[battindex[0]] + '.ChargePower', battdata[2], true);
-              adapter.setState("INV." + names[battindex[0]] + '.DischargePower', battdata[3], true);
-            } else if (battdevicepresent == "false" && battpresent == "true") {
-              adapter.setState('INV.Battery.BattLevel', battdata[1], true);
-              adapter.setState('INV.Battery.ChargePower', battdata[2], true);
-              adapter.setState('INV.Battery.DischargePower', battdata[3], true);
-            } else if (battdevicepresent == "false" && battpresent == "false") {
-              adapter.log.debug("Keine Batterie vorhanden")
-            } else {
-              adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
+        try { //"777":{"0":null}
+          var dataSUZ = JSON.parse(resdata)[777][0];
+          adapter.log.debug("DataSUZ: " + dataSUZ);
+          adapter.log.debug("Inv. to treat: " + names);
+          var namLeng = names.length;
+          adapter.log.debug("Anzahl Elemente: " + namLeng);
+          var d = new Date();
+          var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+          adapter.log.debug("Heute: " + heute);
+          for (var isuz = 0; isuz < 31; isuz++) {
+            var indextag = dataSUZ[isuz].indexOf(heute.toString());
+            if (indextag != -1) {
+              var indexsuz = isuz;
+              adapter.log.debug("Index Tageswerte: " + indexsuz);
+              break;
             }
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in battery data: " + e);
-            throw e
           }
-          break;
-
-        case '{"782":null}': //data inverters
-          try {
-            var dataJUZ = (JSON.parse(resdata));
-            adapter.log.debug("Inv. to treat: " + names);
-            var namLeng = names.length;
-            adapter.log.debug("Anzahl Elemente: " + namLeng);
-            for (var uzi = 0; uzi < namLeng; uzi++) {
-              if (deviceclasses[uzi] != "Batterie") {
-                adapter.log.debug("INV." + names[uzi] + ": " + dataJUZ[782][uzi]);
-                adapter.setState("INV." + names[uzi] + ".PAC", dataJUZ[782][uzi], true);
-              }
+          var daysum = dataSUZ[indexsuz][1];
+          adapter.log.debug("Tagessummen: " + daysum);
+          for (var suzi = 0; suzi < namLeng; suzi++) {
+            if (deviceclasses[suzi] != "Batterie") {
+              adapter.log.debug("INV." + names[suzi] + ": " + daysum[suzi]);
+              adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
             }
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in data inverters: " + e);
-            throw e
           }
-          break;
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in sum data inverters: " + e);
+          throw e
+        }
 
-        case '{"608":null}': //status data inverters
-          try {
-            var dataJSUZ = (JSON.parse(resdata));
-            adapter.log.debug("Inv. to treat: " + names);
-            var namLeng = names.length;
-            adapter.log.debug("Anzahl Elemente: " + namLeng);
-            for (var uzj = 0; uzj < namLeng; uzj++) {
-              adapter.log.debug("INV." + names[uzj] + ": " + dataJSUZ[608][uzj]);
-              adapter.setState("INV." + names[uzj] + ".status", dataJSUZ[608][uzj], true);
+        try { ////"778":{"0":null}
+          var dataselfcons = JSON.parse(resdata)[778][0];
+          adapter.log.debug("DataSelfCons: " + dataselfcons);
+          var d = new Date();
+          var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+          adapter.log.debug("Heute: " + heute);
+          var monatheute = d.getMonth() + 1;
+          adapter.log.debug("Monat heute: " + monatheute);
+          for (var isuz = 0; isuz < 31; isuz++) {
+            var indextag = dataselfcons[isuz].indexOf(heute.toString());
+            if (indextag != -1) {
+              var indexsuz = isuz;
+              adapter.log.debug("Index Tageswerte: " + indexsuz);
+              break;
             }
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in status data inverters: " + e);
-            throw e
           }
-          break;
+          var dataselfconstoday = dataselfcons[indexsuz];
+          adapter.log.debug("Tageswerte SelfCons: " + dataselfconstoday);
+          var daysum = dataselfcons[indexsuz][1];
+          adapter.log.debug("Tagessumme Eigenverbrauch: " + daysum);
+          var dayratio = Math.round((daysum / json[105]) * 1000) / 10;
 
-        case '{"777":{"0":null}}': //sum data inverters
-          try {
-            var dataSUZ = JSON.parse(resdata)[777][0];
-            adapter.log.debug("DataSUZ: " + dataSUZ);
-            adapter.log.debug("Inv. to treat: " + names);
-            var namLeng = names.length;
-            adapter.log.debug("Anzahl Elemente: " + namLeng);
-            var d = new Date();
-            var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
-            adapter.log.debug("Heute: " + heute);
-            for (var isuz = 0; isuz < 31; isuz++) {
-              var indextag = dataSUZ[isuz].indexOf(heute.toString());
-              if (indextag != -1) {
-                var indexsuz = isuz;
-                adapter.log.debug("Index Tageswerte: " + indexsuz);
+
+          adapter.setState("SelfCons.selfconstoday", daysum, true);
+          adapter.setState("SelfCons.selfconsratiotoday", dayratio, true);
+
+          d.setDate(d.getDate() - 1);
+          var gestern = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
+          adapter.log.debug("Gestern: " + gestern);
+          var monatgestern = d.getMonth() + 1;
+          adapter.log.debug("Monat gestern: " + monatgestern);
+          if (monatgestern == monatheute) {
+            for (var iscy = 0; iscy < 31; iscy++) {
+              var indexgestern = dataselfcons[iscy].indexOf(gestern.toString());
+              if (indexgestern != -1) {
+                var indexscy = iscy;
+                adapter.log.debug("Index Tageswerte gestern: " + indexscy);
                 break;
               }
             }
-            var daysum = dataSUZ[indexsuz][1];
-            adapter.log.debug("Tagessummen: " + daysum);
-            for (var suzi = 0; suzi < namLeng; suzi++) {
-              if (deviceclasses[suzi] != "Batterie") {
-                adapter.log.debug("INV." + names[suzi] + ": " + daysum[suzi]);
-                adapter.setState("INV." + names[suzi] + ".daysum", daysum[suzi], true);
+            var dataselfconsyesterday = dataselfcons[indexscy];
+            adapter.log.debug("Gesternwerte SelfCons: " + dataselfconsyesterday);
+            var daysumy = dataselfcons[indexscy][1];
+            adapter.log.debug("Gesternsumme Eigenverbrauch: " + daysumy);
+            var dayratioy = Math.round((daysumy / json[106]) * 1000) / 10;
+
+            adapter.setState("SelfCons.selfconsyesterday", daysumy, true);
+            adapter.setState("SelfCons.selfconsratioyesterday", dayratioy, true);
+            lastdaysumy = daysum;
+            lastdayratioy = dayratio;
+          } else {
+            adapter.setState("SelfCons.selfconsyesterday", lastdaysumy, true);
+            adapter.setState("SelfCons.selfconsratioyesterday", lastdayratioy, true);
+          }
+
+          if (battdevicepresent == "true" && battpresent == "true") {
+            adapter.setState("INV." + names[battindex[0]] + '.BattSelfCons', dataselfconstoday[2], true);
+            adapter.setState("INV." + names[battindex[0]] + '.BattChargeDaysum', dataselfconstoday[3], true);
+            adapter.setState("INV." + names[battindex[0]] + '.BattDischargeDaysum', dataselfconstoday[4], true);
+          } else if (battdevicepresent == "false" && battpresent == "true") {
+            adapter.setState('INV.Battery.BattSelfCons', dataselfconstoday[2], true);
+            adapter.setState('INV.Battery.BattChargeDaysum', dataselfconstoday[3], true);
+            adapter.setState('INV.Battery.BattDischargeDaysum', dataselfconstoday[4], true);
+          } else if (battdevicepresent == "false" && battpresent == "false") {
+            adapter.log.debug("Keine Batterie vorhanden");
+          } else {
+            adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
+          }
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in self consumtion: " + e);
+          throw e
+        }
+
+        break;
+
+      case '{"854"': //var historicData = '{"854":null,"877":null,"878":null}';
+
+        try { //"854":null
+          var dataYear = JSON.parse(resdata)[854];
+          adapter.log.debug("DataYear: " + dataYear);
+          adapter.log.debug("Inv. to treat: " + names);
+          var namLeng = names.length;
+
+          adapter.log.debug("Anzahl Elemente: " + namLeng);
+          for (var iy = 0; iy < dataYear.length; iy++) {
+            var year = dataYear[iy][0].slice(-2);
+            for (var inu = 0; inu < names.length; inu++) {
+              if (dataYear[iy][1][inu] != 0) {
+                adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyearINV." + names[inu], {
+                  type: 'state',
+                  common: {
+                    name: 'yieldyear',
+                    desc: 'Year sum Wh',
+                    type: 'number',
+                    role: "value.yearsum",
+                    read: true,
+                    write: false,
+                    unit: "Wh"
+                  },
+                  native: {}
+                });
               }
             }
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in sum data inverters: " + e);
-            throw e
           }
-          break;
-
-        case '{"778":{"0":null}}': //self consumption
-          try {
-            var dataselfcons = JSON.parse(resdata)[778][0];
-            adapter.log.debug("DataSelfCons: " + dataselfcons);
-            var d = new Date();
-            var heute = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
-            adapter.log.debug("Heute: " + heute);
-            var monatheute = d.getMonth() + 1;
-            adapter.log.debug("Monat heute: " + monatheute);
-            for (var isuz = 0; isuz < 31; isuz++) {
-              var indextag = dataselfcons[isuz].indexOf(heute.toString());
-              if (indextag != -1) {
-                var indexsuz = isuz;
-                adapter.log.debug("Index Tageswerte: " + indexsuz);
-                break;
+          for (var iy = 0; iy < dataYear.length; iy++) {
+            var year = dataYear[iy][0].slice(-2);
+            for (var inu = 0; inu < names.length; inu++) {
+              if (dataYear[iy][1][inu] != 0) {
+                adapter.setState('Historic.' + "20" + year + ".yieldyearINV." + names[inu], dataYear[iy][1][inu], true);
               }
             }
-            var dataselfconstoday = dataselfcons[indexsuz];
-            adapter.log.debug("Tageswerte SelfCons: " + dataselfconstoday);
-            var daysum = dataselfcons[indexsuz][1];
-            adapter.log.debug("Tagessumme Eigenverbrauch: " + daysum);
-            var dayratio = Math.round((daysum / json[801][170][105]) * 1000) / 10;
-
-
-            adapter.setState("SelfCons.selfconstoday", daysum, true);
-            adapter.setState("SelfCons.selfconsratiotoday", dayratio, true);
-
-            d.setDate(d.getDate() - 1);
-            var gestern = (("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + (d.getFullYear().toString()).slice(-2)).toString();
-            adapter.log.debug("Gestern: " + gestern);
-            var monatgestern = d.getMonth() + 1;
-            adapter.log.debug("Monat gestern: " + monatgestern);
-            if (monatgestern == monatheute) {
-              for (var iscy = 0; iscy < 31; iscy++) {
-                var indexgestern = dataselfcons[iscy].indexOf(gestern.toString());
-                if (indexgestern != -1) {
-                  var indexscy = iscy;
-                  adapter.log.debug("Index Tageswerte gestern: " + indexscy);
-                  break;
-                }
-              }
-              var dataselfconsyesterday = dataselfcons[indexscy];
-              adapter.log.debug("Gesternwerte SelfCons: " + dataselfconsyesterday);
-              var daysumy = dataselfcons[indexscy][1];
-              adapter.log.debug("Gesternsumme Eigenverbrauch: " + daysumy);
-              var dayratioy = Math.round((daysumy / json[801][170][106]) * 1000) / 10;
-
-              adapter.setState("SelfCons.selfconsyesterday", daysumy, true);
-              adapter.setState("SelfCons.selfconsratioyesterday", dayratioy, true);
-              lastdaysumy = daysum;
-              lastdayratioy = dayratio;
-            } else {
-              adapter.setState("SelfCons.selfconsyesterday", lastdaysumy, true);
-              adapter.setState("SelfCons.selfconsratioyesterday", lastdayratioy, true);
-            }
-
-            if (battdevicepresent == "true" && battpresent == "true") {
-              adapter.setState("INV." + names[battindex[0]] + '.BattSelfCons', dataselfconstoday[2], true);
-              adapter.setState("INV." + names[battindex[0]] + '.BattChargeDaysum', dataselfconstoday[3], true);
-              adapter.setState("INV." + names[battindex[0]] + '.BattDischargeDaysum', dataselfconstoday[4], true);
-            } else if (battdevicepresent == "false" && battpresent == "true") {
-              adapter.setState('INV.Battery.BattSelfCons', dataselfconstoday[2], true);
-              adapter.setState('INV.Battery.BattChargeDaysum', dataselfconstoday[3], true);
-              adapter.setState('INV.Battery.BattDischargeDaysum', dataselfconstoday[4], true);
-            } else if (battdevicepresent == "false" && battpresent == "false") {
-              adapter.log.debug("Keine Batterie vorhanden");
-            } else {
-              adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
-            }
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in self consumtion: " + e);
-            throw e
           }
-          break;
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in status data inverters: " + e);
+          throw e
+        }
 
-        case '{"877":null}': //historic monthly data
-          try {
-            var dataMonthtot = JSON.parse(resdata)[877];
-            adapter.log.debug("DataMonth: " + dataMonthtot);
+        try { //"877":null
+          var dataMonthtot = JSON.parse(resdata)[877];
+          adapter.log.debug("DataMonth: " + dataMonthtot);
 
-            for (var iy = 0; iy < dataMonthtot.length; iy++) {
-              var year = dataMonthtot[iy][0].slice(-2);
-              var month = dataMonthtot[iy][0].slice(3, 5);
+          for (var iy = 0; iy < dataMonthtot.length; iy++) {
+            var year = dataMonthtot[iy][0].slice(-2);
+            var month = dataMonthtot[iy][0].slice(3, 5);
 
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", {
-                type: 'state',
-                common: {
-                  name: 'yieldmonth',
-                  desc: 'Month sum producion Wh',
-                  type: 'number',
-                  role: "value.monthsum",
-                  read: true,
-                  write: false,
-                  unit: "Wh"
-                },
-                native: {}
-              });
+            adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", {
+              type: 'state',
+              common: {
+                name: 'yieldmonth',
+                desc: 'Month sum producion Wh',
+                type: 'number',
+                role: "value.monthsum",
+                read: true,
+                write: false,
+                unit: "Wh"
+              },
+              native: {}
+            });
 
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".consmonth", {
-                type: 'state',
-                common: {
-                  name: 'consmonth',
-                  desc: 'Month sum consumption Wh',
-                  type: 'number',
-                  role: "value.monthsum",
-                  read: true,
-                  write: false,
-                  unit: "Wh"
-                },
-                native: {}
-              });
+            adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".consmonth", {
+              type: 'state',
+              common: {
+                name: 'consmonth',
+                desc: 'Month sum consumption Wh',
+                type: 'number',
+                role: "value.monthsum",
+                read: true,
+                write: false,
+                unit: "Wh"
+              },
+              native: {}
+            });
 
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", {
-                type: 'state',
-                common: {
-                  name: 'selfconsmonth',
-                  desc: 'Month sum  self consumption Wh',
-                  type: 'number',
-                  role: "value.monthsum",
-                  read: true,
-                  write: false,
-                  unit: "kWh"
-                },
-                native: {}
-              });
-            }
-
-            for (var iy = 0; iy < dataMonthtot.length; iy++) {
-              var year = dataMonthtot[iy][0].slice(-2);
-              var month = dataMonthtot[iy][0].slice(3, 5);
-
-              if (dataMonthtot[iy][1] != 0) {
-                adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", dataMonthtot[iy][1], true);
-                adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".consmonth", dataMonthtot[iy][2], true);
-                adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", dataMonthtot[iy][3], true);
-              }
-            }
-
-            adapter.setState('SelfCons.selfconsmonth', dataMonthtot[dataMonthtot.length - 1][3], true);
-            adapter.setState('SelfCons.selfconslastmonth', dataMonthtot[dataMonthtot.length - 2][3], true);
-
-            adapter.setState('SelfCons.selfconsratiomonth', Math.round((dataMonthtot[dataMonthtot.length - 1][3] * 1000) / (dataMonthtot[dataMonthtot.length - 1][2]) * 1000) / 10, true);
-            adapter.setState('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtot[dataMonthtot.length - 2][3] * 1000) / (dataMonthtot[dataMonthtot.length - 2][2]) * 1000) / 10, true);
-
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in historic monthly: " + e);
-            throw e
+            adapter.setObjectNotExists('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", {
+              type: 'state',
+              common: {
+                name: 'selfconsmonth',
+                desc: 'Month sum  self consumption Wh',
+                type: 'number',
+                role: "value.monthsum",
+                read: true,
+                write: false,
+                unit: "kWh"
+              },
+              native: {}
+            });
           }
-          break;
 
-        case '{"878":null}': //historic sum data
-          try {
-            var dataYeartot = JSON.parse(resdata)[878];
-            adapter.log.debug("DataYear: " + dataYeartot);
+          for (var iy = 0; iy < dataMonthtot.length; iy++) {
+            var year = dataMonthtot[iy][0].slice(-2);
+            var month = dataMonthtot[iy][0].slice(3, 5);
 
-            for (var iy = 0; iy < dataYeartot.length; iy++) {
-              var year = dataYeartot[iy][0].slice(-2);
-
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear", {
-                type: 'state',
-                common: {
-                  name: 'yieldyear',
-                  desc: 'Year sum producion Wh',
-                  type: 'number',
-                  role: "value.yearsum",
-                  read: true,
-                  write: false,
-                  unit: "Wh"
-                },
-                native: {}
-              });
-
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".consyear", {
-                type: 'state',
-                common: {
-                  name: 'consyear',
-                  desc: 'Year sum consumption Wh',
-                  type: 'number',
-                  role: "value.yearsum",
-                  read: true,
-                  write: false,
-                  unit: "Wh"
-                },
-                native: {}
-              });
-
-              adapter.setObjectNotExists('Historic.' + "20" + year + ".selfconsyear", {
-                type: 'state',
-                common: {
-                  name: 'selfconsyear',
-                  desc: 'Year sum  self consumption Wh',
-                  type: 'number',
-                  role: "value.yearsum",
-                  read: true,
-                  write: false,
-                  unit: "kWh"
-                },
-                native: {}
-              });
-
-
+            if (dataMonthtot[iy][1] != 0) {
+              adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".yieldmonth", dataMonthtot[iy][1], true);
+              adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".consmonth", dataMonthtot[iy][2], true);
+              adapter.setState('Historic.' + "20" + year + ".monthly." + month + ".selfconsmonth", dataMonthtot[iy][3], true);
             }
-            for (var iy = 0; iy < dataYeartot.length; iy++) {
-              var year = dataYeartot[iy][0].slice(-2);
-              if (dataYeartot[iy][1] != 0) {
-                adapter.setState('Historic.' + "20" + year + ".yieldyear", dataYeartot[iy][1], true);
-                adapter.setState('Historic.' + "20" + year + ".consyear", dataYeartot[iy][2], true);
-                adapter.setState('Historic.' + "20" + year + ".selfconsyear", dataYeartot[iy][3], true);
-              }
-
-            }
-
-            adapter.setState('SelfCons.selfconsyear', dataYeartot[dataYeartot.length - 1][3], true);
-            adapter.setState('SelfCons.selfconslastyear', dataYeartot[dataYeartot.length - 2][3], true);
-
-            adapter.setState('SelfCons.selfconsratioyear', Math.round((dataYeartot[dataYeartot.length - 1][3] * 1000) / (dataYeartot[dataYeartot.length - 1][2]) * 1000) / 10, true);
-            adapter.setState('SelfCons.selfconsratiolastyear', Math.round((dataYeartot[dataYeartot.length - 2][3] * 1000) / (dataYeartot[dataYeartot.length - 2][2]) * 1000) / 10, true);
-
-
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in status historic sum data: " + e);
-            throw e
           }
-          break;
 
-        case '{"854":null}': //historic sum data inverters
-          try {
-            var dataYear = JSON.parse(resdata)[854];
-            adapter.log.debug("DataYear: " + dataYear);
-            adapter.log.debug("Inv. to treat: " + names);
-            var namLeng = names.length;
+          adapter.setState('SelfCons.selfconsmonth', dataMonthtot[dataMonthtot.length - 1][3], true);
+          adapter.setState('SelfCons.selfconslastmonth', dataMonthtot[dataMonthtot.length - 2][3], true);
 
-            adapter.log.debug("Anzahl Elemente: " + namLeng);
-            for (var iy = 0; iy < dataYear.length; iy++) {
-              var year = dataYear[iy][0].slice(-2);
-              for (var inu = 0; inu < names.length; inu++) {
-                if (dataYear[iy][1][inu] != 0) {
-                  adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyearINV." + names[inu], {
-                    type: 'state',
-                    common: {
-                      name: 'yieldyear',
-                      desc: 'Year sum Wh',
-                      type: 'number',
-                      role: "value.yearsum",
-                      read: true,
-                      write: false,
-                      unit: "Wh"
-                    },
-                    native: {}
-                  });
-                }
-              }
-            }
-            for (var iy = 0; iy < dataYear.length; iy++) {
-              var year = dataYear[iy][0].slice(-2);
-              for (var inu = 0; inu < names.length; inu++) {
-                if (dataYear[iy][1][inu] != 0) {
-                  adapter.setState('Historic.' + "20" + year + ".yieldyearINV." + names[inu], dataYear[iy][1][inu], true);
-                }
-              }
-            }
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in status data inverters: " + e);
-            throw e
+          adapter.setState('SelfCons.selfconsratiomonth', Math.round((dataMonthtot[dataMonthtot.length - 1][3] * 1000) / (dataMonthtot[dataMonthtot.length - 1][2]) * 1000) / 10, true);
+          adapter.setState('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtot[dataMonthtot.length - 2][3] * 1000) / (dataMonthtot[dataMonthtot.length - 2][2]) * 1000) / 10, true);
+
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in historic monthly: " + e);
+          throw e
+        }
+
+        try { //878":null}
+          var dataYeartot = JSON.parse(resdata)[878];
+          adapter.log.debug("DataYear: " + dataYeartot);
+
+          for (var iy = 0; iy < dataYeartot.length; iy++) {
+            var year = dataYeartot[iy][0].slice(-2);
+
+            adapter.setObjectNotExists('Historic.' + "20" + year + ".yieldyear", {
+              type: 'state',
+              common: {
+                name: 'yieldyear',
+                desc: 'Year sum producion Wh',
+                type: 'number',
+                role: "value.yearsum",
+                read: true,
+                write: false,
+                unit: "Wh"
+              },
+              native: {}
+            });
+
+            adapter.setObjectNotExists('Historic.' + "20" + year + ".consyear", {
+              type: 'state',
+              common: {
+                name: 'consyear',
+                desc: 'Year sum consumption Wh',
+                type: 'number',
+                role: "value.yearsum",
+                read: true,
+                write: false,
+                unit: "Wh"
+              },
+              native: {}
+            });
+
+            adapter.setObjectNotExists('Historic.' + "20" + year + ".selfconsyear", {
+              type: 'state',
+              common: {
+                name: 'selfconsyear',
+                desc: 'Year sum  self consumption Wh',
+                type: 'number',
+                role: "value.yearsum",
+                read: true,
+                write: false,
+                unit: "kWh"
+              },
+              native: {}
+            });
+
+
           }
-          break;
-
-        case '{"739":null}': //get devicelist
-          try {
-            devicelist = JSON.parse(resdata);
-            adapter.log.debug("Devicelist: " + devicelist);
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in get devicelist: " + e);
-            throw e
-          }
-          break;
-
-        case '{"744":null}': //get devicelist
-          try {
-            brandlist = JSON.parse(resdata);
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in get brandlist: " + e);
-            throw e
-          }
-          break;
-
-        case '{"740":null}': //get numinv
-          try {
-            var dataJ = JSON.parse(resdata);
-
-            while (statusuz != "Err" && numinv < 100) {
-              statusuz = (dataJ[740][numinv.toString()]);
-              numinv++;
-            }
-            adapter.setState('info.numinv' /*numinv*/ , numinv - 1, true);
-            adapter.log.debug("Numer of Inverters/Meters :" + (numinv - 1));
-
-            for (var i = 0; i < (numinv - 1); i++) {
-              var datafront = '{"141":{"';
-              var dataname = '":{"119":null}}}';
-              inverterDataArray.push(datafront + i.toString() + dataname);
-              //var data = 'token=' + datatoken + ';' + data1 + i.toString() + data2
-
-              var datainfo = '":{"162":null}}}';
-              inverterDataArray.push(datafront + i.toString() + datainfo);
-
-              /*var options = optionsdefault;
-              options.path = cmd;
-
-              adapter.log.debug("Options: " + JSON.stringify(options));
-              adapter.log.debug("Data: " + JSON.stringify(data));
-
-              httpsReqGetUzNames(data, options, i);*/
+          for (var iy = 0; iy < dataYeartot.length; iy++) {
+            var year = dataYeartot[iy][0].slice(-2);
+            if (dataYeartot[iy][1] != 0) {
+              adapter.setState('Historic.' + "20" + year + ".yieldyear", dataYeartot[iy][1], true);
+              adapter.setState('Historic.' + "20" + year + ".consyear", dataYeartot[iy][2], true);
+              adapter.setState('Historic.' + "20" + year + ".selfconsyear", dataYeartot[iy][3], true);
             }
 
-            logcheckarray(inverterDataArray);
-
-          } catch (e) {
-            adapter.log.warn("readSolarlogData - Fehler in get numinv: " + e);
-            throw e
           }
-          break;
 
-        default:
-          adapter.log.warn("Fehler: Problem bei der Solarlog-Datenauswertung, kein Datensatz erkannt");
-      }
+          adapter.setState('SelfCons.selfconsyear', dataYeartot[dataYeartot.length - 1][3], true);
+          adapter.setState('SelfCons.selfconslastyear', dataYeartot[dataYeartot.length - 2][3], true);
+
+          adapter.setState('SelfCons.selfconsratioyear', Math.round((dataYeartot[dataYeartot.length - 1][3] * 1000) / (dataYeartot[dataYeartot.length - 1][2]) * 1000) / 10, true);
+          adapter.setState('SelfCons.selfconsratiolastyear', Math.round((dataYeartot[dataYeartot.length - 2][3] * 1000) / (dataYeartot[dataYeartot.length - 2][2]) * 1000) / 10, true);
+
+
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in status historic sum data: " + e);
+          throw e
+        }
+        break;
+
+      case '{"801"': //nur Daten über offene JSON-Schnittstelle'
+        try {
+          json = (JSON.parse(resdata)[801][170]);
+          adapter.log.debug("Data open JSON: " + resdata);
+          adapter.setState('info.lastSync', json[100], true);
+          adapter.setState('info.totalPower', json[116], true);
+          adapter.setState('status.pac', json[101], true);
+          adapter.setState('status.pdc', json[102], true);
+          adapter.setState('status.uac', json[103], true);
+          adapter.setState('status.udc', json[104], true);
+          adapter.setState('status.conspac', json[110], true);
+          adapter.setState('status.yieldday', json[105], true);
+          adapter.setState('status.yieldyesterday', json[106], true);
+          adapter.setState('status.yieldmonth', json[107], true);
+          adapter.setState('status.yieldyear', json[108], true);
+          adapter.setState('status.yieldtotal', json[109], true);
+          adapter.setState('status.consyieldday', json[111], true);
+          adapter.setState('status.consyieldyesterday', json[112], true);
+          adapter.setState('status.consyieldmonth', json[113], true);
+          adapter.setState('status.consyieldyear', json[114], true);
+          adapter.setState('status.consyieldtotal', json[115], true);
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in standard data request: " + e);
+          throw e;
+        }
+        break;
+
+      default:
+        adapter.log.warn("Fehler: Problem bei der Solarlog-Datenauswertung, kein Datensatz erkannt");
     }
+
   } catch (e) {
     adapter.log.warn("readSolarlogData - Fehler : " + e);
-
   }
-
 } //end readSolarlogData
-
-/*function getuznames() { //Schlaufe mit Abfrage der Information pro Unterzaehler und auslesen der Objekterstellung
-  for (var i = 0; i < (numinv - 1); i++) {
-    var data1 = '{"141":{"';
-    var data2 = '":{"119":null}}}';
-    var data = 'token=' + datatoken + ';' + data1 + i.toString() + data2
-
-    var options = optionsdefault;
-    options.path = cmd;
-
-    adapter.log.debug("Options: " + JSON.stringify(options));
-    adapter.log.debug("Data: " + JSON.stringify(data));
-
-    httpsReqGetUzNames(data, options, i);
-  }
-} //end getuznames*/
-
-/*function httpsReqGetUzNames(data, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var bodyuz = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + bodyuz);
-
-      try {
-        var dataJuz = (JSON.parse(bodyuz));
-        names.push(dataJuz[141][i.toString()][119]);
-        adapter.log.debug("Inverters: " + names);
-
-        if (i == (numinv - 2)) {
-          adapter.log.debug("Lese Geräteinformationen");
-          logcheckfunc(function() {
-            getuzdeviceinfo();
-          });
-        }
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler httpsReqGetUzNames: " + e.message);
-      }
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR httpsReqGetUzNames: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-  req.end();
-} //End httpsReqGetUzNames*/
-
-/*function getuzdeviceinfo() { //Schlaufe mit Abfrage der Information pro Unterz�hler und ausl�sen der Objekterstellung
-  for (var i = 0; i < (numinv - 1); i++) {
-    var data1 = '{"141":{"';
-    var data2 = '":{"162":null}}}';
-    var data = 'token=' + datatoken + ';' + data1 + i.toString() + data2
-
-    var options = optionsdefault;
-    options.path = cmd;
-
-    adapter.log.debug("Options: " + JSON.stringify(options));
-    adapter.log.debug("Data: " + JSON.stringify(data));
-
-    httpsReqGetUzDeviceinfo(data, options, i);
-  }
-} //end getuzdeviceinfo */
-
-/*function httpsReqGetUzDeviceinfo(data, options, i) { //erstellt die Channels und Objekte pro Unterz�hler
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var bodyuz = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + bodyuz);
-
-      try {
-        var dataJuz = (JSON.parse(bodyuz));
-
-        deviceinfos.push(dataJuz[141][i.toString()][162]);
-        adapter.log.debug("Deviceinfos: " + deviceinfos);
-
-        if (i == (numinv - 2)) {
-          defdeviceinfo();
-        }
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler httpsReqGetUzDeviceinfo: " + e.message);
-      }
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR httpsReqGetUzDeviceinfo: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-  req.end();
-} //End httpsReqGetUzDeviceinfo*/
 
 function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   var namLeng = names.length;
   for (var y = 0; y < namLeng; y++) {
-    adapter.log.debug("INV." + names[y] + ".devicetype: " + devicelist[739][deviceinfos[y]][1]);
-    devicetypes.push(devicelist[739][deviceinfos[y]][1]);
+    adapter.log.debug("INV." + names[y] + ".devicetype: " + devicelist[deviceinfos[y]][1]);
+    devicetypes.push(devicelist[deviceinfos[y]][1]);
 
-    adapter.log.debug("INV." + names[y] + ".devicebrand: " + brandlist[744][devicelist[739][deviceinfos[y]][0]]);
-    devicebrands.push(brandlist[744][devicelist[739][deviceinfos[y]][0]]);
+    adapter.log.debug("INV." + names[y] + ".devicebrand: " + brandlist[devicelist[deviceinfos[y]][0]]);
+    devicebrands.push(brandlist[devicelist[deviceinfos[y]][0]]);
 
-    deviceclasses.push(deviceclasslist[(Math.log(devicelist[739][deviceinfos[y]][5]) / Math.LN2)]);
-    if (deviceclasslist[(Math.log(devicelist[739][deviceinfos[y]][5]) / Math.LN2)] == "Batterie") {
+    deviceclasses.push(deviceclasslist[(Math.log(devicelist[deviceinfos[y]][5]) / Math.LN2)]);
+    if (deviceclasslist[(Math.log(devicelist[deviceinfos[y]][5]) / Math.LN2)] == "Batterie") {
       battdevicepresent = "true";
       adapter.log.debug("Batterie als Gerät vorhanden");
       battindex[battarrind] = y;
       adapter.log.debug("Index Gerät Batterie: " + y);
       battarrind++;
 
-      adapter.log.debug("INV." + names[y] + ".deviceclass: " + deviceclasslist[(Math.log(devicelist[739][deviceinfos[y]][5]) / Math.LN2)]);
+      adapter.log.debug("INV." + names[y] + ".deviceclass: " + deviceclasslist[(Math.log(devicelist[deviceinfos[y]][5]) / Math.LN2)]);
 
     }
     adapter.log.debug("Batterie als Gerät: " + battdevicepresent);
@@ -1142,66 +1021,7 @@ function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   adapter.log.debug("Devicebrands: " + devicebrands);
   adapter.log.debug("Deviceclasses: " + deviceclasses);
 
-
-  httpsReqBattpresent();
-
 } // end defdeviceinfo
-
-function httpsReqBattpresent() { //Abfrage der Batteriewerte um festzustellen, ob eine solche vorhanden ist.
-  var data = 'token=' + datatoken + ';{"858":null}';
-
-  var options = optionsdefault;
-  options.path = cmd;
-  options.headers['Content-Length'] = data.length;
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (R�ckmeldung vom Webserver)
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier k�nnen die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var body = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + body);
-
-      try {
-        battdata = JSON.parse(body)[858];
-        adapter.log.debug("Battdata: " + battdata);
-        if (battdata.length > 0) {
-          battpresent = "true";
-          adapter.log.debug("Batterie vorhanden, lege Objekte an.");
-          adapter.log.debug("Batteriestatus: " + battpresent);
-
-        } else {
-          adapter.log.debug("Keine Batterie vorhanden.");
-          adapter.log.debug("Batteriestatus: " + battpresent);
-        }
-
-        adapter.log.debug("END");
-
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler httpsReqBattpresent: " + e.message);
-      }
-
-      setInvObjects();
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR httpsReqBattpresent: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();
-} //End httpsReqBattpresent
 
 function setInvObjects() {
   // create Channel Inverter(i)
@@ -1621,6 +1441,313 @@ function setInvObjects() {
     },
     native: {}
   });
+  adapter.setObjectNotExists('info.RTOS', {
+    type: 'state',
+    common: {
+      name: 'RTOS',
+      desc: 'RTOS',
+      type: 'string',
+      role: "value.RTOS",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.CLIB', {
+    type: 'state',
+    common: {
+      name: 'CLIB',
+      desc: 'CLIB',
+      type: 'string',
+      role: "value.CLIB",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.MAC', {
+    type: 'state',
+    common: {
+      name: 'MAC-Adress',
+      desc: 'MAC-Adress',
+      type: 'string',
+      role: "value.MAC",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.SN', {
+    type: 'state',
+    common: {
+      name: 'Serial Number',
+      desc: 'Serial Number',
+      type: 'string',
+      role: "value.SN",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.Model', {
+    type: 'state',
+    common: {
+      name: 'Model - Number',
+      desc: 'Model - Number (SolarLog XX)',
+      type: 'string',
+      role: "value.Model",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.InstDate', {
+    type: 'state',
+    common: {
+      name: 'Installation - date',
+      desc: 'Installation - date',
+      type: 'string',
+      role: "value.InstDate",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.FW', {
+    type: 'state',
+    common: {
+      name: 'Firmware version',
+      desc: 'Firmware version',
+      type: 'string',
+      role: "value.FW",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.FWrelD', {
+    type: 'state',
+    common: {
+      name: 'Firmware realease date',
+      desc: 'Firmware realease date',
+      type: 'string',
+      role: "value.FWrelD",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('info.SD', {
+    type: 'state',
+    common: {
+      name: 'SC card info',
+      desc: 'SC card info',
+      type: 'string',
+      role: "value.SD",
+      read: true,
+      write: false
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointToday', {
+    type: 'state',
+    common: {
+      name: 'setpointToday',
+      desc: 'todays production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.01', {
+    type: 'state',
+    common: {
+      name: 'setpointJAN',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.02', {
+    type: 'state',
+    common: {
+      name: 'setpointFEB',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.03', {
+    type: 'state',
+    common: {
+      name: 'setpointMAR',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.04', {
+    type: 'state',
+    common: {
+      name: 'setpointAPR',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.05', {
+    type: 'state',
+    common: {
+      name: 'setpointMAY',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.06', {
+    type: 'state',
+    common: {
+      name: 'setpointJUN',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.07', {
+    type: 'state',
+    common: {
+      name: 'setpointJUL',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.08', {
+    type: 'state',
+    common: {
+      name: 'setpointAUG',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.09', {
+    type: 'state',
+    common: {
+      name: 'setpointSEP',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.10', {
+    type: 'state',
+    common: {
+      name: 'setpointOCT',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.11', {
+    type: 'state',
+    common: {
+      name: 'setpointNOV',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointMonth.12', {
+    type: 'state',
+    common: {
+      name: 'setpointDEC',
+      desc: 'monthly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointYear', {
+    type: 'state',
+    common: {
+      name: 'setpoint current year',
+      desc: 'yearly production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+  adapter.setObjectNotExists('forecast.setpointCurrMonth', {
+    type: 'state',
+    common: {
+      name: 'setpoint current month',
+      desc: 'monthly (current) production estimation',
+      type: 'number',
+      role: "value.setpoint",
+      read: true,
+      write: false,
+      unit: "kWh"
+    },
+    native: {}
+  });
+
+
+
+
 } //End setInvObjects
 
 function setdeviceinfo() {
@@ -1632,7 +1759,7 @@ function setdeviceinfo() {
   if (forecast == "true") {
     setforecastobjects();
   } else {
-    logcheckarray(pollingDataArray);
+    logcheck(pollingData);
   }
 } //End setdeviceinfo
 
@@ -1721,9 +1848,9 @@ function setforecastobjects() {
 
   setTimeout(function() {
     if (uzimp == "true") {
-      logcheckarray(pollingDataArray);
+      logcheck(pollingData);
     } else {
-      logcheckarray(['{"801":{"170":null}}']);
+      logcheck(['{"801":{"170":null}}']);
     }
   }, 1000);
 } //end setforecastobjects()
@@ -1782,6 +1909,11 @@ function getforecastdata() {
   });
 } //end getforecastdata()
 
+function restartAdapter() {
+  adapter.getForeignObject('system.adapter.' + adapter.namespace, (err, obj) => {
+    if (obj) adapter.setForeignObject('system.adapter.' + adapter.namespace, obj);
+  });
+} // endFunctionRestartAdapter
 
 // If started as allInOne/compact mode => return function to create instance
 if (module && module.parent) {
