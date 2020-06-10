@@ -342,7 +342,7 @@
       "type": "state",
       "common": {
         "name": "Yield Year",
-        "type": "timestamp",
+        "type": "number",
         "role": "value.yieldyear",
         "read": true,
         "write": false,
