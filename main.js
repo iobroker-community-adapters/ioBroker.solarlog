@@ -260,7 +260,7 @@ function test() {
         testi = 0;
         adapter.log.warn("Nicht alle WR/Zaehler gefunden");
         testj++;
-        if (testj > 3) {
+        if (testj > 5) {
           adapter.log.warn("Fehler, noch nicht alle Unterzaehler angelegt");
           clearInterval(testend);
         }
@@ -584,7 +584,9 @@ function readSolarlogData(reqdata, resdata) {
           adapter.log.warn("JSON-parse-Fehler Battpresent: " + e.message);
           throw e
         }
-        setInvObjects();
+        if (names.length > 0 && deviceclasses.length > 0) {
+          setInvObjects();
+        }
         break;
 
       case '{"608"': //var pollingData = '{"608":null,"777":{"0":null},"778":{"0":null},"782":null,"801":{"170":null},"858":null}';
@@ -1020,6 +1022,10 @@ function defdeviceinfo() { //Geräteinfos httpsReqGetUzDeviceinfo
   adapter.log.debug("Devicetypes: " + devicetypes);
   adapter.log.debug("Devicebrands: " + devicebrands);
   adapter.log.debug("Deviceclasses: " + deviceclasses);
+
+  if (names.length > 0 && deviceclasses.length > 0) {
+    setInvObjects();
+  }
 
 } // end defdeviceinfo
 
