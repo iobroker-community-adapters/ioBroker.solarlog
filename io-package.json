@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "news": {
+      "2.0.2": {
+        "en": "smart energy 'switch grou' data added",
+        "de": "SmartEnergy Schaltgruppen hinzugefügt"
+      },
       "2.0.1": {
         "en": "Bugfix (better timing to set inverter data)",
         "de": "Fehlerbehebung (Timing beim Anlegen der Unterzähler optimiert)"

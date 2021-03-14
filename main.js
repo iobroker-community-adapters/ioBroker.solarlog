@@ -29,6 +29,8 @@ var brandlist = [];
 var deviceclasslist = ["Wechselrichter", "Sensor", "Z채hler", "Hybrid-System", "Batterie", "Intelligente Verbraucher", "Schalter", "W채rmepumpe", "Heizstab", "Ladestation"];
 var numinv = 0;
 var names = [];
+var numsg = 0;
+var namessg = [];
 
 var deviceinfos = [];
 var devicetypes = [];
@@ -68,9 +70,9 @@ var token = "";
 
 var reqdata;
 
-var startupData = '{"152":null,"161":null,"162":null,"610":null,"611":null,"617":null,"706":null,"739":null,"740":null,"744":null,"800":{"100":null,"160":null},"801":{"101":null,"102":null},"858":null,"895":{"100":null,"101":null,"102":null,"103":null,"104":null,"105":null}}';
+var startupData = '{"152":null,"161":null,"162":null,"447":null,"610":null,"611":null,"617":null,"706":null,"739":null,"740":null,"744":null,"800":{"100":null,"160":null},"801":{"101":null,"102":null},"858":null,"895":{"100":null,"101":null,"102":null,"103":null,"104":null,"105":null}}';
 var inverterDataArray = [];
-var pollingData = '{"608":null,"777":{"0":null},"778":{"0":null},"782":null,"801":{"170":null},"858":null}';
+var pollingData = '{"608":null,"447":null,"777":{"0":null},"778":{"0":null},"782":null,"801":{"170":null,"175":null},"858":null}';
 var historicData = '{"854":null,"877":null,"878":null}';
 
 let polling;
@@ -392,8 +394,7 @@ function logcheck(datalc) {
 }; //logcheck END
 
 function httpsRequest(reqdata) { //F체hrt eine Abfrage beim solarlog durch und 체bergibt das REsultat zur Auswertung.
-
-  var data = 'token=' + datatoken + ';preval=none;' + reqdata;
+ var data = 'token=' + datatoken + ';preval=none;' + reqdata;
 
   adapter.log.debug("DATA: " + data + "DATALENGTH: " + data.length)
   var options = optionsdefault;
@@ -421,13 +422,21 @@ function httpsRequest(reqdata) { //F체hrt eine Abfrage beim solarlog durch und �
           requestcounter = 0;
           readSolarlogData(reqdata, bodyr);
         } else {
-          if (requestcounter > 3) {
+          if (requestcounter > 4) {
             adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
             restartAdapter();
-          } else {
-            adapter.log.info('Fehler beim http-request: Statuscode:' + res.statusCode + '. F체hre Request erneut aus.')
+          } else if (requestcounter > 3) {
+            adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + res.statusCode + '. F체hre Request in 60 Sekunden erneut aus.')
             requestcounter++;
-            httpsRequest(reqdata);
+            setTimeout(function() {
+              httpsRequest(reqdata);
+            }, 60000);
+          } else {
+            adapter.log.info('Fehler beim http-request: Statuscode:' + res.statusCode + '. F체hre Request in 10 Sekunden erneut aus.')
+            requestcounter++;
+            setTimeout(function() {
+              httpsRequest(reqdata);
+            }, 10000);
           }
         }
       } catch (e) {
@@ -475,7 +484,7 @@ function readSolarlogData(reqdata, resdata) {
 
         break;
 
-      case '{"152"': //var startupData = '{"152":null,"161":null,"162":null,"706":null,"739":null,"740":null,"744":null,"610":null,"611":null,"617":null,"800":{"100":null,"160":null},"801":{"101":null,"102":null},"858":null,"895":{"100":null,"101":null,"102":null,"103":null,"104":null,"105":null}}';
+      case '{"152"': //var startupData = ''{"152":null,"161":null,"162":null,"447":null,"610":null,"611":null,"617":null,"706":null,"739":null,"740":null,"744":null,"800":{"100":null,"160":null},"801":{"101":null,"102":null},"858":null,"895":{"100":null,"101":null,"102":null,"103":null,"104":null,"105":null}}';
 
         try { //"739":null,"744":null
           devicelist = JSON.parse(resdata)[739];
@@ -510,6 +519,24 @@ function readSolarlogData(reqdata, resdata) {
 
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in get numinv: " + e);
+          throw e
+        }
+
+        try { //"447":null
+          var sgdata = JSON.parse(resdata)[447];
+          adapter.log.debug("Schaltgruppendaten: " + sgdata);
+          for (var isg = 0; isg < 10; isg++) {
+            var sgname = JSON.parse(resdata)[447][isg][100];
+            if (sgname != "") {
+              adapter.log.debug("neue Schaltgruppe: " + sgname);
+              namessg.push(sgname);
+            }
+          }
+          adapter.log.debug("Anzahl Schaltgruppen: " + namessg.length)
+          numsg = namessg.length;
+
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in get switchgrouplist: " + e);
           throw e
         }
 
@@ -602,6 +629,32 @@ function readSolarlogData(reqdata, resdata) {
           }
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in status data inverters: " + e);
+          throw e
+        }
+
+        try { //"447":null
+          var dataSG = (JSON.parse(resdata)[447]);
+          adapter.log.debug("Schaltgruppen: " + namessg);
+          adapter.log.debug("Anzahl Elemente: " + numsg);
+          for (var sgj = 0; sgj < numsg; sgj++) {
+            adapter.log.debug("SwichtGroup." + namessg[sgj] + ": " + dataSG[sgj][102]);
+            adapter.setState("SwitchGroup." + namessg[sgj] + ".mode", dataSG[sgj][102], true);
+          }
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in swichtgroupmode: " + e);
+          throw e
+        }
+
+        try { //"801":{"175":null}
+          var dataSGs = (JSON.parse(resdata)[801][175]);
+          adapter.log.debug("Schaltgruppen: " + namessg);
+          adapter.log.debug("Anzahl Elemente: " + numsg);
+          for (var sgsj = 0; sgsj < numsg; sgsj++) {
+            adapter.log.debug("SwichtGroup." + namessg[sgsj] + ": " + dataSGs[sgsj][101]);
+            adapter.setState("SwitchGroup." + namessg[sgsj] + ".state", dataSGs[sgsj][101], true);
+          }
+        } catch (e) {
+          adapter.log.warn("readSolarlogData - Fehler in swichtgroupmode: " + e);
           throw e
         }
 
@@ -963,8 +1016,13 @@ function readSolarlogData(reqdata, resdata) {
 
       case '{"801"': //nur Daten 체ber offene JSON-Schnittstelle'
         try {
+          var jsonsg = (JSON.parse(resdata)[801][175]);
+          adapter.log.debug("Data Switchgroup: " + jsonsg);
+
+
+
           json = (JSON.parse(resdata)[801][170]);
-          adapter.log.debug("Data open JSON: " + resdata);
+          adapter.log.debug("Data open JSON: " + json);
           adapter.setState('info.lastSync', json[100], true);
           adapter.setState('info.totalPower', json[116], true);
           adapter.setState('status.pac', json[101], true);
@@ -982,6 +1040,8 @@ function readSolarlogData(reqdata, resdata) {
           adapter.setState('status.consyieldmonth', json[113], true);
           adapter.setState('status.consyieldyear', json[114], true);
           adapter.setState('status.consyieldtotal', json[115], true);
+
+
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in standard data request: " + e);
           throw e;
@@ -1034,6 +1094,8 @@ function setInvObjects() {
   adapter.log.debug("Lege nun Objekte an - soweit nicht vorhanden 2");
   adapter.log.debug("NumInv Obj: " + numinv);
   adapter.log.debug("Names zum anlegen: " + names);
+  adapter.log.debug("Anzahl Schaltgruppen: " + numsg);
+  adapter.log.debug("Schaltgruppen: " + namessg);
   for (var i = 0; i < (numinv - 1); i++) {
     adapter.setObjectNotExists('INV.' + names[i], {
       type: 'channel',
@@ -1291,6 +1353,49 @@ function setInvObjects() {
       native: {}
     });
   }
+
+  if (numsg > 0) {
+    for (var jsg = 0; jsg < numsg; jsg++) {
+      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".mode", {
+        type: 'state',
+        common: {
+          name: 'swichtgroupmode',
+          desc: 'shows set mode on/auto/off',
+          type: 'number',
+          states: {
+            0: "OFF",
+            1: "ON",
+            2: "AUTO"
+          },
+          role: "value.switchgroupmode",
+          read: true,
+          write: false
+        },
+        native: {}
+      });
+      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".state", {
+        type: 'state',
+        common: {
+          name: 'swichtgroupstate',
+          desc: 'shows set mode on/auto/off',
+          type: 'number',
+          states: {
+            0: "OFF",
+            240: "Switching",
+            255: "ON"
+          },
+          role: "value.switchgroupstate",
+          read: true,
+          write: false
+        },
+        native: {}
+      });
+
+    }
+  }
+
+
+
   adapter.setObjectNotExists('SelfCons.selfconstoday', {
     type: 'state',
     common: {
