@@ -394,7 +394,7 @@ function logcheck(datalc) {
 }; //logcheck END
 
 function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
- var data = 'token=' + datatoken + ';preval=none;' + reqdata;
+  var data = 'token=' + datatoken + ';preval=none;' + reqdata;
 
   adapter.log.debug("DATA: " + data + "DATALENGTH: " + data.length)
   var options = optionsdefault;
@@ -637,8 +637,8 @@ function readSolarlogData(reqdata, resdata) {
           adapter.log.debug("Schaltgruppen: " + namessg);
           adapter.log.debug("Anzahl Elemente: " + numsg);
           for (var sgj = 0; sgj < numsg; sgj++) {
-            adapter.log.debug("SwichtGroup." + namessg[sgj] + ": " + dataSG[sgj][102]);
-            adapter.setState("SwitchGroup." + namessg[sgj] + ".mode", dataSG[sgj][102], true);
+            adapter.log.debug("SwichtGroup." + namessg[sgj].trim() + ": " + dataSG[sgj][102]);
+            adapter.setState("SwitchGroup." + namessg[sgj].trim() + ".mode", dataSG[sgj][102], true);
           }
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in swichtgroupmode: " + e);
@@ -650,8 +650,8 @@ function readSolarlogData(reqdata, resdata) {
           adapter.log.debug("Schaltgruppen: " + namessg);
           adapter.log.debug("Anzahl Elemente: " + numsg);
           for (var sgsj = 0; sgsj < numsg; sgsj++) {
-            adapter.log.debug("SwichtGroup." + namessg[sgsj] + ": " + dataSGs[sgsj][101]);
-            adapter.setState("SwitchGroup." + namessg[sgsj] + ".state", dataSGs[sgsj][101], true);
+            adapter.log.debug("SwichtGroup." + namessg[sgsj].trim() + ": " + dataSGs[sgsj][101]);
+            adapter.setState("SwitchGroup." + namessg[sgsj].trim() + ".state", dataSGs[sgsj][101], true);
           }
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in swichtgroupmode: " + e);
@@ -1356,7 +1356,7 @@ function setInvObjects() {
 
   if (numsg > 0) {
     for (var jsg = 0; jsg < numsg; jsg++) {
-      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".mode", {
+      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg].trim() + ".mode", {
         type: 'state',
         common: {
           name: 'swichtgroupmode',
@@ -1373,7 +1373,7 @@ function setInvObjects() {
         },
         native: {}
       });
-      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".state", {
+      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg].trim() + ".state", {
         type: 'state',
         common: {
           name: 'swichtgroupstate',
