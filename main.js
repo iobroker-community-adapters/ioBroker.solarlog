@@ -529,11 +529,15 @@ function readSolarlogData(reqdata, resdata) {
             var sgname = JSON.parse(resdata)[447][isg][100];
             if (sgname != "") {
               adapter.log.debug("neue Schaltgruppe: " + sgname);
-              namessg.push(sgname);
             }
+            namessg[isg] = sgname.replace(/\s+/g, '');
           }
-          adapter.log.debug("Anzahl Schaltgruppen: " + namessg.length)
-          numsg = namessg.length;
+          adapter.log.debug("Anzahl Schaltgruppen: " + namessg.filter(Boolean).length)
+          numsg = namessg.filter(Boolean).length;
+          adapter.log.debug("namessg = " + namessg);
+          adapter.log.debug("Schaltgruppen neu: " + namessg.filter(function() {
+            return true
+          }));
 
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in get switchgrouplist: " + e);
@@ -634,11 +638,19 @@ function readSolarlogData(reqdata, resdata) {
 
         try { //"447":null
           var dataSG = (JSON.parse(resdata)[447]);
-          adapter.log.debug("Schaltgruppen: " + namessg);
+          adapter.log.debug("Schaltgruppen: " + namessg.filter(function() {
+            return true
+          }));
           adapter.log.debug("Anzahl Elemente: " + numsg);
-          for (var sgj = 0; sgj < numsg; sgj++) {
-            adapter.log.debug("SwichtGroup." + namessg[sgj].trim() + ": " + dataSG[sgj][102]);
-            adapter.setState("SwitchGroup." + namessg[sgj].trim() + ".mode", dataSG[sgj][102], true);
+          for (var sgj = 0; sgj < 10; sgj++) {
+            if (namessg[sgj] != "") {
+              adapter.log.debug("SwichtGroup." + namessg[sgj] + " Modus: " + dataSG[sgj][102]);
+              adapter.setState("SwitchGroup." + namessg[sgj] + ".mode", dataSG[sgj][102], true);
+              adapter.log.debug("SwichtGroup." + namessg[sgj] + " Verknüpfte Hardware: " + names[dataSG[sgj][101][0][100]]);
+              adapter.setState("SwitchGroup." + namessg[sgj] + ".linkeddev", names[dataSG[sgj][101][0][100]], true);
+              adapter.log.debug("SwichtGroup." + namessg[sgj] + " Verknüpfter Hardware Untereinheit: " + names[dataSG[sgj][101][0][101]]);
+              adapter.setState("SwitchGroup." + namessg[sgj] + ".linkeddevsub", dataSG[sgj][101][0][101], true);
+            }
           }
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in swichtgroupmode: " + e);
@@ -647,11 +659,15 @@ function readSolarlogData(reqdata, resdata) {
 
         try { //"801":{"175":null}
           var dataSGs = (JSON.parse(resdata)[801][175]);
-          adapter.log.debug("Schaltgruppen: " + namessg);
+          adapter.log.debug("Schaltgruppen: " + namessg.filter(function() {
+            return true
+          }));
           adapter.log.debug("Anzahl Elemente: " + numsg);
-          for (var sgsj = 0; sgsj < numsg; sgsj++) {
-            adapter.log.debug("SwichtGroup." + namessg[sgsj].trim() + ": " + dataSGs[sgsj][101]);
-            adapter.setState("SwitchGroup." + namessg[sgsj].trim() + ".state", dataSGs[sgsj][101], true);
+          for (var sgsj = 0; sgsj < 10; sgsj++) {
+            if (namessg[sgsj] != "") {
+              adapter.log.debug("SwichtGroup." + namessg[sgsj] + " Status: " + dataSGs[sgsj][101]);
+              adapter.setState("SwitchGroup." + namessg[sgsj] + ".state", dataSGs[sgsj][101], true);
+            }
           }
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in swichtgroupmode: " + e);
@@ -1356,41 +1372,72 @@ function setInvObjects() {
 
   if (numsg > 0) {
     for (var jsg = 0; jsg < numsg; jsg++) {
-      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg].trim() + ".mode", {
-        type: 'state',
-        common: {
-          name: 'swichtgroupmode',
-          desc: 'shows set mode on/auto/off',
-          type: 'number',
-          states: {
-            0: "OFF",
-            1: "ON",
-            2: "AUTO"
+      if (namessg[jsg] != "") {
+        adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".mode", {
+          type: 'state',
+          common: {
+            name: 'swichtgroupmode',
+            desc: 'shows set mode on/auto/off',
+            type: 'number',
+            states: {
+              0: "OFF",
+              1: "ON",
+              2: "AUTO"
+            },
+            role: "value.switchgroupmode",
+            read: true,
+            write: false
           },
-          role: "value.switchgroupmode",
-          read: true,
-          write: false
-        },
-        native: {}
-      });
-      adapter.setObjectNotExists("SwitchGroup." + namessg[jsg].trim() + ".state", {
-        type: 'state',
-        common: {
-          name: 'swichtgroupstate',
-          desc: 'shows set mode on/auto/off',
-          type: 'number',
-          states: {
-            0: "OFF",
-            240: "Switching",
-            255: "ON"
-          },
-          role: "value.switchgroupstate",
-          read: true,
-          write: false
-        },
-        native: {}
-      });
+          native: {}
+        });
 
+        adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".state", {
+          type: 'state',
+          common: {
+            name: 'swichtgroupstate',
+            desc: 'shows set mode on/auto/off',
+            type: 'number',
+            states: {
+              0: "OFF",
+              240: "Switching",
+              255: "ON"
+            },
+            role: "value.switchgroupstate",
+            read: true,
+            write: false
+          },
+          native: {}
+        });
+
+        adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".linkeddev", {
+          type: 'state',
+          common: {
+            name: 'swichtgrouplinkeddev',
+            desc: 'Hardware linked to SwitchGroup',
+            type: 'string',
+
+            role: "value.switchgrouplinkeddev",
+            read: true,
+            write: false
+          },
+          native: {}
+        });
+
+        adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".linkeddevsub", {
+          type: 'state',
+          common: {
+            name: 'swichtgrouplinkeddevsub',
+            desc: 'Sub-device of hardware linked to SwitchGroup (if existing)',
+            type: 'number',
+
+            role: "value.switchgrouplinkeddevsub",
+            read: true,
+            write: false
+          },
+          native: {}
+        })
+
+      }
     }
   }
 
