@@ -30,7 +30,7 @@ var deviceclasslist = ["Wechselrichter", "Sensor", "Zähler", "Hybrid-System", "
 var numinv = 0;
 var names = [];
 var numsg = 0;
-var namessg = [];
+const namessg = new Array(10);
 
 var deviceinfos = [];
 var devicetypes = [];
@@ -648,7 +648,7 @@ function readSolarlogData(reqdata, resdata) {
               adapter.setState("SwitchGroup." + namessg[sgj] + ".mode", dataSG[sgj][102], true);
               adapter.log.debug("SwichtGroup." + namessg[sgj] + " Verknüpfte Hardware: " + names[dataSG[sgj][101][0][100]]);
               adapter.setState("SwitchGroup." + namessg[sgj] + ".linkeddev", names[dataSG[sgj][101][0][100]], true);
-              adapter.log.debug("SwichtGroup." + namessg[sgj] + " Verknüpfter Hardware Untereinheit: " + names[dataSG[sgj][101][0][101]]);
+              adapter.log.debug("SwichtGroup." + namessg[sgj] + " Verknüpfte Hardware Untereinheit: " + dataSG[sgj][101][0][101]);
               adapter.setState("SwitchGroup." + namessg[sgj] + ".linkeddevsub", dataSG[sgj][101][0][101], true);
             }
           }
@@ -1371,7 +1371,7 @@ function setInvObjects() {
   }
 
   if (numsg > 0) {
-    for (var jsg = 0; jsg < numsg; jsg++) {
+    for (var jsg = 0; jsg < 10; jsg++) {
       if (namessg[jsg] != "") {
         adapter.setObjectNotExists("SwitchGroup." + namessg[jsg] + ".mode", {
           type: 'state',
