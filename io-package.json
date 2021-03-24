@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.0.2",
+    "version": "2.1.0",
     "news": {
+      "2.1.0": {
+        "en": "Cockpit-Data (consumption/production/battery/feed) added. Polling structure optimized for a faster polling of certain values ('live'-data).",
+        "de": "Cockpit-Daten (Verbrauch/Produktion/Batterie/Einspeisung) hinzugefügt. Abfragestruktur angepasse, erlaubt häufigeres Abrufen von bestimmten Werten."
+      },
       "2.0.2": {
         "en": "smart energy 'switch grou' data added",
         "de": "SmartEnergy Schaltgruppen hinzugefügt"
@@ -111,7 +115,8 @@
   "native": {
     "host": "",
     "port": 80,
-    "pollInterval": 300000,
+    "pollIntervalcurrent": 30,
+    "pollIntervalperiodic": 5,
     "invimp": false,
     "numinv": 0,
     "forecast": false,
@@ -220,6 +225,23 @@
         "write": false,
         "def": false,
         "desc": "Total output PAC from all of the inverters",
+        "unit": "W"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "status.feed",
+      "type": "state",
+      "common": {
+        "name": "Feed",
+        "type": "number",
+        "role": "value.feed",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Feed to (+) or consumption from (-) grid",
         "unit": "W"
       },
       "native": {

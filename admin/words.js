@@ -36,16 +36,27 @@ systemDictionary = {
     "es": "Puerto",
     "pl": "Port"
   },
-  "pollInterval": {
-    "en": "polling Interval (ms)",
-    "de": "Abrufintervall (ms)",
-    "ru": "Интервал опроса (ms)",
-    "pt": "Intervalo de votação (ms)",
-    "nl": "polling-interval (ms)",
-    "fr": "intervalle d'interrogation (ms)",
-    "it": "Intervallo di polling (ms)",
-    "es": "intervalo de votación (ms)",
-    "pl": "Interwał odpytywania (ms)"
+  "pollIntervalcurrent": {
+    "en": "polling interval production/consumption (s)",
+    "de": "Abfrageintervall Produktion / Verbrauch (e)",
+    "ru": "Интервал опроса производство / потребление (а)",
+    "pt": "produção / consumo (s) do intervalo de sondagem",
+    "nl": "polling interval productie / consumptie (s)",
+    "fr": "production / consommation (s) d'intervalle d'interrogation",
+    "it": "produzione / consumo (i) dell'intervallo di polling",
+    "es": "producción / consumo (s) del intervalo de sondeo",
+    "pl": "produkcja / zużycie w interwale sondowania"
+  },
+  "pollIntervalperiodic": {
+    "en": "polling interval average-/sumup values & other (min)",
+    "de": "Abfrageintervall Durchschnitts- / Summenwerte & andere (min)",
+    "ru": "интервал опроса средние / суммарные значения и другое (мин.)",
+    "pt": "média do intervalo de sondagem- / valores de soma e outros (min)",
+    "nl": "polling interval gemiddelde- / somwaarden & andere (min)",
+    "fr": "Intervalle d'interrogation valeurs moyennes / sommaires et autres (min)",
+    "it": "Intervallo di polling valori medi / di riepilogo e altro (min)",
+    "es": "Intervalo de sondeo valores promedio / sumatorio y otros (min)",
+    "pl": "wartości średnie / sumaryczne interwału odpytywania i inne (min)"
   },
   "invimp": {
     "en": "Import of inverter and other devices data",
