@@ -38,14 +38,14 @@ systemDictionary = {
   },
   "pollIntervalcurrent": {
     "en": "polling interval production/consumption (s)",
-    "de": "Abfrageintervall Produktion / Verbrauch (e)",
+    "de": "Abfrageintervall Produktion / Verbrauch (s)",
     "ru": "Интервал опроса производство / потребление (а)",
-    "pt": "produção / consumo (s) do intervalo de sondagem",
+    "pt": "intervalo de sondagem produção / consumo (s)",
     "nl": "polling interval productie / consumptie (s)",
-    "fr": "production / consommation (s) d'intervalle d'interrogation",
-    "it": "produzione / consumo (i) dell'intervallo di polling",
-    "es": "producción / consumo (s) del intervalo de sondeo",
-    "pl": "produkcja / zużycie w interwale sondowania"
+    "fr": "intervalle d'interrogation production / consommation (s)",
+    "it": "intervallo di polling produzione / consumo (s)",
+    "es": "intervalo de sondeo producción / consumo (s)",
+    "pl": "interwale sondowania produkcja / zużycie (s)"
   },
   "pollIntervalperiodic": {
     "en": "polling interval average-/sumup values & other (min)",
