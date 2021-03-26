@@ -554,9 +554,9 @@
         "name": "Inverter icon",
         "type": "number",
         "states": {
-          0: "OFF",
-          1: "ON",
-          2: "flashing"
+          "0": "OFF",
+          "1": "ON",
+          "2": "flashing"
         },
         "role": "value.icon",
         "read": true,
@@ -574,9 +574,9 @@
         "name": "Network icon",
         "type": "number",
         "states": {
-          0: "OFF",
-          1: "ON",
-          2: "flashing"
+          "0": "OFF",
+          "1": "ON",
+          "2": "flashing"
         },
         "role": "value.icon",
         "read": true,
@@ -594,9 +594,9 @@
         "name": "Meter icon",
         "type": "number",
         "states": {
-          0: "OFF",
-          1: "ON",
-          12: "flashing"
+          "0": "OFF",
+          "1": "ON",
+          "12": "flashing"
         },
         "role": "value.icon",
         "read": true,
@@ -614,9 +614,9 @@
         "name": "Mail icon",
         "type": "number",
         "states": {
-          0: "OFF",
-          1: "ON",
-          2: "flashing"
+          "0": "OFF",
+          "1": "ON",
+          "2": "flashing"
         },
         "role": "value.icon",
         "read": true,
