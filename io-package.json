@@ -223,7 +223,6 @@
         "role": "value.powerac",
         "read": true,
         "write": false,
-        "def": false,
         "desc": "Total output PAC from all of the inverters",
         "unit": "W"
       },
@@ -240,7 +239,6 @@
         "role": "value.feed",
         "read": true,
         "write": false,
-        "def": false,
         "desc": "Feed to (+) or consumption from (-) grid",
         "unit": "W"
       },
@@ -257,7 +255,6 @@
         "role": "value.feed",
         "read": true,
         "write": false,
-        "def": false,
         "desc": "Feed to grid",
         "unit": "W"
       },
@@ -290,7 +287,6 @@
         "role": "value.feed",
         "read": true,
         "write": false,
-        "def": false,
         "desc": "Consumption from (feed out of)grid",
         "unit": "W"
       },
@@ -307,7 +303,6 @@
         "role": "value.powerdc",
         "read": true,
         "write": false,
-        "def": false,
         "desc": "Total output PAC from all of the inverters",
         "unit": "W"
       },
