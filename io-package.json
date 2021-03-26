@@ -275,8 +275,7 @@
         "read": true,
         "write": false,
         "def": false,
-        "desc": "Indicates if grid is fed",
-        "unit": "W"
+        "desc": "Indicates if grid is fed"
       },
       "native": {
 
