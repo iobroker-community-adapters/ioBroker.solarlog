@@ -75,7 +75,7 @@ var startupData = '{"152":null,"161":null,"162":null,"447":null,"610":null,"611"
 var inverterDataArray = [];
 var pollingData = '{"447":null,"777":{"0":null},"778":{"0":null},"801":{"170":null}}';
 var historicData = '{"854":null,"877":null,"878":null}';
-var fastpollData = '{"608":null,"780":null,"781":null,"782":null,{"794":{"0":null}},"801":{"175":null},"858":null}';
+var fastpollData = '{"608":null,"780":null,"781":null,"782":null,"794":{"0":null},"801":{"175":null},"858":null}';
 
 let polling;
 let fastpolling;
@@ -829,12 +829,12 @@ function readSolarlogData(reqdata, resdata) {
             adapter.setState('status.feed', feed, true);
             if (Math.sign(feed) == 1) {
               adapter.setState('status.feedin', feed, true);
-              adapter.setState('status.feedactive', true, true);
+              adapter.setState('status.feedinactive', true, true);
               adapter.setState('status.feedout', 0, true);
             } else {
               adapter.setState('status.feedin', 0, true);
-              adapter.setState('status.feedactive', false, true);
-              adapter.setState('status.feedout', abs(feed), true);
+              adapter.setState('status.feedinactive', false, true);
+              adapter.setState('status.feedout', Math.abs(feed), true);
             }
           } else if (battdevicepresent == "false" && battpresent == "true") {
             adapter.setState('INV.Battery.BattLevel', battdata[1], true);
@@ -845,12 +845,12 @@ function readSolarlogData(reqdata, resdata) {
             adapter.setState('status.feed', feed, true);
             if (Math.sign(feed) == 1) {
               adapter.setState('status.feedin', feed, true);
-              adapter.setState('status.feedactive', true, true);
+              adapter.setState('status.feedinactive', true, true);
               adapter.setState('status.feedout', 0, true);
             } else {
               adapter.setState('status.feedin', 0, true);
-              adapter.setState('status.feedactive', false, true);
-              adapter.setState('status.feedout', abs(feed), true);
+              adapter.setState('status.feedinactive', false, true);
+              adapter.setState('status.feedout', Math.abs(feed), true);
             }
           } else if (battdevicepresent == "false" && battpresent == "false") {
             adapter.log.debug("Keine Batterie vorhanden");
@@ -859,12 +859,12 @@ function readSolarlogData(reqdata, resdata) {
             adapter.setState('status.feed', feed, true);
             if (Math.sign(feed) == 1) {
               adapter.setState('status.feedin', feed, true);
-              adapter.setState('status.feedactive', true, true);
+              adapter.setState('status.feedinactive', true, true);
               adapter.setState('status.feedout', 0, true);
             } else {
               adapter.setState('status.feedin', 0, true);
-              adapter.setState('status.feedactive', false, true);
-              adapter.setState('status.feedout', abs(feed), true);
+              adapter.setState('status.feedinactive', false, true);
+              adapter.setState('status.feedout', Math.abs(feed), true);
             }
           } else {
             adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
