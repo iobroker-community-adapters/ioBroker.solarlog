@@ -249,6 +249,57 @@
       }
     },
     {
+      "_id": "status.feedin",
+      "type": "state",
+      "common": {
+        "name": "Feed in grid",
+        "type": "number",
+        "role": "value.feed",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Feed to grid",
+        "unit": "W"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "status.feedinactive",
+      "type": "state",
+      "common": {
+        "name": "Feed active",
+        "type": "boolean",
+        "role": "value.feed",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Indicates if grid is fed",
+        "unit": "W"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "status.feedout",
+      "type": "state",
+      "common": {
+        "name": "Feed out of grid",
+        "type": "number",
+        "role": "value.feed",
+        "read": true,
+        "write": false,
+        "def": false,
+        "desc": "Consumption from (feed out of)grid",
+        "unit": "W"
+      },
+      "native": {
+
+      }
+    },
+    {
       "_id": "status.pdc",
       "type": "state",
       "common": {
@@ -482,6 +533,161 @@
         "def": false,
         "desc": "Accumulated total consumption",
         "unit": "Wh"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.OK",
+      "type": "state",
+      "common": {
+        "name": "Display OK",
+        "type": "boolean",
+        "role": "value.consyieldtotal",
+        "read": true,
+        "write": false,
+        "desc": "Indication if display shows 'OK'"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.invicon",
+      "type": "state",
+      "common": {
+        "name": "Inverter icon",
+        "type": "number",
+        "states": {
+          0: "OFF",
+          1: "ON",
+          2: "flashing"
+        },
+        "role": "value.icon",
+        "read": true,
+        "write": false,
+        "desc": "Indication if display shows inverter icon"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.networkicon",
+      "type": "state",
+      "common": {
+        "name": "Network icon",
+        "type": "number",
+        "states": {
+          0: "OFF",
+          1: "ON",
+          2: "flashing"
+        },
+        "role": "value.icon",
+        "read": true,
+        "write": false,
+        "desc": "Indication if display shwos network icon"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.metericon",
+      "type": "state",
+      "common": {
+        "name": "Meter icon",
+        "type": "number",
+        "states": {
+          0: "OFF",
+          1: "ON",
+          12: "flashing"
+        },
+        "role": "value.icon",
+        "read": true,
+        "write": false,
+        "desc": "Indication if display shows meter icon"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.mailicon",
+      "type": "state",
+      "common": {
+        "name": "Mail icon",
+        "type": "number",
+        "states": {
+          0: "OFF",
+          1: "ON",
+          2: "flashing"
+        },
+        "role": "value.icon",
+        "read": true,
+        "write": false,
+        "desc": "Indication if display shows mail icon"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.inverror",
+      "type": "state",
+      "common": {
+        "name": "Inverter error",
+        "type": "number",
+        "role": "value.error",
+        "read": true,
+        "write": false,
+        "desc": "Errornumber inverter errors"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.networkerror",
+      "type": "state",
+      "common": {
+        "name": "Network error",
+        "type": "number",
+        "role": "value.error",
+        "read": true,
+        "write": false,
+        "desc": "Errornumber network errors"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.metersoffline",
+      "type": "state",
+      "common": {
+        "name": "Meters offline",
+        "type": "number",
+        "role": "value.error",
+        "read": true,
+        "write": false,
+        "desc": "Number of meters offline"
+      },
+      "native": {
+
+      }
+    },
+    {
+      "_id": "display.mailerror",
+      "type": "state",
+      "common": {
+        "name": "Mail error",
+        "type": "number",
+        "role": "value.error",
+        "read": true,
+        "write": false,
+        "desc": "Number of mail error"
       },
       "native": {
 

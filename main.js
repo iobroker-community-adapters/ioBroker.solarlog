@@ -50,6 +50,7 @@ var battdata = [];
 var testend;
 var testj = 0;
 var testi = 0;
+var feed = 0;
 
 var historic = "false";
 var histcron = "0 0 * * *"
@@ -74,7 +75,7 @@ var startupData = '{"152":null,"161":null,"162":null,"447":null,"610":null,"611"
 var inverterDataArray = [];
 var pollingData = '{"447":null,"777":{"0":null},"778":{"0":null},"801":{"170":null}}';
 var historicData = '{"854":null,"877":null,"878":null}';
-var fastpollData = '{"608":null,"780":null,"781":null,"782":null,"801":{"175":null},"858":null}';
+var fastpollData = '{"608":null,"780":null,"781":null,"782":null,{"794":{"0":null}},"801":{"175":null},"858":null}';
 
 let polling;
 let fastpolling;
@@ -823,23 +824,53 @@ function readSolarlogData(reqdata, resdata) {
             adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
             adapter.setState("INV." + names[battindex[0]] + '.ChargePower', battdata[2], true);
             adapter.setState("INV." + names[battindex[0]] + '.DischargePower', battdata[3], true);
-            adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + ((+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3]));
-            adapter.setState('status.feed', ((+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3]), true);
+            feed = (+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3];
+            adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + feed);
+            adapter.setState('status.feed', feed, true);
+            if (Math.sign(feed) == 1) {
+              adapter.setState('status.feedin', feed, true);
+              adapter.setState('status.feedactive', true, true);
+              adapter.setState('status.feedout', 0, true);
+            } else {
+              adapter.setState('status.feedin', 0, true);
+              adapter.setState('status.feedactive', false, true);
+              adapter.setState('status.feedout', abs(feed), true);
+            }
           } else if (battdevicepresent == "false" && battpresent == "true") {
             adapter.setState('INV.Battery.BattLevel', battdata[1], true);
             adapter.setState('INV.Battery.ChargePower', battdata[2], true);
             adapter.setState('INV.Battery.DischargePower', battdata[3], true);
-            adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + ((+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3]));
-            adapter.setState('status.feed', ((+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3]), true);
+            feed = (+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3];
+            adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + feed);
+            adapter.setState('status.feed', feed, true);
+            if (Math.sign(feed) == 1) {
+              adapter.setState('status.feedin', feed, true);
+              adapter.setState('status.feedactive', true, true);
+              adapter.setState('status.feedout', 0, true);
+            } else {
+              adapter.setState('status.feedin', 0, true);
+              adapter.setState('status.feedactive', false, true);
+              adapter.setState('status.feedout', abs(feed), true);
+            }
           } else if (battdevicepresent == "false" && battpresent == "false") {
             adapter.log.debug("Keine Batterie vorhanden");
-            adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + (+datafast[780] - +datafast[781]));
-            adapter.setState('status.feed', (+datafast[780] - +datafast[781]), true);
+            feed = (+datafast[780] - +datafast[781]);
+            adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + feed);
+            adapter.setState('status.feed', feed, true);
+            if (Math.sign(feed) == 1) {
+              adapter.setState('status.feedin', feed, true);
+              adapter.setState('status.feedactive', true, true);
+              adapter.setState('status.feedout', 0, true);
+            } else {
+              adapter.setState('status.feedin', 0, true);
+              adapter.setState('status.feedactive', false, true);
+              adapter.setState('status.feedout', abs(feed), true);
+            }
           } else {
             adapter.log.debug("Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch")
           }
 
-
+          setdisplaydata(datafast[794][0]);
 
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in datafast: " + e);
@@ -2067,6 +2098,37 @@ function getforecastdata() {
     }
   });
 } //end getforecastdata()
+
+function setdisplaydata(displaydata) {
+  var checkok = [];
+  for (var di = 0; di <= 15; di++) {
+    checkok[di] = displaydata[di][1];
+  }
+
+  function checkerr(errval) {
+    return errval == 0;
+  }
+  adapter.log.debug("Display OK?: " + checkok.every(checkerr));
+  adapter.setState('display.OK', checkok.every(checkerr), true);
+
+  adapter.log.debug("Display Icon Inverter: " + displaydata[0][0]);
+  adapter.setState('display.invicon', displaydata[0][0], true);
+  adapter.log.debug("Display Icon Network: " + displaydata[1][0]);
+  adapter.setState('display.networkicon', displaydata[1][0], true);
+  adapter.log.debug("Display Icon Meter: " + displaydata[6][0]);
+  adapter.setState('display.metericon', displaydata[6][0], true);
+  adapter.log.debug("Display Icon Mail: " + displaydata[11][0]);
+  adapter.setState('display.mailicon', displaydata[11][0], true);
+  adapter.log.debug("Display Inverter Error: " + displaydata[0][1]);
+  adapter.setState('display.inverror', displaydata[0][1], true);
+  adapter.log.debug("Display Network Error: " + displaydata[1][1]);
+  adapter.setState('display.networkerror', displaydata[1][1], true);
+  adapter.log.debug("Display Meters offline: " + displaydata[6][1]);
+  adapter.setState('display.metersoffline', displaydata[6][1], true);
+  adapter.log.debug("Display Mail Error: " + displaydata[11][1]);
+  adapter.setState('display.mailerror', displaydata[11][1], true);
+
+} //end setdisplaydata
 
 function restartAdapter() {
   adapter.getForeignObject('system.adapter.' + adapter.namespace, (err, obj) => {
