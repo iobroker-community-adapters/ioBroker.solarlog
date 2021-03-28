@@ -802,11 +802,6 @@ function readSolarlogData(reqdata, resdata) {
             adapter.setState("INV." + names[uzj] + ".PAC", datafast[782][uzj], true);
           }
 
-          adapter.log.debug("Erzeugung: " + datafast[780]);
-          adapter.setState('status.pac', datafast[780], true);
-          adapter.log.debug("Verbrauch: " + datafast[781]);
-          adapter.setState('status.conspac', datafast[781], true);
-
           adapter.log.debug("Schaltgruppen: " + namessg.filter(function() {
             return true
           }));
@@ -820,11 +815,21 @@ function readSolarlogData(reqdata, resdata) {
 
           battdata = datafast[858];
           adapter.log.debug("Battdata: " + battdata);
+          adapter.log.debug("Battdata - Länge: " + battdata.length)
+          if (battdata.length == 0) {
+            battdata[2] = 0;
+            battdata[3] = 0;
+          }
+          adapter.log.debug("Erzeugung: " + (+datafast[780] - +battdata[3]));
+          adapter.setState('status.pac', (+datafast[780] - +battdata[3]), true);
+          adapter.log.debug("Verbrauch: " + (+datafast[781] - +battdata[2]));
+          adapter.setState('status.conspac', (+datafast[781] - +battdata[2]), true);
+
           if (battdevicepresent == "true" && battpresent == "true") {
             adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
             adapter.setState("INV." + names[battindex[0]] + '.ChargePower', battdata[2], true);
             adapter.setState("INV." + names[battindex[0]] + '.DischargePower', battdata[3], true);
-            feed = (+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3];
+            feed = (+datafast[780] - +datafast[781]);
             adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + feed);
             adapter.setState('status.feed', feed, true);
             if (Math.sign(feed) == 1) {
@@ -840,7 +845,7 @@ function readSolarlogData(reqdata, resdata) {
             adapter.setState('INV.Battery.BattLevel', battdata[1], true);
             adapter.setState('INV.Battery.ChargePower', battdata[2], true);
             adapter.setState('INV.Battery.DischargePower', battdata[3], true);
-            feed = (+datafast[780] - +datafast[781]) - +battdata[2] + +battdata[3];
+            feed = (+datafast[780] - +datafast[781]);
             adapter.log.debug("Erzeugung(+)/Verbrauch(-): " + feed);
             adapter.setState('status.feed', feed, true);
             if (Math.sign(feed) == 1) {
