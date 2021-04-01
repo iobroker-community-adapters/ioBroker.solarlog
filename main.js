@@ -211,7 +211,7 @@ function main() {
       fastpolling = setTimeout(function repeat() { // poll states every [30] seconds
         logcheck(fastpollData);
         setTimeout(repeat, pollingTimecurrent);
-      }, pollingTimecurrent);
+      }, pollingTimecurrent + 20000);
     } // endIf
 
     if (!polling) {
@@ -1535,7 +1535,7 @@ function setInvObjects() {
   adapter.setObjectNotExists('SelfCons.selfconsyear', {
     type: 'state',
     common: {
-      name: 'selfconslastyear',
+      name: 'selfconsyear',
       desc: 'Total self consumption year',
       type: 'number',
       role: "value.selfconsyear",

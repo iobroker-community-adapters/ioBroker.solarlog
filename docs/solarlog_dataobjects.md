@@ -6,7 +6,7 @@
 
 ## OTHERS
 
-All these requests have benn discovered by analyzing the solarlog webinterface with google's developer - tools.
+All these requests have been discovered by analyzing the solarlog webinterface with developer - tools.
 
 ### Device data (inverters/meters/batteries/other)
 
@@ -44,9 +44,11 @@ All these requests have benn discovered by analyzing the solarlog webinterface w
 
 -   {"152":null} 0-11: monthly % of total production estimated,
 -   {"161":null} Wp installed,
--   {"162":null} kWh/kWp p.a. estimated.
+-   {"162":null} kWh/kWp p.a. estimated,
 -   {"141":{"i":{"708/709/710"}}} list of events per device: 708: list of possible events, 709: error codes,
-    710: 100 last events (timestamps start, end, 0, eventcode, errorcode)
+        710: 100 last events (timestamps start, end, 0, eventcode, errorcode),
+-   {"780":null} Total energy input (production + battery discharge power),
+-   {"781":null} Total energy output (consumption + battery charge power).    
 
 ### System information
 
