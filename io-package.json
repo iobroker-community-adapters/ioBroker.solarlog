@@ -1,11 +1,11 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "news": {
-      "2.1.0": {
-        "en": "Cockpit-Data (consumption/production/battery/feed) added. Polling structure optimized for a faster polling of certain values ('live'-data).",
-        "de": "Cockpit-Daten (Verbrauch/Produktion/Batterie/Einspeisung) hinzugefügt. Abfragestruktur angepasse, erlaubt häufigeres Abrufen von bestimmten Werten."
+      "2.1.1": {
+        "en": "Cockpit- (consumption/production/battery/feed) and LCD-Display dataadded. Polling structure optimized for a faster polling of certain values ('live'-data).",
+        "de": "Cockpit- und (Verbrauch/Produktion/Batterie/Einspeisung) LCD-Display - Daten hinzugefügt. Abfragestruktur angepasse, erlaubt häufigeres Abrufen von bestimmten Werten."
       },
       "2.0.2": {
         "en": "smart energy 'switch grou' data added",
