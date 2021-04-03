@@ -796,11 +796,14 @@ function readSolarlogData(reqdata, resdata) {
           var namLeng = names.length;
           adapter.log.debug("Anzahl Elemente: " + namLeng);
           for (var uzj = 0; uzj < namLeng; uzj++) {
-            adapter.log.debug("INV." + names[uzj] + " Status: " + datafast[608][uzj]);
-            adapter.setState("INV." + names[uzj] + ".status", datafast[608][uzj], true);
-            adapter.log.debug("INV." + names[uzj] + " PAC: " + datafast[782][uzj]);
-            adapter.setState("INV." + names[uzj] + ".PAC", datafast[782][uzj], true);
+            if (deviceclasses[uzj] != "Batterie") {
+              adapter.log.debug("INV." + names[uzj] + " Status: " + datafast[608][uzj]);
+              adapter.setState("INV." + names[uzj] + ".status", datafast[608][uzj], true);
+              adapter.log.debug("INV." + names[uzj] + " PAC: " + datafast[782][uzj]);
+              adapter.setState("INV." + names[uzj] + ".PAC", datafast[782][uzj], true);
+            }
           }
+
 
           adapter.log.debug("Schaltgruppen: " + namessg.filter(function() {
             return true
