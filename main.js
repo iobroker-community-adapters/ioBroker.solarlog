@@ -565,7 +565,7 @@ function readSolarlogData(reqdata, resdata) {
           adapter.setState('info.CLIB', JSON.parse(resdata)[611], true);
           adapter.setState('info.MAC', JSON.parse(resdata)[617], true);
           adapter.setState('info.SN', JSON.parse(resdata)[706], true);
-          adapter.setState('info.Model', JSON.parse(resdata)[800][100], true);
+          adapter.setState('info.Model', (JSON.parse(resdata)[800][100]).toString(), true);
           adapter.setState('info.InstDate', JSON.parse(resdata)[800][160], true);
           adapter.setState('info.FW', JSON.parse(resdata)[801][101], true);
           adapter.setState('info.FWrelD', JSON.parse(resdata)[801][102], true);
