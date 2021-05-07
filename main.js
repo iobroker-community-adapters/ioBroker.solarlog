@@ -664,11 +664,11 @@ function readSolarlogData(reqdata, resdata) {
           adapter.log.debug("Data801_170: " + json);
           adapter.setState('info.lastSync', json[100], true);
           adapter.setState('info.totalPower', json[116], true);
-          adapter.setState('status.pac', json[101], true);
+          adapter.setState('status.pac', parseInt(json[101]), true);
           adapter.setState('status.pdc', json[102], true);
           adapter.setState('status.uac', json[103], true);
           adapter.setState('status.udc', json[104], true);
-          adapter.setState('status.conspac', json[110], true);
+          adapter.setState('status.conspac', parseInt(json[110]), true);
           adapter.setState('status.yieldday', json[105], true);
           adapter.setState('status.yieldyesterday', json[106], true);
           adapter.setState('status.yieldmonth', json[107], true);
@@ -800,7 +800,7 @@ function readSolarlogData(reqdata, resdata) {
               adapter.log.debug("INV." + names[uzj] + " Status: " + datafast[608][uzj]);
               adapter.setState("INV." + names[uzj] + ".status", datafast[608][uzj], true);
               adapter.log.debug("INV." + names[uzj] + " PAC: " + datafast[782][uzj]);
-              adapter.setState("INV." + names[uzj] + ".PAC", datafast[782][uzj], true);
+              adapter.setState("INV." + names[uzj] + ".PAC", parseInt(datafast[782][uzj]), true);
             }
           }
 
@@ -824,9 +824,9 @@ function readSolarlogData(reqdata, resdata) {
             battdata[3] = 0;
           }
           adapter.log.debug("Erzeugung: " + (+datafast[780] - +battdata[3]));
-          adapter.setState('status.pac', (+datafast[780] - +battdata[3]), true);
+          adapter.setState('status.pac', parseInt(+datafast[780] - +battdata[3]), true);
           adapter.log.debug("Verbrauch: " + (+datafast[781] - +battdata[2]));
-          adapter.setState('status.conspac', (+datafast[781] - +battdata[2]), true);
+          adapter.setState('status.conspac', parseInt(+datafast[781] - +battdata[2]), true);
 
           if (battdevicepresent == "true" && battpresent == "true") {
             adapter.setState("INV." + names[battindex[0]] + '.BattLevel', battdata[1], true);
@@ -1085,7 +1085,7 @@ function readSolarlogData(reqdata, resdata) {
           adapter.setState('status.pdc', json[102], true);
           adapter.setState('status.uac', json[103], true);
           adapter.setState('status.udc', json[104], true);
-          adapter.setState('status.conspac', json[110], true);
+          adapter.setState('status.conspac', parseInt(json[110]), true);
           adapter.setState('status.yieldday', json[105], true);
           adapter.setState('status.yieldyesterday', json[106], true);
           adapter.setState('status.yieldmonth', json[107], true);
