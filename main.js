@@ -662,8 +662,8 @@ function readSolarlogData(reqdata, resdata) {
         try { //"801":{"170":null}
           json = (JSON.parse(resdata)[801][170]);
           adapter.log.debug("Data801_170: " + json);
-          adapter.setState('info.lastSync', json[100], true);
-          adapter.setState('info.totalPower', json[116], true);
+          adapter.setState('info.lastSync', json[100].toString(), true);
+          adapter.setState('info.totalPower', parseInt(json[116]), true);
           adapter.setState('status.pac', parseInt(json[101]), true);
           adapter.setState('status.pdc', json[102], true);
           adapter.setState('status.uac', json[103], true);
@@ -1080,7 +1080,7 @@ function readSolarlogData(reqdata, resdata) {
           json = (JSON.parse(resdata)[801][170]);
           adapter.log.debug("Data open JSON: " + json);
           adapter.setState('info.lastSync', json[100], true);
-          adapter.setState('info.totalPower', json[116], true);
+          adapter.setState('info.totalPower', parseInt(json[116]), true);
           adapter.setState('status.pac', json[101], true);
           adapter.setState('status.pdc', json[102], true);
           adapter.setState('status.uac', json[103], true);
