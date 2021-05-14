@@ -2020,7 +2020,7 @@ function setforecastobjects() {
     common: {
       name: 'forecastToday',
       desc: 'forecast for todays total kWh',
-      type: 'string',
+      type: 'number',
       role: "value.forecastToday",
       read: true,
       write: false,
@@ -2033,7 +2033,7 @@ function setforecastobjects() {
     common: {
       name: 'forecastTomorrow',
       desc: 'forecast for tomorrows total kWh',
-      type: 'string',
+      type: 'number',
       role: "value.forecastTomorrow",
       read: true,
       write: false,
