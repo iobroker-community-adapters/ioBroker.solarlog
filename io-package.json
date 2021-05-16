@@ -1,9 +1,9 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.1.2",
+    "version": "2.1.3",
     "news": {
-      "2.1.2": {
+      "2.1.3": {
         "en": "bugfixes (js-controller 3.3.x)",
         "de": "bugfixes (js-controller 3.3.x)"
       },
