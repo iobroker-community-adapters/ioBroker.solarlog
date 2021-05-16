@@ -2088,8 +2088,8 @@ function getforecastdata() {
             var watthourstomorrow = parseInt(response["body"]["result"]["watt_hours_day"][tomorrow.toISOString().slice(0, 10)]);
             adapter.log.debug("Vorhersage für morgen, " + tomorrow.toISOString().slice(0, 10) + ": " + watthourstomorrow);
 
-            adapter.setState('forecast.today', watthourstoday, true);
-            adapter.setState('forecast.tomorrow', watthourstomorrow, true);
+            adapter.setState('forecast.today', parseInt(watthourstoday), true);
+            adapter.setState('forecast.tomorrow', parseInt(watthourstomorrow), true);
             adapter.setState('info.latitude', lat, true);
             adapter.setState('info.longitude', lon, true);
             adapter.setState('info.inclination', dec, true);
