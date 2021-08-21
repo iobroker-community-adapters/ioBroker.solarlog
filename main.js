@@ -434,7 +434,7 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
     options.path = reqdata;
     options.method = 'GET';
     options.headers['Content-Length'] = data.length;
-    options.header['Cookie'] = 'banner_hidden=true; SolarLog=' + datatoken
+    options.headers['Cookie'] = 'banner_hidden=true; SolarLog=' + datatoken
   } else {
     var data = 'token=' + datatoken + ';preval=none;' + reqdata;
     adapter.log.debug("DATA: " + data + "DATALENGTH: " + data.length)
