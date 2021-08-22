@@ -455,6 +455,10 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
     var options = optionsjson;
     options.path = reqdata;
     options.headers['Content-Length'] = data.length;
+<<<<<<< HEAD
+=======
+    options.headers['Cookie'] = 'banner_hidden=true; SolarLog=' + datatoken
+>>>>>>> c86372a09e8b1390432eebd3e6adae298e1211ce
   } else {
     var data = 'token=' + datatoken + ';preval=none;' + reqdata;
 
