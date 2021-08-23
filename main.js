@@ -1238,11 +1238,11 @@ function readSolarlogDatajson(reqdata, resdata) {
 
           }
 
-          adapter.setState('SelfCons.selfconsyear', dataYeartotj[dataYeartotj.length - 1][3], true);
-          adapter.setState('SelfCons.selfconslastyear', dataYeartotj[dataYeartotj.length - 2][3], true);
+          adapter.setState('SelfCons.selfconsyear', dataYeartotj[0][3], true);
+          adapter.setState('SelfCons.selfconslastyear', dataYeartotj[1][3], true);
 
-          adapter.setState('SelfCons.selfconsratioyear', Math.round((dataYeartotj[dataYeartotj.length - 1][3] * 1000) / (dataYeartotj[dataYeartotj.length - 1][2]) * 1000) / 10, true);
-          adapter.setState('SelfCons.selfconsratiolastyear', Math.round((dataYeartotj[dataYeartotj.length - 2][3] * 1000) / (dataYeartotj[dataYeartotj.length - 2][2]) * 1000) / 10, true);
+          adapter.setState('SelfCons.selfconsratioyear', Math.round((dataYeartotj[0][3] * 1000) / (dataYeartotj[0][2]) * 1000) / 10, true);
+          adapter.setState('SelfCons.selfconsratiolastyear', Math.round((dataYeartotj[1][3] * 1000) / (dataYeartotj[1][2]) * 1000) / 10, true);
 
 
         } catch (e) {
@@ -1315,11 +1315,11 @@ function readSolarlogDatajson(reqdata, resdata) {
             }
           }
 
-          adapter.setState('SelfCons.selfconsmonth', dataMonthtotj[dataMonthtotj.length - 1][3], true);
-          adapter.setState('SelfCons.selfconslastmonth', dataMonthtotj[dataMonthtotj.length - 2][3], true);
+          adapter.setState('SelfCons.selfconsmonth', dataMonthtotj[0][3], true);
+          adapter.setState('SelfCons.selfconslastmonth', dataMonthtotj[1][3], true);
 
-          adapter.setState('SelfCons.selfconsratiomonth', Math.round((dataMonthtotj[dataMonthtotj.length - 1][3] * 1000) / (dataMonthtotj[dataMonthtotj.length - 1][2]) * 1000) / 10, true);
-          adapter.setState('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtotj[dataMonthtotj.length - 2][3] * 1000) / (dataMonthtotj[dataMonthtotj.length - 2][2]) * 1000) / 10, true);
+          adapter.setState('SelfCons.selfconsratiomonth', Math.round((dataMonthtotj[0][3] * 1000) / (dataMonthtotj[0][2]) * 1000) / 10, true);
+          adapter.setState('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtotj[1][3] * 1000) / (dataMonthtotj[1][2]) * 1000) / 10, true);
 
         } catch (e) {
           adapter.log.warn("readSolarlogDatajson - month - Fehler : " + e);
