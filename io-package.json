@@ -16,12 +16,8 @@
         "de": "Cockpit-Daten (Verbrauch/Produktion/Batterie/Einspeisung) hinzugefügt. Abfragestruktur angepasse, erlaubt häufigeres Abrufen von bestimmten Werten."
       },
       "2.0.2": {
-        "en": "smart energy 'switch grou' data added",
+        "en": "smart energy 'switch group' data added",
         "de": "SmartEnergy Schaltgruppen hinzugefügt"
-      },
-      "2.0.1": {
-        "en": "Bugfix (better timing to set inverter data)",
-        "de": "Fehlerbehebung (Timing beim Anlegen der Unterzähler optimiert)"
       },
       "2.0.0": {
         "en": "Complete code redesign to reduce traffic between adapter and solarlog. NEW: System informations (info) and solarlogs setpoint-values for year, current and all month and current day (forecast).",
@@ -31,21 +27,9 @@
         "en": "user-login possibility added.",
         "de": "Benutzer-Passwort Aktivierung ermöglicht."
       },
-      "1.2.4": {
-        "en": ".npmignore and .gitignore added, small bugfix.",
-        "de": ".npmignore and .gitignore ergänzt, kleine Fehlerbehebung"
-      },
-      "1.2.3": {
-        "en": "Readme / License update.",
-        "de": "Readme / License update."
-      },
       "1.2.2": {
         "en": " It is now possible to set the time when historic data is requested.",
         "de": "Der Zeitpunkt für die Abfrage der historischen Werte kann nun festgelegt werden."
-      },
-      "1.2.1": {
-        "en": "'Forecast' - bug fixed (forecast request now only sumbitted if forecast is activated), dependencies updated.",
-        "de": "Bugfix: Forecast-request nur bei aktivierter Funktion, Dependencies aktualisiert."
       },
       "1.2.0": {
         "en": "Shows now forecast data: todays and tomorrows total kWh.",
@@ -66,22 +50,6 @@
       "0.1.5": {
         "en": "Reads now historic data (yearly sum per Inverter), testing update",
         "de": "Liest jetzt historische Daten (Jahressummen pro Zähler), Testing - Update"
-      },
-      "0.1.4": {
-        "en": "Readme - update",
-        "de": "Readme - Update"
-      },
-      "0.1.3": {
-        "en": "Core Files/Testing Update and introduce adapter-core",
-        "de": "Core Files/Testing Update und adapter-core eingeführt"
-      },
-      "0.1.2": {
-        "en": "Inverter / meter - detection optimized",
-        "de": "Geräteerkennung verbessert"
-      },
-      "0.1.1": {
-        "en": "support for compact mode",
-        "de": "Support für Compact Mode"
       },
       "0.1.0": {
         "en": "optional port specification, readme",
