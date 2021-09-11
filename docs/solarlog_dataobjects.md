@@ -26,12 +26,15 @@ All these requests have been discovered by analyzing the solarlog webinterface w
 -   {"782":null} consumption/Production per inverter/meter.
 -   {"608":null} Status per inverter/meter.
 
+-   {"771"::null} daily sum of total production & consumption ["timestamp(day/noon)","Wh production", "Wh consumption"].
 -   {"776"::null} 5-min consumption/production per inverter/meter.
 -   {"777"::null} daily consumption/production per inverter/meter.
 -   {"778"::null} daily self - consumption; self-consuption, charge & discharge energy of battery if connected.
 -   {"779"::null} monthly consumption/production per inverter/meter.
 -   {"854":null} yealry consumption/production per inverter/meter.
 -   {"858":null} voltage, level, charge & discharge power of battery. Empty if no battery is connected.
+-   {"867":null} 5-min (current day, every 5 min) values for total production, total consumption, current production,  
+    current consumption.
 -   {"877":null} monthly values for production (Wh), consuption (Wh) and self-consumption (kWh).
 -   {"878":null} yearly values for production (Wh), consuption (Wh) and self-consumption (kWh).
 
