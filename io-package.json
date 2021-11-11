@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.1.4",
+    "version": "2.1.5",
     "news": {
+      "2.1.5": {
+        "en": "bugfix (variable type).",
+        "de": "bugfix (variable type)."
+      },
       "2.1.4": {
         "en": "history-/selfconsumption-data for SL500 added.",
         "de": "History- / Selcons- Daten auch für SL500"
