@@ -1,0 +1,78 @@
+{
+  "_from": "github:iobroker-community-adapters/ioBroker.solarlog",
+  "_id": "iobroker.solarlog@2.2.0",
+  "_inBundle": false,
+  "_integrity": "",
+  "_location": "/iobroker.solarlog",
+  "_phantomChildren": {
+    "@types/node": "16.7.4",
+    "call-bind": "1.0.2",
+    "define-properties": "1.1.3",
+    "long-timeout": "0.1.1",
+    "luxon": "1.28.0"
+  },
+  "_requested": {
+    "type": "git",
+    "raw": "iobroker-community-adapters/ioBroker.solarlog",
+    "rawSpec": "iobroker-community-adapters/ioBroker.solarlog",
+    "saveSpec": "github:iobroker-community-adapters/ioBroker.solarlog",
+    "fetchSpec": null,
+    "gitCommittish": null
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "github:iobroker-community-adapters/ioBroker.solarlog#d87a644f1552e43fbe7c454ba19b336d0a980c5b",
+  "_spec": "iobroker-community-adapters/ioBroker.solarlog",
+  "_where": "/opt/iobroker",
+  "author": {
+    "name": "Marcel Adam",
+    "email": "marceladam@gmx.ch"
+  },
+  "bugs": {
+    "url": "https://github.com/iobroker-community-adapters/ioBroker.solarlog/issues"
+  },
+  "bundleDependencies": false,
+  "contributors": [{
+    "name": "Marcel Adam",
+    "email": "marceladam@gmx.ch"
+  }],
+  "dependencies": {
+    "@iobroker/adapter-core": "^2.3.1",
+    "node-schedule": "2.0.0",
+    "got": "^11.8.3"
+  },
+  "deprecated": false,
+  "description": "solarlog",
+  "devDependencies": {
+    "@iobroker/testing": "^2.2.0",
+    "chai": "^4.1.2",
+    "gulp": "^4.0.0",
+    "mocha": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "homepage": "https://github.com/iobroker-community-adapters/ioBroker.solarlog",
+  "keywords": [
+    "ioBroker",
+    "solarlog",
+    "Smart Home",
+    "home automation"
+  ],
+  "license": "MIT",
+  "main": "main.js",
+  "name": "iobroker.solarlog",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iobroker-community-adapters/ioBroker.solarlog.git"
+  },
+  "scripts": {
+    "test": "npm run test:package && npm run test:unit",
+    "test:integration": "mocha test/integration --exit",
+    "test:package": "mocha test/package --exit",
+    "test:unit": "mocha test/unit --exit"
+  },
+  "version": "2.1.5"
+}
