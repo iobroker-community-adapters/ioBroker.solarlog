@@ -183,15 +183,9 @@ function main() {
   };
 
   optionsjson = {
-<<<<<<< Updated upstream
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
-=======
     host: deviceIpAdress,
     port: port,
     pathname: "",
->>>>>>> Stashed changes
     method: 'GET',
     headers: {
       'Accept': '*/*',
@@ -200,13 +194,8 @@ function main() {
       'Connection': 'keep-alive',
       //'Content-Length': data.length,
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-<<<<<<< Updated upstream
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
-=======
       'Referer': deviceIpAdress + '/',
       'Accept-Origin': deviceIpAdress + '/',
->>>>>>> Stashed changes
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
       'X-Requested-With': 'XMLHttpRequest',
       'Cookie': 'banner_hidden=true; SolarLog=' + datatoken
@@ -480,8 +469,7 @@ function logcheck(datalc) {
     adapter.log.warn("Logcheck - Error: " + e.message);
   }
 
-<<<<<<< Updated upstream
-function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
+  /*function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
   if (reqdata.includes(".json") == true) {
     var data = 'token=' + datatoken + ';preval=none;' + Date.now().toString();
 
@@ -498,11 +486,11 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
     options.headers['Content-Length'] = data.length;
   }
   adapter.log.debug("OPTIONS: " + JSON.stringify(options));
-=======
 
-  /*
 
->>>>>>> Stashed changes
+
+
+
 
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
@@ -575,15 +563,6 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
 
     (async () => {
       try {
-<<<<<<< Updated upstream
-        if (res.statusCode == 200) {
-          requestcounter = 0;
-          if (reqdata.includes(".json") == true) {
-            readSolarlogDatajson(reqdata, bodyr);
-          } else {
-            readSolarlogData(reqdata, bodyr);
-          }
-=======
 
         var response = await got(deviceIpAdress, options);
 
@@ -612,7 +591,6 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
           setTimeout(function() {
             httpsRequest(reqdata);
           }, 90000);
->>>>>>> Stashed changes
         } else {
           adapter.log.info('Fehler beim http-request: Statuscode:' + error + '. Führe Request in 10 Sekunden erneut aus.')
           requestcounter++;
@@ -1417,7 +1395,6 @@ function readSolarlogDatajson(reqdata, resdata) {
           adapter.log.warn("readSolarlogDatajson - years - Fehler : " + e);
         }
         break;
-<<<<<<< Updated upstream
 
       case "/months.json?_=":
         try {
@@ -1426,16 +1403,7 @@ function readSolarlogDatajson(reqdata, resdata) {
 
           adapter.log.debug("DataMonthj: " + dataMonthtotj);
 
-=======
 
-      case "/months.json?_=":
-        try {
-
-          var dataMonthtotj = JSON.parse(resdata);
-
-          adapter.log.debug("DataMonthj: " + dataMonthtotj);
-
->>>>>>> Stashed changes
           for (var iy = 0; iy < dataMonthtotj.length; iy++) {
             var year = dataMonthtotj[iy][0].slice(-2);
             var month = dataMonthtotj[iy][0].slice(3, 5);
