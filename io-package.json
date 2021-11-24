@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.1.5",
+    "version": "2.2.0",
     "news": {
+      "2.2.0": {
+        "en": "replaced 'request' by 'got'.",
+        "de": "'request' mit 'got' ersetzt."
+      },
       "2.1.5": {
         "en": "bugfix (variable type).",
         "de": "bugfix (variable type)."

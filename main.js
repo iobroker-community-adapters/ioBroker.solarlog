@@ -7,15 +7,15 @@
 'use strict';
 
 const utils = require('@iobroker/adapter-core'); // Get common adapter utils
+const got = require('got');
+var https = require('http');
+var schedule = require('node-schedule');
+//var request = require('request');
 
 let adapter;
 
-var DeviceIpAdress;
-var Port;
-var https = require('http');
-var schedule = require('node-schedule');
-var request = require('request');
-
+var deviceIpAdress;
+var port;
 const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
 
 var requestcounter = 0;
@@ -147,9 +147,14 @@ function startAdapter(options) {
 
 function main() {
   // Vars
-  DeviceIpAdress = adapter.config.host;
-  Port = adapter.config.port;
-  const cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
+  adapter.log.debug("Host? " + adapter.config.host.indexOf('http') + " : " + adapter.config.host)
+  if (adapter.config.host.indexOf('http') != -1) {
+    deviceIpAdress = adapter.config.host;
+  } else {
+    deviceIpAdress = 'http://' + adapter.config.host;
+  }
+  port = adapter.config.port;
+  //cmd = "/getjp"; // Kommandos in der URL nach der Host-Adresse
   var statusuz = "on";
   numinv = 0;
   uzimp = (adapter.config.invimp).toString();
@@ -159,9 +164,8 @@ function main() {
   userpass = (adapter.config.userpass).toString();
   logindata = "u=user&p=" + (adapter.config.userpw);
   optionsdefault = {
-    host: DeviceIpAdress,
-    port: Port,
-    path: cmd,
+    port: port,
+    pathname: "",
     method: 'POST',
     headers: {
       'Accept': '*/*',
@@ -170,8 +174,8 @@ function main() {
       'Connection': 'keep-alive',
       //'Content-Length': data.length,
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Referer': 'http://' + DeviceIpAdress + '/',
-      'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+      'Referer': deviceIpAdress + '/',
+      'Accept-Origin': deviceIpAdress + '/',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
       'X-Requested-With': 'XMLHttpRequest',
       'Cookie': 'banner_hidden=false; SolarLog=' + datatoken
@@ -179,9 +183,15 @@ function main() {
   };
 
   optionsjson = {
+<<<<<<< Updated upstream
     host: DeviceIpAdress,
     port: Port,
     path: cmd,
+=======
+    host: deviceIpAdress,
+    port: port,
+    pathname: "",
+>>>>>>> Stashed changes
     method: 'GET',
     headers: {
       'Accept': '*/*',
@@ -190,8 +200,13 @@ function main() {
       'Connection': 'keep-alive',
       //'Content-Length': data.length,
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+<<<<<<< Updated upstream
       'Referer': 'http://' + DeviceIpAdress + '/',
       'Accept-Origin': 'http://' + DeviceIpAdress + '/',
+=======
+      'Referer': deviceIpAdress + '/',
+      'Accept-Origin': deviceIpAdress + '/',
+>>>>>>> Stashed changes
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
       'X-Requested-With': 'XMLHttpRequest',
       'Cookie': 'banner_hidden=true; SolarLog=' + datatoken
@@ -337,16 +352,40 @@ function check(uz) {
 } // END check()
 
 function login() {
-  var data = logindata;
-  var options = optionsdefault;
-  options.path = "/login";
-  options.headers['Cookie'] = 'banner_hidden=false';
-  options.headers['Content-Length'] = data.length;
+  try {
+    var data = logindata;
+    var options = optionsdefault;
+    //options.path = "/login";
+    options.headers['Cookie'] = 'banner_hidden=false';
+    //options.headers['Content-Length'] = data.length;
+    options.body = logindata;
 
-  adapter.log.debug("Options: " + JSON.stringify(options));
-  adapter.log.debug("starte LOGIN");
+    adapter.log.debug("Options: " + JSON.stringify(options));
+    adapter.log.debug("starte LOGIN");
 
-  var req = https.request(options, function(res) {
+    (async () => {
+      try {
+
+        var response = await got(deviceIpAdress + "/login", options);
+
+        adapter.log.debug('Status-Code: ' + response.statusCode);
+        adapter.log.debug('Header: ' + JSON.stringify(response.headers))
+        adapter.log.debug('Response.body= ' + response.body);
+        adapter.log.debug("Cookie: " + response.headers["set-cookie"])
+
+        var token = response.headers["set-cookie"].toString();
+        datatoken = token.slice(9);
+        adapter.log.debug("Datatoken: " + datatoken);
+
+      } catch (error) {
+        adapter.log.warn("Login - got - Error: " + error);
+      }
+    })();
+  } catch (e) {
+    adapter.log.warn("Login - Error: " + e.message);
+  }
+
+  /*var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
     adapter.log.debug('COOKIE: ' + JSON.stringify(res.headers["set-cookie"]));
@@ -355,7 +394,7 @@ function login() {
       token = JSON.stringify(res.headers["set-cookie"].toString());
       datatoken = token.slice(10, -1);
       adapter.log.debug("TOKEN: " + token);
-      adapter.log.debug("DATATOKEN: " + datatoken);
+      adapter.log.debug("DATATOKEN: " + );
       var bodyChunks = [];
       var chunkLine = 0;
     } catch (e) {
@@ -386,67 +425,62 @@ function login() {
   // write data to request body
   (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
 
-  req.end();
+  req.end();*/
 }; //END login
 
 function logcheck(datalc) {
-  if (userpass == "false") {
-    httpsRequest(datalc);
-  } else {
-    var data = ""
-    var options = optionsdefault;
-    options.path = "/logcheck?";
-    options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
-    options.headers['Content-Length'] = data.length;
+  try {
+    if (userpass == "false") {
+      httpsRequest(datalc);
+    } else {
 
-    adapter.log.debug("Options: " + JSON.stringify(options));
-    adapter.log.debug("Starte Logcheck");
+      var data = ""
+      var options = optionsdefault;
+      options.pathname = "";
+      options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
+      options.method = 'GET';
+      if (options.hasOwnProperty('body')) {
+        delete options.body
+      };
 
-    var req = https.request(options, function(res) {
-      adapter.log.debug("http Status: " + res.statusCode);
-      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+      adapter.log.debug("Options: " + JSON.stringify(options));
+      adapter.log.debug("Starte Logcheck");
 
-      var bodyChunks = [];
-      var chunkLine = 0;
-      res.on('data', function(chunk) {
-        chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
-        bodyChunks.push(chunk);
+      (async () => {
+        try {
 
-      }).on('end', function() {
-        var bodyl = Buffer.concat(bodyChunks);
-        var bodystring = bodyl.toString();
-        var bodyarray = bodystring.split(";");
+          var response = await got(deviceIpAdress + "/logcheck?", options);
 
-        adapter.log.debug("bodyraw: " + bodyl);
-        adapter.log.debug("bodyarray0= " + bodyarray[0]);
+          adapter.log.debug('Status-Code: ' + response.statusCode);
+          adapter.log.debug('Header: ' + JSON.stringify(response.headers))
+          adapter.log.debug('Response.body= ' + response.body);
 
-        //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
-        if (bodyarray[0] != 0) {
-          adapter.log.debug("login OK, starte Request");
-          httpsRequest(datalc);
-        } else {
-          adapter.log.warn("login NICHT OK, starte zuerst Login, danach Request");
-          login();
-          setTimeout(function() {
-            logcheck(datalc);
-          }, 2000)
+          var bodyarray = response.body.split(";");
+
+          //adapter.log.debug("bodyraw: " + bodyl);
+          adapter.log.debug("bodyarray0= " + bodyarray[0]);
+
+          //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
+          if (bodyarray[0] != 0) {
+            adapter.log.debug("login OK, starte Request");
+            httpsRequest(datalc);
+          } else {
+            adapter.log.warn("login NICHT OK, starte zuerst Login, danach Request");
+            login();
+            setTimeout(function() {
+              logcheck(datalc);
+            }, 2000)
+          }
+        } catch (error) {
+          adapter.log.warn("Logcheck - got - Error: " + error);
         }
-      });;
-    });
-
-    req.on('error', function(e) { // Fehler abfangen
-      adapter.log.warn('ERROR: ' + e.message, "warn");
-    });
-
-    adapter.log.debug("Data to request body LC: " + data);
-    // write data to request body
-    (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-
-    req.end();
+      })();
+    }
+  } catch (e) {
+    adapter.log.warn("Logcheck - Error: " + e.message);
   }
-}; //logcheck END
 
+<<<<<<< Updated upstream
 function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
   if (reqdata.includes(".json") == true) {
     var data = 'token=' + datatoken + ';preval=none;' + Date.now().toString();
@@ -464,10 +498,16 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
     options.headers['Content-Length'] = data.length;
   }
   adapter.log.debug("OPTIONS: " + JSON.stringify(options));
+=======
+
+  /*
+
+>>>>>>> Stashed changes
 
   var req = https.request(options, function(res) {
     adapter.log.debug("http Status: " + res.statusCode);
     adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+
     var bodyChunks = [];
     var chunkLine = 0;
     res.on('data', function(chunk) {
@@ -476,10 +516,66 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
       bodyChunks.push(chunk);
 
     }).on('end', function() {
-      var bodyr = Buffer.concat(bodyChunks);
-      // ...und/oder das Gesamtergebnis (body).
-      adapter.log.debug("body: " + bodyr);
+      var bodyl = Buffer.concat(bodyChunks);
+      var bodystring = bodyl.toString();
+      var bodyarray = bodystring.split(";");
+
+      adapter.log.debug("bodyraw: " + bodyl);
+      adapter.log.debug("bodyarray0= " + bodyarray[0]);
+
+      //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
+      if (bodyarray[0] != 0) {
+        adapter.log.debug("login OK, starte Request");
+        httpsRequest(datalc);
+      } else {
+        adapter.log.warn("login NICHT OK, starte zuerst Login, danach Request");
+        login();
+        setTimeout(function() {
+          logcheck(datalc);
+        }, 2000)
+      }
+    });;
+  });
+
+  req.on('error', function(e) { // Fehler abfangen
+    adapter.log.warn('ERROR: ' + e.message, "warn");
+  });
+
+  adapter.log.debug("Data to request body LC: " + data);
+  // write data to request body
+  (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
+
+  req.end();*/
+
+}; //logcheck END
+
+function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
+  try {
+    if (reqdata.includes(".json") == true) {
+      //var data = 'token=' + datatoken + ';preval=none;' + Date.now().toString();
+
+      adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
+      var options = optionsjson;
+      options.pathname = reqdata + Date.now().toString();
+      //options.headers['Content-Length'] = data.length;
+      //options.method = 'POST';
+      //options.body = 'token=' + datatoken + ';preval=none;' + Date.now().toString();
+    } else {
+      //var data = 'token=' + datatoken + ';preval=none;' + reqdata;
+
+      adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
+      var options = optionsdefault;
+      options.pathname = cmd;
+      //options.headers['Content-Length'] = data.length;
+      options.method = 'POST';
+      options.body = 'token=' + datatoken + ';preval=none;' + reqdata;
+      //options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
+    }
+    adapter.log.debug("OPTIONS: " + JSON.stringify(options));
+
+    (async () => {
       try {
+<<<<<<< Updated upstream
         if (res.statusCode == 200) {
           requestcounter = 0;
           if (reqdata.includes(".json") == true) {
@@ -487,40 +583,112 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
           } else {
             readSolarlogData(reqdata, bodyr);
           }
+=======
+
+        var response = await got(deviceIpAdress, options);
+
+        adapter.log.debug('Status-Code: ' + response.statusCode);
+        adapter.log.debug('Header: ' + JSON.stringify(response.headers))
+        adapter.log.debug('Response.body= ' + response.body);
+
+        var bodyr = response.body;
+
+        requestcounter = 0;
+        if (reqdata.includes(".json") == true) {
+          readSolarlogDatajson(reqdata, bodyr);
         } else {
-          if (requestcounter > 4) {
-            adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
-            restartAdapter();
-          } else if (requestcounter > 3) {
-            adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + res.statusCode + '. Führe Request in 60 Sekunden erneut aus.')
-            requestcounter++;
-            setTimeout(function() {
-              httpsRequest(reqdata);
-            }, 90000);
-          } else {
-            adapter.log.info('Fehler beim http-request: Statuscode:' + res.statusCode + '. Führe Request in 10 Sekunden erneut aus.')
-            requestcounter++;
-            setTimeout(function() {
-              httpsRequest(reqdata);
-            }, 10000);
-          }
+          readSolarlogData(reqdata, bodyr);
         }
-      } catch (e) {
-        adapter.log.warn("JSON-parse-Fehler httpsRequest: " + e.message);
+
+      } catch (error) {
+        adapter.log.warn("Login - got - Error: " + error);
+
+        if (requestcounter > 4) {
+          adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
+          restartAdapter();
+        } else if (requestcounter > 3) {
+          adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + error + '. Führe Request in 60 Sekunden erneut aus.')
+          requestcounter++;
+          setTimeout(function() {
+            httpsRequest(reqdata);
+          }, 90000);
+>>>>>>> Stashed changes
+        } else {
+          adapter.log.info('Fehler beim http-request: Statuscode:' + error + '. Führe Request in 10 Sekunden erneut aus.')
+          requestcounter++;
+          setTimeout(function() {
+            httpsRequest(reqdata);
+          }, 10000);
+        }
+
       }
+    })();
 
-      adapter.log.debug("END Request: " + JSON.stringify(data));
+  } catch (e) {
+    adapter.log.warn("JSON-parse-Fehler httpsRequest: " + e.message);
+  }
 
+  adapter.log.debug("END Request: " + options.body);
+
+
+  /*
+    var req = https.request(options, function(res) {
+      adapter.log.debug("http Status: " + res.statusCode);
+      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
+      var bodyChunks = [];
+      var chunkLine = 0;
+      res.on('data', function(chunk) {
+        chunkLine = chunkLine + 1;
+        // Hier können die einzelnen Zeilen verarbeitet werden...
+        bodyChunks.push(chunk);
+
+      }).on('end', function() {
+        var bodyr = Buffer.concat(bodyChunks);
+        // ...und/oder das Gesamtergebnis (body).
+        adapter.log.debug("body: " + bodyr);
+        try {
+          if (res.statusCode == 200) {
+            requestcounter = 0;
+            if (reqdata.includes(".json") == true) {
+              readSolarlogDatajson(reqdata, bodyr);
+            } else {
+              readSolarlogData(reqdata, bodyr);
+            }
+          } else {
+            if (requestcounter > 4) {
+              adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
+              restartAdapter();
+            } else if (requestcounter > 3) {
+              adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + res.statusCode + '. Führe Request in 60 Sekunden erneut aus.')
+              requestcounter++;
+              setTimeout(function() {
+                httpsRequest(reqdata);
+              }, 90000);
+            } else {
+              adapter.log.info('Fehler beim http-request: Statuscode:' + res.statusCode + '. Führe Request in 10 Sekunden erneut aus.')
+              requestcounter++;
+              setTimeout(function() {
+                httpsRequest(reqdata);
+              }, 10000);
+            }
+          }
+        } catch (e) {
+          adapter.log.warn("JSON-parse-Fehler httpsRequest: " + e.message);
+        }
+
+        adapter.log.debug("END Request: " + JSON.stringify(data));
+
+      });
     });
-  });
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR httpsRequest: ' + e.message, "warn");
-  });
+    req.on('error', function(e) { // Fehler abfangen
+      adapter.log.warn('ERROR httpsRequest: ' + e.message, "warn");
+    });
 
-  adapter.log.debug("Data to request body: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-  req.end();
+    adapter.log.debug("Data to request body: " + data);
+    // write data to request body
+    (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
+    req.end();
+    */
 } //end httpsRequest
 
 function readSolarlogData(reqdata, resdata) {
@@ -556,7 +724,7 @@ function readSolarlogData(reqdata, resdata) {
           devicelist = JSON.parse(resdata)[739];
           adapter.log.debug("Devicelist: " + devicelist);
           brandlist = JSON.parse(resdata)[744];
-          adapter.log.debug("Brandlist: " + brandlist);
+          adapter.log.debug("Brandlist: " + JSON.stringify(brandlist));
         } catch (e) {
           adapter.log.warn("readSolarlogData - Fehler in get devicelist/brandlist: " + e);
           throw e
@@ -564,7 +732,7 @@ function readSolarlogData(reqdata, resdata) {
 
         try { //"740":null
           var dataJ = JSON.parse(resdata)[740];
-          adapter.log.debug("List of Inverters: " + dataJ);
+          adapter.log.debug("List of Inverters: " + JSON.stringify(dataJ));
           while (statusuz != "Err" && numinv < 100) {
             statusuz = (dataJ[numinv.toString()]);
             numinv++;
@@ -590,7 +758,7 @@ function readSolarlogData(reqdata, resdata) {
 
         try { //"447":null
           var sgdata = JSON.parse(resdata)[447];
-          adapter.log.debug("Schaltgruppendaten: " + sgdata);
+          adapter.log.debug("Schaltgruppendaten: " + JSON.stringify(sgdata));
           for (var isg = 0; isg < 10; isg++) {
             var sgname = JSON.parse(resdata)[447][isg][100];
             if (sgname != "") {
@@ -712,7 +880,7 @@ function readSolarlogData(reqdata, resdata) {
 
         try { //"801":{"170":null}
           json = (JSON.parse(resdata)[801][170]);
-          adapter.log.debug("Data801_170: " + json);
+          adapter.log.debug("Data801_170: " + JSON.stringify(json));
           adapter.setState('info.lastSync', json[100].toString(), true);
           adapter.setState('info.totalPower', parseInt(json[116]), true);
           adapter.setState('status.pac', parseInt(json[101]), true);
@@ -1249,6 +1417,7 @@ function readSolarlogDatajson(reqdata, resdata) {
           adapter.log.warn("readSolarlogDatajson - years - Fehler : " + e);
         }
         break;
+<<<<<<< Updated upstream
 
       case "/months.json?_=":
         try {
@@ -1257,6 +1426,16 @@ function readSolarlogDatajson(reqdata, resdata) {
 
           adapter.log.debug("DataMonthj: " + dataMonthtotj);
 
+=======
+
+      case "/months.json?_=":
+        try {
+
+          var dataMonthtotj = JSON.parse(resdata);
+
+          adapter.log.debug("DataMonthj: " + dataMonthtotj);
+
+>>>>>>> Stashed changes
           for (var iy = 0; iy < dataMonthtotj.length; iy++) {
             var year = dataMonthtotj[iy][0].slice(-2);
             var month = dataMonthtotj[iy][0].slice(3, 5);
