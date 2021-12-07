@@ -431,7 +431,7 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
     var reqaddress = deviceIpAdress
     if (reqdata.includes(".json") == true) {
 
-      adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
+      //adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
       var options = optionsjson;
       //options.pathname = reqdata + Date.now().toString();
 
@@ -440,14 +440,14 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
     } else {
       //var data = 'token=' + datatoken + ';preval=none;' + reqdata;
 
-      adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
+      //adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
       var options = optionsdefault;
       options.pathname = cmd;
       //options.headers['Content-Length'] = data.length;
       options.method = 'POST';
       options.body = 'token=' + datatoken + ';preval=none;' + reqdata;
     }
-    adapter.log.debug("ReqAdress: " + reqaddress + " OPTIONS: " + JSON.stringify(options));
+    adapter.log.debug("ReqAdress: " + reqaddress + " ReqData: " + reqdata + " OPTIONS: " + JSON.stringify(options));
 
     (async () => {
       try {
@@ -468,7 +468,7 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
         }
 
       } catch (error) {
-        adapter.log.warn("Login - got - Error: " + error);
+        adapter.log.warn("httpsRequest - got - Error: " + error);
 
         if (requestcounter > 4) {
           adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
