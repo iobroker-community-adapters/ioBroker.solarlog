@@ -344,9 +344,8 @@ function login() {
   try {
     var data = logindata;
     var options = optionsdefault;
-    //options.path = "/login";
+
     options.headers['Cookie'] = 'banner_hidden=false';
-    //options.headers['Content-Length'] = data.length;
     options.body = logindata;
 
     adapter.log.debug("Options: " + JSON.stringify(options));
@@ -373,48 +372,6 @@ function login() {
   } catch (e) {
     adapter.log.warn("Login - Error: " + e.message);
   }
-
-  /*var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-    adapter.log.debug('COOKIE: ' + JSON.stringify(res.headers["set-cookie"]));
-
-    try {
-      token = JSON.stringify(res.headers["set-cookie"].toString());
-      datatoken = token.slice(10, -1);
-      adapter.log.debug("TOKEN: " + token);
-      adapter.log.debug("DATATOKEN: " + );
-      var bodyChunks = [];
-      var chunkLine = 0;
-    } catch (e) {
-      adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
-    }
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier können die einzelnen Zeilen verarbeitet werden...
-      try {
-        bodyChunks.push(chunk);
-      } catch (e) {
-        adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
-      }
-    }).on('end', function() {
-      try {
-        var body = Buffer.concat(bodyChunks);
-      } catch (e) {
-        adapter.log.warn("Fehler Login: " + e.message + " Benuterpasswort im Solalog aktiviert??");
-      }
-    });
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body LI: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();*/
 }; //END login
 
 function logcheck(datalc) {
@@ -446,7 +403,6 @@ function logcheck(datalc) {
 
           var bodyarray = response.body.split(";");
 
-          //adapter.log.debug("bodyraw: " + bodyl);
           adapter.log.debug("bodyarray0= " + bodyarray[0]);
 
           //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
@@ -468,86 +424,19 @@ function logcheck(datalc) {
   } catch (e) {
     adapter.log.warn("Logcheck - Error: " + e.message);
   }
-
-  /*function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
-  if (reqdata.includes(".json") == true) {
-    var data = 'token=' + datatoken + ';preval=none;' + Date.now().toString();
-
-    adapter.log.debug("DATA: " + data + " and DATALENGTH: " + data.length)
-    var options = optionsjson;
-    options.path = reqdata;
-    options.headers['Content-Length'] = data.length;
-  } else {
-    var data = 'token=' + datatoken + ';preval=none;' + reqdata;
-
-    adapter.log.debug("DATA: " + data + " and DATALENGTH: " + data.length)
-    var options = optionsdefault;
-    options.path = cmd;
-    options.headers['Content-Length'] = data.length;
-  }
-  adapter.log.debug("OPTIONS: " + JSON.stringify(options));
-
-
-
-
-
-
-  var req = https.request(options, function(res) {
-    adapter.log.debug("http Status: " + res.statusCode);
-    adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-
-    var bodyChunks = [];
-    var chunkLine = 0;
-    res.on('data', function(chunk) {
-      chunkLine = chunkLine + 1;
-      // Hier können die einzelnen Zeilen verarbeitet werden...
-      bodyChunks.push(chunk);
-
-    }).on('end', function() {
-      var bodyl = Buffer.concat(bodyChunks);
-      var bodystring = bodyl.toString();
-      var bodyarray = bodystring.split(";");
-
-      adapter.log.debug("bodyraw: " + bodyl);
-      adapter.log.debug("bodyarray0= " + bodyarray[0]);
-
-      //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
-      if (bodyarray[0] != 0) {
-        adapter.log.debug("login OK, starte Request");
-        httpsRequest(datalc);
-      } else {
-        adapter.log.warn("login NICHT OK, starte zuerst Login, danach Request");
-        login();
-        setTimeout(function() {
-          logcheck(datalc);
-        }, 2000)
-      }
-    });;
-  });
-
-  req.on('error', function(e) { // Fehler abfangen
-    adapter.log.warn('ERROR: ' + e.message, "warn");
-  });
-
-  adapter.log.debug("Data to request body LC: " + data);
-  // write data to request body
-  (data ? req.write(data) : adapter.log.debug("Daten: keine Daten im Body angegeben angegeben"));
-
-  req.end();*/
-
 }; //logcheck END
 
 function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und übergibt das REsultat zur Auswertung.
   try {
+    var reqaddress = deviceIpAdress
     if (reqdata.includes(".json") == true) {
-      //var data = 'token=' + datatoken + ';preval=none;' + Date.now().toString();
 
       adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
       var options = optionsjson;
-      options.pathname = reqdata + Date.now().toString();
-      //options.headers['Content-Length'] = data.length;
-      //options.method = 'POST';
-      //options.body = 'token=' + datatoken + ';preval=none;' + Date.now().toString();
+      //options.pathname = reqdata + Date.now().toString();
+
+      reqaddress = deviceIpAdress + reqdata + Date.now().toString();
+
     } else {
       //var data = 'token=' + datatoken + ';preval=none;' + reqdata;
 
@@ -557,14 +446,13 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
       //options.headers['Content-Length'] = data.length;
       options.method = 'POST';
       options.body = 'token=' + datatoken + ';preval=none;' + reqdata;
-      //options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
     }
-    adapter.log.debug("OPTIONS: " + JSON.stringify(options));
+    adapter.log.debug("ReqAdress: " + reqaddress + " OPTIONS: " + JSON.stringify(options));
 
     (async () => {
       try {
 
-        var response = await got(deviceIpAdress, options);
+        var response = await got(reqaddress, options);
 
         adapter.log.debug('Status-Code: ' + response.statusCode);
         adapter.log.debug('Header: ' + JSON.stringify(response.headers))
@@ -607,66 +495,6 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
   }
 
   adapter.log.debug("END Request: " + options.body);
-
-
-  /*
-    var req = https.request(options, function(res) {
-      adapter.log.debug("http Status: " + res.statusCode);
-      adapter.log.debug('HEADERS: ' + JSON.stringify(res.headers), (res.statusCode != 200 ? "warn" : "info")); // Header (Rückmeldung vom Webserver)
-      var bodyChunks = [];
-      var chunkLine = 0;
-      res.on('data', function(chunk) {
-        chunkLine = chunkLine + 1;
-        // Hier können die einzelnen Zeilen verarbeitet werden...
-        bodyChunks.push(chunk);
-
-      }).on('end', function() {
-        var bodyr = Buffer.concat(bodyChunks);
-        // ...und/oder das Gesamtergebnis (body).
-        adapter.log.debug("body: " + bodyr);
-        try {
-          if (res.statusCode == 200) {
-            requestcounter = 0;
-            if (reqdata.includes(".json") == true) {
-              readSolarlogDatajson(reqdata, bodyr);
-            } else {
-              readSolarlogData(reqdata, bodyr);
-            }
-          } else {
-            if (requestcounter > 4) {
-              adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
-              restartAdapter();
-            } else if (requestcounter > 3) {
-              adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + res.statusCode + '. Führe Request in 60 Sekunden erneut aus.')
-              requestcounter++;
-              setTimeout(function() {
-                httpsRequest(reqdata);
-              }, 90000);
-            } else {
-              adapter.log.info('Fehler beim http-request: Statuscode:' + res.statusCode + '. Führe Request in 10 Sekunden erneut aus.')
-              requestcounter++;
-              setTimeout(function() {
-                httpsRequest(reqdata);
-              }, 10000);
-            }
-          }
-        } catch (e) {
-          adapter.log.warn("JSON-parse-Fehler httpsRequest: " + e.message);
-        }
-
-        adapter.log.debug("END Request: " + JSON.stringify(data));
-
-      });
-    });
-    req.on('error', function(e) { // Fehler abfangen
-      adapter.log.warn('ERROR httpsRequest: ' + e.message, "warn");
-    });
-
-    adapter.log.debug("Data to request body: " + data);
-    // write data to request body
-    (data ? req.write(data) : adapter.log.warn("Daten: keine Daten im Body angegeben angegeben"));
-    req.end();
-    */
 } //end httpsRequest
 
 function readSolarlogData(reqdata, resdata) {
