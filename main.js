@@ -463,9 +463,13 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
         requestcounter = 0;
         if (reqdata.includes(".json") == true) {
           readSolarlogDatajson(reqdata, bodyr);
+          adapter.log.debug("END Request: " + reqdata);
         } else {
           readSolarlogData(reqdata, bodyr);
+          adapter.log.debug("END Request: " + options.body);
         }
+
+
 
       } catch (error) {
         adapter.log.warn("httpsRequest - got - Error: " + error);
@@ -494,7 +498,7 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
     adapter.log.warn("JSON-parse-Fehler httpsRequest: " + e.message);
   }
 
-  adapter.log.debug("END Request: " + options.body);
+
 } //end httpsRequest
 
 function readSolarlogData(reqdata, resdata) {
