@@ -347,6 +347,7 @@ function login() {
 
     options.headers['Cookie'] = 'banner_hidden=false';
     options.body = logindata;
+    options.method = 'POST';
 
     adapter.log.debug("Options: " + JSON.stringify(options));
     adapter.log.debug("starte LOGIN");
@@ -367,6 +368,23 @@ function login() {
 
       } catch (error) {
         adapter.log.warn("Login - got - Error: " + error);
+        if (requestcounter > 4) {
+          adapter.log.warn('Mehrfach fehlerhafter Login, starte Adapter neu.')
+          restartAdapter();
+        } else if (requestcounter > 3) {
+          adapter.log.info('Mehrfacher Fehler beim Login: Statuscode:' + error + '. Führe Login in 60 Sekunden erneut aus.')
+          requestcounter++;
+          setTimeout(function() {
+            login();;
+          }, 60000);
+        } else {
+          adapter.log.info('Fehler beim Login: Statuscode:' + error + '. Führe Login in 10 Sekunden erneut aus.')
+          requestcounter++;
+          setTimeout(function() {
+            login();;
+          }, 10000);
+        }
+
       }
     })();
   } catch (e) {
@@ -418,6 +436,23 @@ function logcheck(datalc) {
           }
         } catch (error) {
           adapter.log.warn("Logcheck - got - Error: " + error);
+
+          if (requestcounter > 4) {
+            adapter.log.warn('Mehrfach fehlerhafter Logcheck, starte Adapter neu.')
+            restartAdapter();
+          } else if (requestcounter > 3) {
+            adapter.log.info('Mehrfacher Fehler beim Logcheck: Statuscode:' + error + '. Führe Logcheck in 60 Sekunden erneut aus.')
+            requestcounter++;
+            setTimeout(function() {
+              logcheck(datalc);
+            }, 90000);
+          } else {
+            adapter.log.info('Fehler beim Logcheck: Statuscode:' + error + '. Führe Logcheck in 10 Sekunden erneut aus.')
+            requestcounter++;
+            setTimeout(function() {
+              logcheck(datalc);
+            }, 10000);
+          }
         }
       })();
     }
