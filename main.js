@@ -183,7 +183,6 @@ function main() {
   };
 
   optionsjson = {
-    host: deviceIpAdress,
     port: port,
     pathname: "",
     method: 'GET',
@@ -468,6 +467,9 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
 
       //adapter.log.debug("DATA: " + reqdata + " and DATALENGTH: " + reqdata.length)
       var options = optionsjson;
+      if (options.hasOwnProperty('body')) {
+        delete options.body
+      };
       //options.pathname = reqdata + Date.now().toString();
 
       reqaddress = deviceIpAdress + reqdata + Date.now().toString();
