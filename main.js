@@ -8,7 +8,7 @@
 
 const utils = require('@iobroker/adapter-core'); // Get common adapter utils
 const got = require('got');
-var https = require('http');
+const https = require('https');
 var schedule = require('node-schedule');
 //var request = require('request');
 
@@ -2292,7 +2292,7 @@ function setforecastobjects() {
 
 function getforecastdata() {
   adapter.log.debug("Rufe Forcastdaten ab");
-  cmdforecast = "estimate/";
+  cmdforecast = "estimate//watthours/day/";
   lat = adapter.config.latitude;
   lon = adapter.config.longitude;
   dec = adapter.config.inclination;
@@ -2300,44 +2300,67 @@ function getforecastdata() {
   adapter.getState("info.totalPower", function(err, obj) {
     if (obj) {
       kwp = obj.val / 1000;
-      var options = {
-        url: urlforecast + cmdforecast + lat + "/" + lon + "/" + dec + "/" + az + "/" + kwp,
-        json: true,
-        headers: {
-          'content-type': 'application/json'
-        }
-      };
 
-      adapter.log.debug("options: " + JSON.stringify(options));
+      var urlprog = urlforecast + cmdforecast + lat + "/" + lon + "/" + dec + "/" + az + "/" + kwp;
 
-      request.get(options, function(error, response, body) {
-        if (error) {
-          adapter.log.warn("Error request forecastdata: " + error);
-        } else {
+      https.get(urlprog, res => {
+        let data = [];
+        const headerDate = res.headers && res.headers.date ? res.headers.date : 'no response date';
+        adapter.log.debug('Status Code:', res.statusCode);
+        adapter.log.debug('Date in Response header:', headerDate);
+
+        res.on('data', chunk => {
+          data.push(chunk);
+        });
+
+        res.on('end', () => {
+          adapter.log.debug('Response ended: ');
+
           try {
-            adapter.log.debug("Response: " + JSON.stringify(response));
-            var watthoursday = response["body"]["result"]["watt_hours_day"];
-            adapter.log.debug("WatthoursDay = " + JSON.stringify(watthoursday));
-            var watthourstoday = parseInt(response["body"]["result"]["watt_hours_day"][new Date().toISOString().slice(0, 10)]);
-            adapter.log.debug("Vorhersage für heute, " + new Date().toISOString().slice(0, 10) + ": " + watthourstoday);
-            var tomorrow = new Date();
-            tomorrow.setDate(new Date().getDate() + 1);
-            var watthourstomorrow = parseInt(response["body"]["result"]["watt_hours_day"][tomorrow.toISOString().slice(0, 10)]);
-            adapter.log.debug("Vorhersage für morgen, " + tomorrow.toISOString().slice(0, 10) + ": " + watthourstomorrow);
+            var forecast = JSON.parse(Buffer.concat(data).toString());
+            adapter.log.debug("forecast: " + JSON.stringify(forecast));
 
-            adapter.setState('forecast.today', parseInt(watthourstoday), true);
-            adapter.setState('forecast.tomorrow', parseInt(watthourstomorrow), true);
-            adapter.setState('info.latitude', lat, true);
-            adapter.setState('info.longitude', lon, true);
-            adapter.setState('info.inclination', dec, true);
-            adapter.setState('info.azimuth', az, true);
+            if (forecast["message"]["type"] == "success") {
+
+              var watthoursday = forecast["result"];
+              adapter.log.debug("WatthoursDay = " + JSON.stringify(watthoursday));
+              var watthourstoday = parseInt(forecast["result"][new Date().toISOString().slice(0, 10)]);
+              adapter.log.debug("Vorhersage für heute, " + new Date().toISOString().slice(0, 10) + ": " + watthourstoday);
+              var tomorrow = new Date();
+              tomorrow.setDate(new Date().getDate() + 1);
+              var watthourstomorrow = parseInt(forecast["result"][tomorrow.toISOString().slice(0, 10)]);
+              adapter.log.debug("Vorhersage für morgen, " + tomorrow.toISOString().slice(0, 10) + ": " + watthourstomorrow);
+
+              adapter.setState('forecast.today', parseInt(watthourstoday), true);
+              adapter.setState('forecast.tomorrow', parseInt(watthourstomorrow), true);
+              adapter.setState('info.latitude', lat, true);
+              adapter.setState('info.longitude', lon, true);
+              adapter.setState('info.inclination', dec, true);
+              adapter.setState('info.azimuth', az, true);
+
+            } else {
+              adapter.log.warn("Prognosefehler, keine Forecast - Werte erhalten");
+              adapter.log.info("Antowrttyp: " + forecast["message"]["type"]);
+              adapter.log.info("Anfragen (Limit:12): " + forecast["message"]["ratelimit"]["limit"]);
+              adapter.log.info("Antowrttyp: " + forecast["message"]);
+
+            }
 
           } catch (e) {
             adapter.log.warn("Getforecastdata - Error: " + e);
           }
 
-        }
+
+
+
+
+        });
+      }).on('error', err => {
+        console.log('Error: ', err.message);
       });
+
+
+
     } else {
       adapter.log.warn("Prognosefehler: Anlageleistung nicht verfügbar");
     }

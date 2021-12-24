@@ -40,7 +40,7 @@ SolarLog 50: There is no open JSON-Interface @ SolarLog 50 devices. So certain v
 
 ## Changelog
 
-### 2.2.0
+### 2.2.1
 
 -   replaced 'request' by 'got', node.js >= 12.
 
