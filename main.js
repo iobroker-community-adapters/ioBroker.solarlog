@@ -368,14 +368,16 @@ function login() {
       } catch (error) {
         adapter.log.warn("Login - got - Error: " + error);
         if (requestcounter > 4) {
-          adapter.log.warn('Mehrfach fehlerhafter Login, starte Adapter neu.')
-          restartAdapter();
+          adapter.log.warn('Mehrfach fehlerhafter Login, starte Adapter in 90 Sekunden neu neu.')
+          setTimeout(function() {
+            restartAdapter();
+          }, 90000);
         } else if (requestcounter > 3) {
-          adapter.log.info('Mehrfacher Fehler beim Login: Statuscode:' + error + '. F체hre Login in 60 Sekunden erneut aus.')
+          adapter.log.info('Mehrfacher Fehler beim Login: Statuscode:' + error + '. F체hre Login in 90 Sekunden erneut aus.')
           requestcounter++;
           setTimeout(function() {
             login();;
-          }, 60000);
+          }, 90000);
         } else {
           adapter.log.info('Fehler beim Login: Statuscode:' + error + '. F체hre Login in 10 Sekunden erneut aus.')
           requestcounter++;
@@ -397,7 +399,7 @@ function logcheck(datalc) {
       httpsRequest(datalc);
     } else {
 
-      var data = ""
+      var data = "";
       var options = optionsdefault;
       options.pathname = "";
       options.headers['Cookie'] = 'banner_hidden=false; SolarLog=' + datatoken;
@@ -419,7 +421,6 @@ function logcheck(datalc) {
           adapter.log.debug('Response.body= ' + response.body);
 
           var bodyarray = response.body.split(";");
-
           adapter.log.debug("bodyarray0= " + bodyarray[0]);
 
           //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
@@ -437,10 +438,12 @@ function logcheck(datalc) {
           adapter.log.warn("Logcheck - got - Error: " + error);
 
           if (requestcounter > 4) {
-            adapter.log.warn('Mehrfach fehlerhafter Logcheck, starte Adapter neu.')
-            restartAdapter();
+            adapter.log.warn('Mehrfach fehlerhafter Logcheck, starte Adapter in 90 Sekunden neu neu.')
+            setTimeout(function() {
+              restartAdapter();
+            }, 90000);
           } else if (requestcounter > 3) {
-            adapter.log.info('Mehrfacher Fehler beim Logcheck: Statuscode:' + error + '. F체hre Logcheck in 60 Sekunden erneut aus.')
+            adapter.log.info('Mehrfacher Fehler beim Logcheck: Statuscode:' + error + '. F체hre Logcheck in 90 Sekunden erneut aus.')
             requestcounter++;
             setTimeout(function() {
               logcheck(datalc);
@@ -512,10 +515,12 @@ function httpsRequest(reqdata) { //F체hrt eine Abfrage beim solarlog durch und �
         adapter.log.warn("httpsRequest - got - Error: " + error);
 
         if (requestcounter > 4) {
-          adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter neu.')
-          restartAdapter();
+          adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter in 90 Sekunden neu neu.')
+          setTimeout(function() {
+            restartAdapter();
+          }, 90000);
         } else if (requestcounter > 3) {
-          adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + error + '. F체hre Request in 60 Sekunden erneut aus.')
+          adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + error + '. F체hre Request in 90 Sekunden erneut aus.')
           requestcounter++;
           setTimeout(function() {
             httpsRequest(reqdata);
