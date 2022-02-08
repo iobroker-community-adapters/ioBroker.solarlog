@@ -476,7 +476,7 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
         var response = await got(reqaddress, options);
 
         adapter.log.debug('Status-Code: ' + response.statusCode);
-        adapter.log.debug('Header: ' + JSON.stringify(response.headers))
+        adapter.log.debug('Header: ' + JSON.stringify(response.headers));
         adapter.log.debug('Response.body= ' + response.body);
 
         var bodyr = response.body;
@@ -496,14 +496,14 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
         adapter.log.warn("httpsRequest - got - Error: " + error);
 
         if (requestcounter > 4) {
-          adapter.log.warn('Mehrfach fehlerhafter http-Request, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');,
+          adapter.log.warn('Mehrfach fehlerhafter http-Request, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
           clearInterval(polling);
           clearInterval(fastpolling);
           setTimeout(function() {
             restartAdapter();
           }, 90000);
         } else {
-          adapter.log.info('Fehler beim http-request: Statuscode:' + error + '. Führe Request bei nächster Gelegenheit erneut aus.')
+          adapter.log.info('Fehler beim http-request: Statuscode:' + error + '. Führe Request bei nächster Gelegenheit erneut aus.');
           requestcounter++;
         }
       }
