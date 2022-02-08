@@ -93,8 +93,8 @@ function startAdapter(options) {
   // when adapter shuts down
   adapter.on('unload', function(callback) {
     try {
-      clearTimeout(polling);
-      clearTimeout(fastpolling);
+      clearInterval(polling);
+      clearInterval(fastpolling);
       adapter.setState('info.connection', false, true);
       adapter.log && adapter.log.info('[END] Stopping solarlog adapter...');
       callback();
@@ -233,18 +233,14 @@ function main() {
     testend = setInterval(test, 2000); //�berpr�fen ob alle Channels angelegt sind.
 
     if (!fastpolling) {
-      fastpolling = setTimeout(function repeat() { // poll states every [30] seconds
+      fastpolling = setInterval(function() { // poll states every [30] seconds
         logcheck(fastpollData);
-        setTimeout(repeat, pollingTimecurrent);
       }, pollingTimecurrent + 20000);
     } // endIf
 
     if (!polling) {
-      polling = setTimeout(function repeat() { // poll states every [30] seconds
-        setTimeout(function() {
-          logcheck(pollingData);
-        }, 500);
-        setTimeout(repeat, pollingTimeperiodic);
+      polling = setInterval(function() { // poll states every [30] seconds
+        logcheck(pollingData);
       }, pollingTimeperiodic);
     } // endIf
 
@@ -258,9 +254,8 @@ function main() {
     }
 
     if (!polling) {
-      polling = setTimeout(function repeat() { // poll states every [30] seconds
+      polling = setInterval(function() { // poll states every [30] seconds
         logcheck('{"801":{"170":null}}');
-        setTimeout(repeat, pollingTimecurrent);
       }, pollingTimecurrent)
     }
   }
@@ -299,7 +294,7 @@ function main() {
   });
 
   // all states changes inside the adapters namespace are subscribed
-  adapter.subscribeStates('*');
+  //adapter.subscribeStates('*');
 } // endMain
 
 function test() {
@@ -368,22 +363,15 @@ function login() {
       } catch (error) {
         adapter.log.warn("Login - got - Error: " + error);
         if (requestcounter > 4) {
-          adapter.log.warn('Mehrfach fehlerhafter Login, starte Adapter in 90 Sekunden neu neu.')
+          adapter.log.warn('Mehrfach fehlerhafter Login, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
+          clearInterval(polling);
+          clearInterval(fastpolling);
           setTimeout(function() {
             restartAdapter();
           }, 90000);
-        } else if (requestcounter > 3) {
-          adapter.log.info('Mehrfacher Fehler beim Login: Statuscode:' + error + '. Führe Login in 90 Sekunden erneut aus.')
-          requestcounter++;
-          setTimeout(function() {
-            login();;
-          }, 90000);
         } else {
-          adapter.log.info('Fehler beim Login: Statuscode:' + error + '. Führe Login in 10 Sekunden erneut aus.')
+          adapter.log.info('Fehler beim Login: Statuscode:' + error + '. Führe Login bei nächster Gelegenheit erneut aus.')
           requestcounter++;
-          setTimeout(function() {
-            login();;
-          }, 10000);
         }
 
       }
@@ -438,22 +426,15 @@ function logcheck(datalc) {
           adapter.log.warn("Logcheck - got - Error: " + error);
 
           if (requestcounter > 4) {
-            adapter.log.warn('Mehrfach fehlerhafter Logcheck, starte Adapter in 90 Sekunden neu neu.')
+            adapter.log.warn('Mehrfach fehlerhafter Logcheck, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.')
+            clearInterval(polling);
+            clearInterval(fastpolling);
             setTimeout(function() {
               restartAdapter();
             }, 90000);
-          } else if (requestcounter > 3) {
-            adapter.log.info('Mehrfacher Fehler beim Logcheck: Statuscode:' + error + '. Führe Logcheck in 90 Sekunden erneut aus.')
-            requestcounter++;
-            setTimeout(function() {
-              logcheck(datalc);
-            }, 90000);
           } else {
-            adapter.log.info('Fehler beim Logcheck: Statuscode:' + error + '. Führe Logcheck in 10 Sekunden erneut aus.')
+            adapter.log.info('Fehler beim Logcheck: Statuscode:' + error + '. Führe Logcheck bei nächster Gelegenheit erneut aus.')
             requestcounter++;
-            setTimeout(function() {
-              logcheck(datalc);
-            }, 10000);
           }
         }
       })();
@@ -515,24 +496,16 @@ function httpsRequest(reqdata) { //Führt eine Abfrage beim solarlog durch und �
         adapter.log.warn("httpsRequest - got - Error: " + error);
 
         if (requestcounter > 4) {
-          adapter.log.warn('Mehrfach fehlerhafter http-Request, starte Adapter in 90 Sekunden neu neu.')
+          adapter.log.warn('Mehrfach fehlerhafter http-Request, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');,
+          clearInterval(polling);
+          clearInterval(fastpolling);
           setTimeout(function() {
             restartAdapter();
           }, 90000);
-        } else if (requestcounter > 3) {
-          adapter.log.info('Mehrfacher Fehler beim http-request: Statuscode:' + error + '. Führe Request in 90 Sekunden erneut aus.')
-          requestcounter++;
-          setTimeout(function() {
-            httpsRequest(reqdata);
-          }, 90000);
         } else {
-          adapter.log.info('Fehler beim http-request: Statuscode:' + error + '. Führe Request in 10 Sekunden erneut aus.')
+          adapter.log.info('Fehler beim http-request: Statuscode:' + error + '. Führe Request bei nächster Gelegenheit erneut aus.')
           requestcounter++;
-          setTimeout(function() {
-            httpsRequest(reqdata);
-          }, 10000);
         }
-
       }
     })();
 

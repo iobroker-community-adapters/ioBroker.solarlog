@@ -96,7 +96,10 @@
     "license": "MIT",
     "messagebox": false,
     "connectionType": "local",
-    "dataSource": "poll"
+    "dataSource": "poll",
+    "dependencies": [{
+      "js-controller": ">=2.0.0"
+    }]
   },
   "native": {
     "host": "",
