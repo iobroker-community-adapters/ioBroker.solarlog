@@ -361,7 +361,7 @@ function login() {
         adapter.log.debug("Datatoken: " + datatoken);
 
       } catch (error) {
-        adapter.log.warn("Login - got - Error: " + error);
+        adapter.log.info("Login - got - Error: " + error);
         if (requestcounter > 4) {
           adapter.log.warn('Mehrfach fehlerhafter Login, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
           clearInterval(polling);
@@ -423,7 +423,7 @@ function logcheck(datalc) {
             }, 2000)
           }
         } catch (error) {
-          adapter.log.warn("Logcheck - got - Error: " + error);
+          adapter.log.info("Logcheck - got - Error: " + error);
 
           if (requestcounter > 4) {
             adapter.log.warn('Mehrfach fehlerhafter Logcheck, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.')
@@ -493,7 +493,7 @@ function httpsRequest(reqdata) { //FÃ¼hrt eine Abfrage beim solarlog durch und Ã
 
 
       } catch (error) {
-        adapter.log.warn("httpsRequest - got - Error: " + error);
+        adapter.log.info("httpsRequest - got - Error: " + error);
 
         if (requestcounter > 4) {
           adapter.log.warn('Mehrfach fehlerhafter http-Request, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
