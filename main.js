@@ -416,7 +416,7 @@ function logcheck(datalc) {
             adapter.log.debug("login OK, starte Request");
             httpsRequest(datalc);
           } else {
-            adapter.log.warn("login NICHT OK, starte zuerst Login, danach Request");
+            adapter.log.info("login NICHT OK, starte zuerst Login, danach Request");
             login();
             setTimeout(function() {
               logcheck(datalc);
