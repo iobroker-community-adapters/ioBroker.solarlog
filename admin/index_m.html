@@ -24,6 +24,14 @@
     </style>
     <!-- you have to define 2 functions in the global scope: -->
     <script type="text/javascript">
+        function onShow() {
+            if ($('#userpass').prop('checked')) {
+                $('#_userpw').show();
+            } else {
+                $('#_userpw').hide();
+            }
+        }
+
         // the function loadSettings has to exist ...
         function load(settings, onChange) {
             // example: select elements with id=key and class=value and insert value
@@ -45,6 +53,12 @@
                     });
                 }
             });
+
+            $('#userpass').on('change', function () {
+                onShow();
+            });
+            onShow();
+
             onChange(false);
             M.updateTextFields(); // function Materialize.updateTextFields(); to reinitialize all the Materialize labels on the page if you are dynamically adding inputs.
         }
@@ -86,14 +100,12 @@
             </div>
             <h6 class="translate sub-title">Connection settings</h6>
             <div class="row">
-                <div class="input-field col col s3">
+                <div class="input-field col col s12 m6 l4">
                     <input class="value" id="host" type="text"/>
                     <label for="host" class="translate">host</label>
                     <span class="translate">host</span>
                 </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s12 m6 l4">
+                <div class="input-field col s12 m3 l2">
                     <input type="number" class="value" id="port"/>
                     <label for="port" class="translate">port</label>
                     <!-- Important: label must come directly after input. Label is important. -->
@@ -109,28 +121,22 @@
                 </div>
             </div>
             <div class="row">
-                <div class="input-field col s12 m6">
+                <div class="input-field col s12 m6 l3">
                     <input class="value" id="userpass" type="checkbox"/>
                     <label for="userpass" class="translate">userpass</label>
                 </div>
-                <div class="input-field col s12 m6 l3">
+                <div class="input-field col s12 m6 l3" id="_userpw">
                     <input class="value" id="userpw" type="text"/>
                     <label for="userpw" class="translate">userpw</label>
                     <span class="translate">userpw</span>
                 </div>
             </div>
-            <div class="row">
-                <div class="col s12">
-                    <p class="translate">on save adapter restarts with new config immediately</p>
-                </div>
-            </div>
         </div>
-
 
         <div id="tab-advanced" class="col s12 page">
             <div class="row">
                 <div class="col s6">
-                    <img src="solarlog.png" class="logo">
+                    <img src="solarlog.png" class="logo" />
                 </div>
             </div>
             <div class="row">
@@ -205,7 +211,6 @@
                     <span class="translate">-180 … 180 (-180 = north, -90 = east, 0 = south, 90 = west, 180 = north)</span>)
                 </div>
             </div>
-
         </div>
     </div>
 </div>
