@@ -406,6 +406,7 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
         if (reqData.includes('.json')) {
             //adapter.log.debug('DATA: ' + reqdata + ' and DATALENGTH: ' + reqdata.length)
             options = JSON.parse(JSON.stringify(optionsJson));
+			options.headers['Cookie'] = `banner_hidden=true; SolarLog=${dataToken}`;
             //options.pathname = reqdata + Date.now().toString();
 
             reqAddress = deviceIpAddress + reqData + Date.now().toString();
@@ -414,20 +415,21 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
 
             //adapter.log.debug('DATA: ' + reqdata + ' and DATALENGTH: ' + reqdata.length)
             options = JSON.parse(JSON.stringify(optionsDefault));
-            options.pathname = cmd;
+			options.headers['Cookie'] = `banner_hidden=false; SolarLog=${dataToken}`;
+            //options.pathname = cmd;
             //options.headers['Content-Length'] = data.length;
         }
 
         adapter.log.debug(`ReqAddress: ${reqAddress} ReqData: ${reqData} OPTIONS: ${JSON.stringify(options)}`);
 
         try {
-            const response = await axios.post(`${reqAddress}/${cmd}`, `token=${dataToken};preval=none;${reqData}`, options);
+            const response = await axios.post(`${reqAddress}${cmd}`, `token=${dataToken};preval=none;${reqData}`, options);
 
-            adapter.log.debug(`Status-Code: ${response.statusCode}`);
+            adapter.log.debug(`Status-Code: ${response.status}`);
             adapter.log.debug(`Header: ${JSON.stringify(response.headers)}`);
-            adapter.log.debug(`Response.body= ${response.data}`);
+            adapter.log.debug(`Response.body= ${JSON.stringify(response.data)}`);
 
-            const bodyr = response.data;
+            const bodyr = JSON.stringify(response.data);
 
             requestCounter = 0;
             if (reqData.includes('.json')) {
@@ -435,7 +437,7 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
                 adapter.log.debug(`END Request: ${reqData}`);
             } else {
                 await readSolarlogData(reqData, bodyr);
-                adapter.log.debug(`END Request: ${options.body}`);
+                adapter.log.debug(`END Request: ${reqData}`);
             }
         } catch (error) {
             adapter.log.info(`httpsRequest - got - Error: ${error}`);
@@ -506,8 +508,9 @@ async function readSolarlogData(reqData, resData) {
                     adapter.log.debug(`Number of inverters/meters :${numinv - 1}`);
 
 
-                    for (let i = 0; i < (numinv - 1); i++) {
-                        const dataElements = '":{"119":null,"162":null}';
+                    for (var i = 0; i < (numinv - 1); i++) {
+						var dataFront = '{"141":{';
+                        var dataElements = '":{"119":null,"162":null}';
                         inverterDataArray.push(`"${i.toString()}${dataElements}`);
                     }
 
@@ -660,7 +663,8 @@ async function readSolarlogData(reqData, resData) {
                     adapter.log.debug(`Heute: ${heute}`);
                     for (let isuz = 0; isuz < 31; isuz++) {
                         if (dataSUZ[isuz].includes(heute.toString())) {
-                            adapter.log.debug(`Index Tageswerte: ${isuz}`);
+							var indexsuz = isuz;
+                            adapter.log.debug(`Index Tageswerte: ${indexsuz}`);
                             break;
                         }
                     }
@@ -687,7 +691,8 @@ async function readSolarlogData(reqData, resData) {
                     adapter.log.debug(`Monat heute: ${monatheute}`);
                     for (let isuz = 0; isuz < 31; isuz++) {
                         if (dataselfcons[isuz].includes(heute.toString())) {
-                            adapter.log.debug(`Index Tageswerte: ${isuz}`);
+							var indexsuz = isuz;
+                            adapter.log.debug(`Index Tageswerte: ${indexsuz}`);
                             break;
                         }
                     }
@@ -708,7 +713,8 @@ async function readSolarlogData(reqData, resData) {
                     if (monatGestern === monatheute) {
                         for (let iscy = 0; iscy < 31; iscy++) {
                             if (dataselfcons[iscy].includes(gestern.toString())) {
-                                adapter.log.debug(`Index Tageswerte gestern: ${iscy}`);
+								var indexscy = iscy;
+                                adapter.log.debug(`Index Tageswerte gestern: ${indexscy}`);
                                 break;
                             }
                         }
@@ -2222,9 +2228,9 @@ async function getForecastData() {
     lon = adapter.config.longitude;
     dec = adapter.config.inclination;
     az = adapter.config.azimuth;
-    const obj = await adapter.getState('info.totalPower');
-    if (obj) {
-        kwp = obj.val / 1000;
+    const objkwp = await adapter.getStateAsync('info.totalPower');
+    if (objkwp) {
+        kwp = objkwp.val / 1000;
 
         const urlProg = `${urlForecast + cmdForecast + lat}/${lon}/${dec}/${az}/${kwp}`;
 
