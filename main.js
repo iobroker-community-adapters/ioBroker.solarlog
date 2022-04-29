@@ -168,6 +168,7 @@ async function main() {
   userPass = !!adapter.config.userpass;
   loginData = `u=user&p=${adapter.config.userpw}`;
   optionsDefault = {
+    method: 'post',
     headers: {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
@@ -184,7 +185,8 @@ async function main() {
   };
 
   optionsJson = {
-    port,
+    //port,
+    method: 'get',
     headers: {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
@@ -408,26 +410,34 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
     let reqAddress = deviceIpAddress;
     let options;
     if (reqData.includes('.json')) {
+
       //adapter.log.debug('DATA: ' + reqdata + ' and DATALENGTH: ' + reqdata.length)
       options = JSON.parse(JSON.stringify(optionsJson));
       options.headers['Cookie'] = `banner_hidden=true; SolarLog=${dataToken}`;
       //options.pathname = reqdata + Date.now().toString();
 
       reqAddress = deviceIpAddress + reqData + Date.now().toString();
+
+      options.url = `${reqAddress}`;
+
     } else {
       //const data = 'token=' + datatoken + ';preval=none;' + reqdata;
 
       //adapter.log.debug('DATA: ' + reqdata + ' and DATALENGTH: ' + reqdata.length)
       options = JSON.parse(JSON.stringify(optionsDefault));
       options.headers['Cookie'] = `banner_hidden=false; SolarLog=${dataToken}`;
+
+      options.url = `${reqAddress}${cmd}`;
+      options.data = `token=${dataToken};preval=none;${reqData}`
+
       //options.pathname = cmd;
       //options.headers['Content-Length'] = data.length;
     }
 
-    adapter.log.debug(`ReqAddress: ${reqAddress} ReqData: ${reqData} OPTIONS: ${JSON.stringify(options)}`);
+    adapter.log.debug(` OPTIONS: ${JSON.stringify(options)}`); //ReqAddress: ${reqAddress} ReqData: ${reqData}
 
     try {
-      const response = await axios.post(`${reqAddress}${cmd}`, `token=${dataToken};preval=none;${reqData}`, options);
+      const response = await axios( /*`${reqAddress}${cmd}`, `token=${dataToken};preval=none;${reqData}`, */ options);
 
       adapter.log.debug(`Status-Code: ${response.status}`);
       adapter.log.debug(`Header: ${JSON.stringify(response.headers)}`);
@@ -1142,12 +1152,21 @@ async function readSolarlogDataJson(reqData, resData) {
             }
 
           }
+          adapter.log.debug(`SelfCons.selfconsyear: ${dataYeartotj[0][3]}`);
+          adapter.log.debug(`SelfCons.selfconslastyear: ${dataYeartotj[1][3]}`);
 
           await adapter.setStateAsync('SelfCons.selfconsyear', dataYeartotj[0][3], true);
           await adapter.setStateAsync('SelfCons.selfconslastyear', dataYeartotj[1][3], true);
 
+          adapter.log.debug(`SelfCons.selfconsratioyear: ${Math.round((dataYeartotj[0][3] * 1000) / (dataYeartotj[0][2]) * 1000) / 10}`);
+          adapter.log.debug(`SelfCons.selfconsratiolastyear: ${Math.round((dataYeartotj[1][3] * 1000) / (dataYeartotj[1][2]) * 1000) / 10}`);
+
           await adapter.setStateAsync('SelfCons.selfconsratioyear', Math.round((dataYeartotj[0][3] * 1000) / (dataYeartotj[0][2]) * 1000) / 10, true);
           await adapter.setStateAsync('SelfCons.selfconsratiolastyear', Math.round((dataYeartotj[1][3] * 1000) / (dataYeartotj[1][2]) * 1000) / 10, true);
+
+
+
+
         } catch (e) {
           adapter.log.warn(`readSolarlogDatajson - years - Fehler : ${e}`);
         }
@@ -1218,11 +1237,18 @@ async function readSolarlogDataJson(reqData, resData) {
             }
           }
 
+          adapter.log.debug(`SelfCons.selfconsmonth: ${dataMonthtotj[0][3]}`);
+          adapter.log.debug(`SelfCons.selfconslastmonth: ${dataMonthtotj[1][3]}`);
+
           await adapter.setStateAsync('SelfCons.selfconsmonth', dataMonthtotj[0][3], true);
           await adapter.setStateAsync('SelfCons.selfconslastmonth', dataMonthtotj[1][3], true);
 
+          adapter.log.debug(`SelfCons.selfconsratiomonth: ${Math.round((dataMonthtotj[0][3] * 1000) / (dataMonthtotj[0][2]) * 1000) / 10}`);
+          adapter.log.debug(`SelfCons.selfconsratiolastmonth: ${Math.round((dataMonthtotj[1][3] * 1000) / (dataMonthtotj[1][2]) * 1000) / 10}`);
+
           await adapter.setStateAsync('SelfCons.selfconsratiomonth', Math.round((dataMonthtotj[0][3] * 1000) / (dataMonthtotj[0][2]) * 1000) / 10, true);
           await adapter.setStateAsync('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtotj[1][3] * 1000) / (dataMonthtotj[1][2]) * 1000) / 10, true);
+
         } catch (e) {
           adapter.log.warn(`readSolarlogDatajson - month - Fehler : ${e}`);
         }
