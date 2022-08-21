@@ -419,9 +419,9 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
       reqAddress = deviceIpAddress + reqData + Date.now().toString();
 
       options.url = `${reqAddress}`;
-      options.params = {
-        `_`: `${Date.now().toString()}`
-      };
+      //options.params = {
+      `_`: `${Date.now().toString()}`
+      //};
 
     } else {
       //const data = 'token=' + datatoken + ';preval=none;' + reqdata;
