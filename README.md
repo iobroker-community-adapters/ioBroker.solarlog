@@ -45,7 +45,9 @@ SolarLog 50: There is no open JSON-Interface @ SolarLog 50 devices. So certain v
 
 ## Changelog
 
-### **WORK IN PROGRESS**
+### 2.2.4
+
+-   polling-bug fixt, dependecies updated
 
 ### 2.2.3
 

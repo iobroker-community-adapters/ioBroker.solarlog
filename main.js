@@ -333,7 +333,7 @@ async function login() {
       dataToken = token.slice(9);
       adapter.log.debug(`Datatoken: ${dataToken}`);
     } catch (error) {
-      adapter.log.info(`Login - got - Error: ${error}`);
+      adapter.log.info(`Login - axios - Error: ${error}`);
       if (requestCounter > 4) {
         adapter.log.warn('Mehrfach fehlerhafter Login, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
 
@@ -384,7 +384,7 @@ async function logCheck(dataLC) {
           setTimeout(async () => await logCheck(dataLC), 2000);
         }
       } catch (error) {
-        adapter.log.info(`Logcheck - got - Error: ${error}`);
+        adapter.log.info(`Logcheck - axios - Error: ${error}`);
 
         if (requestCounter > 4) {
           adapter.log.warn('Mehrfach fehlerhafter Logcheck, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
@@ -457,7 +457,7 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
         adapter.log.debug(`END Request: ${reqData}`);
       }
     } catch (error) {
-      adapter.log.info(`httpsRequest - got - Error: ${error}`);
+      adapter.log.info(`httpsRequest - axios - Error: ${error}`);
 
       if (requestCounter > 4) {
         adapter.log.warn('Mehrfach fehlerhafter http-Request, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
@@ -773,91 +773,99 @@ async function readSolarlogData(reqData, resData) {
       case '{"608"': //fastpollData = '{"608":null,"780":null,"781":null,"782":null,"801":{"175":null},"858":null}';
         try { //"608":null
           const datafast = JSON.parse(resData);
-          adapter.log.debug(`Inv. to treat: ${names}`);
-          const namLeng = names.length;
-          adapter.log.debug(`Anzahl Elemente: ${namLeng}`);
-          for (let uzj = 0; uzj < namLeng; uzj++) {
-            if (deviceclasses[uzj] !== 'Batterie') {
-              adapter.log.debug(`INV.${names[uzj]} Status: ${datafast[608][uzj]}`);
-              await adapter.setStateAsync(`INV.${names[uzj]}.status`, datafast[608][uzj], true);
-              adapter.log.debug(`INV.${names[uzj]} PAC: ${datafast[782][uzj]}`);
-              await adapter.setStateAsync(`INV.${names[uzj]}.PAC`, parseInt(datafast[782][uzj]), true);
-            }
-          }
 
-          adapter.log.debug(`Schaltgruppen: ${namessg}`);
+          if (datafast[608][0].includes("DENIED") == true) {
+            adapter.log.warn('SolarLog access violation - restart Adapter');
+            restartAdapter();
 
-          adapter.log.debug(`Anzahl Schaltgruppen: ${numsg}`);
-          for (let sgsj = 0; sgsj < 10; sgsj++) {
-            if (namessg[sgsj]) {
-              adapter.log.debug(`SwichtGroup.${namessg[sgsj]} Status: ${datafast[801][175][sgsj][101]}`);
-              await adapter.setStateAsync(`SwitchGroup.${namessg[sgsj]}.state`, datafast[801][175][sgsj][101], true);
-            }
-          }
-
-          battdata = datafast[858];
-          adapter.log.debug(`Battdata: ${battdata}`);
-          adapter.log.debug(`Battdata - Länge: ${battdata.length}`)
-          if (!battdata.length) {
-            battdata[2] = 0;
-            battdata[3] = 0;
-          }
-          adapter.log.debug(`Erzeugung: ${+datafast[780] - +battdata[3]}`);
-          await adapter.setStateAsync('status.pac', parseInt(+datafast[780] - +battdata[3]), true);
-          adapter.log.debug(`Verbrauch: ${+datafast[781] - +battdata[2]}`);
-          await adapter.setStateAsync('status.conspac', parseInt(+datafast[781] - +battdata[2]), true);
-
-          if (battDevicePresent && battPresent) {
-            await adapter.setStateAsync(`INV.${names[battindex[0]]}.BattLevel`, battdata[1], true);
-            await adapter.setStateAsync(`INV.${names[battindex[0]]}.ChargePower`, battdata[2], true);
-            await adapter.setStateAsync(`INV.${names[battindex[0]]}.DischargePower`, battdata[3], true);
-            feed = +datafast[780] - +datafast[781];
-            adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
-            await adapter.setStateAsync('status.feed', feed, true);
-            if (Math.sign(feed) === 1) {
-              await adapter.setStateAsync('status.feedin', feed, true);
-              await adapter.setStateAsync('status.feedinactive', true, true);
-              await adapter.setStateAsync('status.feedout', 0, true);
-            } else {
-              await adapter.setStateAsync('status.feedin', 0, true);
-              await adapter.setStateAsync('status.feedinactive', false, true);
-              await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
-            }
-          } else if (!battDevicePresent && battPresent) {
-            await adapter.setStateAsync('INV.Battery.BattLevel', battdata[1], true);
-            await adapter.setStateAsync('INV.Battery.ChargePower', battdata[2], true);
-            await adapter.setStateAsync('INV.Battery.DischargePower', battdata[3], true);
-            feed = +datafast[780] - +datafast[781];
-            adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
-            await adapter.setStateAsync('status.feed', feed, true);
-            if (Math.sign(feed) === 1) {
-              await adapter.setStateAsync('status.feedin', feed, true);
-              await adapter.setStateAsync('status.feedinactive', true, true);
-              await adapter.setStateAsync('status.feedout', 0, true);
-            } else {
-              await adapter.setStateAsync('status.feedin', 0, true);
-              await adapter.setStateAsync('status.feedinactive', false, true);
-              await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
-            }
-          } else if (!battDevicePresent && !battPresent) {
-            adapter.log.debug('Keine Batterie vorhanden');
-            feed = +datafast[780] - +datafast[781];
-            adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
-            await adapter.setStateAsync('status.feed', feed, true);
-            if (Math.sign(feed) === 1) {
-              await adapter.setStateAsync('status.feedin', feed, true);
-              await adapter.setStateAsync('status.feedinactive', true, true);
-              await adapter.setStateAsync('status.feedout', 0, true);
-            } else {
-              await adapter.setStateAsync('status.feedin', 0, true);
-              await adapter.setStateAsync('status.feedinactive', false, true);
-              await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
-            }
           } else {
-            adapter.log.debug('Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch');
-          }
+            adapter.log.debug(`Inv. to treat: ${names}`);
+            const namLeng = names.length;
+            adapter.log.debug(`Anzahl Elemente: ${namLeng}`);
+            for (let uzj = 0; uzj < namLeng; uzj++) {
+              if (deviceclasses[uzj] !== 'Batterie') {
+                adapter.log.debug(`INV.${names[uzj]} Status: ${datafast[608][uzj]}`);
+                await adapter.setStateAsync(`INV.${names[uzj]}.status`, datafast[608][uzj], true);
+                adapter.log.debug(`INV.${names[uzj]} PAC: ${datafast[782][uzj]}`);
+                await adapter.setStateAsync(`INV.${names[uzj]}.PAC`, parseInt(datafast[782][uzj]), true);
+              }
+            }
 
-          setDisplayData(datafast[794][0]);
+            adapter.log.debug(`Schaltgruppen: ${namessg}`);
+
+            adapter.log.debug(`Anzahl Schaltgruppen: ${numsg}`);
+            for (let sgsj = 0; sgsj < 10; sgsj++) {
+              if (namessg[sgsj]) {
+                adapter.log.debug(`SwichtGroup.${namessg[sgsj]} Status: ${datafast[801][175][sgsj][101]}`);
+                await adapter.setStateAsync(`SwitchGroup.${namessg[sgsj]}.state`, datafast[801][175][sgsj][101], true);
+              }
+            }
+
+            battdata = datafast[858];
+            adapter.log.debug(`Battdata: ${battdata}`);
+            adapter.log.debug(`Battdata - Länge: ${battdata.length}`)
+            if (!battdata.length) {
+              battdata[2] = 0;
+              battdata[3] = 0;
+            }
+            adapter.log.debug(`Erzeugung: ${+datafast[780] - +battdata[3]}`);
+            await adapter.setStateAsync('status.pac', parseInt(+datafast[780] - +battdata[3]), true);
+            adapter.log.debug(`Verbrauch: ${+datafast[781] - +battdata[2]}`);
+            await adapter.setStateAsync('status.conspac', parseInt(+datafast[781] - +battdata[2]), true);
+
+            if (battDevicePresent && battPresent) {
+              await adapter.setStateAsync(`INV.${names[battindex[0]]}.BattLevel`, battdata[1], true);
+              await adapter.setStateAsync(`INV.${names[battindex[0]]}.ChargePower`, battdata[2], true);
+              await adapter.setStateAsync(`INV.${names[battindex[0]]}.DischargePower`, battdata[3], true);
+              feed = +datafast[780] - +datafast[781];
+              adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
+              await adapter.setStateAsync('status.feed', feed, true);
+              if (Math.sign(feed) === 1) {
+                await adapter.setStateAsync('status.feedin', feed, true);
+                await adapter.setStateAsync('status.feedinactive', true, true);
+                await adapter.setStateAsync('status.feedout', 0, true);
+              } else {
+                await adapter.setStateAsync('status.feedin', 0, true);
+                await adapter.setStateAsync('status.feedinactive', false, true);
+                await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
+              }
+            } else if (!battDevicePresent && battPresent) {
+              await adapter.setStateAsync('INV.Battery.BattLevel', battdata[1], true);
+              await adapter.setStateAsync('INV.Battery.ChargePower', battdata[2], true);
+              await adapter.setStateAsync('INV.Battery.DischargePower', battdata[3], true);
+              feed = +datafast[780] - +datafast[781];
+              adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
+              await adapter.setStateAsync('status.feed', feed, true);
+              if (Math.sign(feed) === 1) {
+                await adapter.setStateAsync('status.feedin', feed, true);
+                await adapter.setStateAsync('status.feedinactive', true, true);
+                await adapter.setStateAsync('status.feedout', 0, true);
+              } else {
+                await adapter.setStateAsync('status.feedin', 0, true);
+                await adapter.setStateAsync('status.feedinactive', false, true);
+                await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
+              }
+            } else if (!battDevicePresent && !battPresent) {
+              adapter.log.debug('Keine Batterie vorhanden');
+              feed = +datafast[780] - +datafast[781];
+              adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
+              await adapter.setStateAsync('status.feed', feed, true);
+              if (Math.sign(feed) === 1) {
+                await adapter.setStateAsync('status.feedin', feed, true);
+                await adapter.setStateAsync('status.feedinactive', true, true);
+                await adapter.setStateAsync('status.feedout', 0, true);
+              } else {
+                await adapter.setStateAsync('status.feedin', 0, true);
+                await adapter.setStateAsync('status.feedinactive', false, true);
+                await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
+              }
+            } else {
+              adapter.log.debug('Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch');
+            }
+
+            setDisplayData(datafast[794][0]);
+
+          }
 
         } catch (e) {
           adapter.log.warn(`readSolarlogData - Fehler in datafast: ${e}`);

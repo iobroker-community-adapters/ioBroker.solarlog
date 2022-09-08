@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.2.3",
+    "version": "2.2.4",
     "news": {
+      "2.2.4": {
+        "en": "polling-bug fixed, dependencies updated",
+        "de": "Abfragefehler behoben, Dependecies aktualisiert"
+      },
       "2.2.3": {
         "en": "got => axios, usage of async functions",
         "de": "got => axios, umstellung auf async - Funktionen"
