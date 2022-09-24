@@ -63,10 +63,12 @@
     "url": "git+https://github.com/iobroker-community-adapters/ioBroker.solarlog.git"
   },
   "scripts": {
-    "test": "npm run test:package && npm run test:unit",
-    "test:integration": "mocha test/integration --exit",
+    "test:js": "mocha \"{!(node_modules|test)/**/*.test.js,*.test.js,test/**/test!(PackageFiles|Startup).js}\"",
     "test:package": "mocha test/package --exit",
     "test:unit": "mocha test/unit --exit",
+    "test:integration": "mocha test/integration --exit",
+    "test": "npm run test:js && npm run test:package",
+    "lint": "eslint", 
     "release": "release-script",
     "release-patch": "release-script patch --yes --no-update-lockfile",
     "release-minor": "release-script minor --yes --no-update-lockfile",
