@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.2.4",
+    "version": "2.2.5",
     "news": {
+      "2.2.5": {
+        "en": "testing fixed",
+        "de": "Testing aktualisiert"
+      },
       "2.2.4": {
         "en": "polling-bug fixed, dependencies updated",
         "de": "Abfragefehler behoben, Dependecies aktualisiert"
@@ -76,14 +80,30 @@
         "de": "Möglichkeit Port festzulegen (optional), Readme"
       }
     },
-    "title": "solarlog",
+
     "titleLang": {
       "en": "solarlogMonitor",
-      "de": "SolarlogMonitor"
+      "de": "solarlogMonitor",
+      "ru": "солнечный блогМонитор",
+      "pt": "máquina de montagem automática",
+      "nl": "solarlogMonitor",
+      "fr": "solarlogMonitor",
+      "it": "solarlogMonitor",
+      "es": "solarlogMonitor",
+      "pl": "solarlogmonitor",
+      "zh-cn": "太阳能标志Monitor"
     },
     "desc": {
       "en": "Monitor your solarlog meter",
-      "de": "Überwache deinen Solarlog Meter"
+      "de": "Überwachen Sie Ihren Solarlog-Meter",
+      "ru": "Контролируйте свой солнечный метр",
+      "pt": "Monitorar o medidor solar",
+      "nl": "Monitor je zonnelogmeter",
+      "fr": "Surveillez votre compteur solaire",
+      "it": "Monitora il tuo contatore solare",
+      "es": "Monitoree su medidor de solarlog",
+      "pl": "Pamiętnik słoneczny",
+      "zh-cn": "监测你的太阳能参数"
     },
     "authors": [
       "forelleblau <marceladam@gmx.ch>"
