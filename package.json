@@ -12,7 +12,7 @@
     "email": "marceladam@gmx.ch"
   }],
   "dependencies": {
-    "@iobroker/adapter-core": "^2.6.6",
+    "@iobroker/adapter-core": "^2.6.7",
     "node-schedule": "^2.1.0",
     "axios": "^0.27.2"
   },
