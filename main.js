@@ -375,7 +375,7 @@ async function logCheck(dataLC) {
         adapter.log.debug(`bodyarray0= ${bodyArray[0]}`);
 
         //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
-        if (bodyArray[0]) {
+        if (bodyArray[0] != 0) {
           adapter.log.debug('login OK, starte Request');
           await httpsRequest(dataLC);
         } else {
@@ -1062,7 +1062,7 @@ async function readSolarlogData(reqData, resData) {
       case '{"801"': //nur Daten über offene JSON-Schnittstelle'
         try {
           json = JSON.parse(resData)[801][170];
-          adapter.log.debug(`Data open JSON: ${json}`);
+          adapter.log.debug('Data open JSON: ' + JSON.stringify(json));
           await adapter.setStateAsync('info.lastSync', json[100], true);
           await adapter.setStateAsync('info.totalPower', parseInt(json[116]), true);
           await adapter.setStateAsync('status.pac', parseInt(json[101]), true);
