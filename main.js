@@ -2264,7 +2264,7 @@ async function setForecastObjects() {
 
 async function getForecastData() {
   adapter.log.debug('Rufe Forcastdaten ab');
-  cmdForecast = 'estimate//watthours/day/';
+  cmdForecast = 'estimate/watthours/day/';
   lat = adapter.config.latitude;
   lon = adapter.config.longitude;
   dec = adapter.config.inclination;
