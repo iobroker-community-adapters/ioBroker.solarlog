@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.2.5",
+    "version": "2.2.6",
     "news": {
+      "2.2.6": {
+        "en": "bug in 'forecast' fixed, dependecies updated",
+        "de": "Fehler in 'forecast' behobend, Dependencies aktualisiert"
+      },
       "2.2.5": {
         "en": "testing fixed",
         "de": "Testing aktualisiert"

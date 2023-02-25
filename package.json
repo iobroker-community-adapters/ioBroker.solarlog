@@ -74,5 +74,5 @@
     "release-minor": "release-script minor --yes --no-update-lockfile",
     "release-major": "release-script major --yes --no-update-lockfile"
   },
-  "version": "2.2.5"
+  "version": "2.2.6"
 }
