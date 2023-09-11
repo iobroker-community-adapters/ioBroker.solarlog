@@ -6,18 +6,20 @@
   "bugs": {
     "url": "https://github.com/iobroker-community-adapters/ioBroker.solarlog/issues"
   },
+  "description": "solarlog",
   "bundleDependencies": false,
   "contributors": [{
     "name": "Marcel Adam",
     "email": "marceladam@gmx.ch"
   }],
+  "engines": {
+    "node": ">=16"
+  },
   "dependencies": {
     "@iobroker/adapter-core": "^3.0.3",
     "node-schedule": "^2.1.1",
     "axios": "^1.5.0"
   },
-  "deprecated": false,
-  "description": "solarlog",
   "devDependencies": {
     "@iobroker/testing": "^4.1.0",
     "@types/chai": "^4.3.5",
