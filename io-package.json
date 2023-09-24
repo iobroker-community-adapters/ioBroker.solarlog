@@ -55,38 +55,6 @@
         "en": "Complete code redesign to reduce traffic between adapter and solarlog. NEW: System informations (info) and solarlogs setpoint-values for year, current and all month and current day (forecast).",
         "de": "Vollständiges Code - Redesign zur Reduktion den Anzahl Abfragen beim Solarlog. NEU: System - infos (info) und Produktions - Sollwerte aus dem Solarlog für laufenden Tag/Monat/Jahr und für jeden Monat."
       },
-      "1.3.0": {
-        "en": "user-login possibility added.",
-        "de": "Benutzer-Passwort Aktivierung ermöglicht."
-      },
-      "1.2.2": {
-        "en": " It is now possible to set the time when historic data is requested.",
-        "de": "Der Zeitpunkt für die Abfrage der historischen Werte kann nun festgelegt werden."
-      },
-      "1.2.0": {
-        "en": "Shows now forecast data: todays and tomorrows total kWh.",
-        "de": "Enthält nun eine Prognose: heutige und morgige Produktion in kWh."
-      },
-      "1.1.0": {
-        "en": "Shows detailed information on self - consumption. Imports yearly & monthly historic data.",
-        "de": "Zeigt detaillierte Informationen zum Eigenverbrauch. Importiert jährliche und monatliche historische Werte"
-      },
-      "1.0.0": {
-        "en": "Reads now devicetypes, -brands and -classes. Sets correct params for batteries. Displays self-consumption @'status'",
-        "de": "Liest jetzt Gerätetypen, -klassen und -marken aus. Legt die richtigen Objekte für Batteriespeicher an. Ziegt im 'status' den Eigenverbrauch an"
-      },
-      "0.1.6": {
-        "en": "Reads now battery data",
-        "de": "Liest jetzt Batteriewerte aus"
-      },
-      "0.1.5": {
-        "en": "Reads now historic data (yearly sum per Inverter), testing update",
-        "de": "Liest jetzt historische Daten (Jahressummen pro Zähler), Testing - Update"
-      },
-      "0.1.0": {
-        "en": "optional port specification, readme",
-        "de": "Möglichkeit Port festzulegen (optional), Readme"
-      }
     },
 
     "titleLang": {
