@@ -1,7 +1,9 @@
 /**
  * solarlog adapter
  */
-
+try {} catch (e) {
+  adapter.log.warn(`Login - Error: ${e.message}`);
+}
 /* jshint -W097 */
 /* jshint strict: false */
 /* jslint node: true */
@@ -124,25 +126,33 @@ function startAdapter(options) {
 
   // Some message was sent to adapter instance over message box. Used by email, pushover, text2speech, ...
   adapter.on('message', function(obj) {
-    if (typeof obj === 'object' && obj.message) {
-      if (obj.command === 'send') {
-        // e.g. send email or pushover or whatever
-        adapter.log('send command');
+    try {
+      if (typeof obj === 'object' && obj.message) {
+        if (obj.command === 'send') {
+          // e.g. send email or pushover or whatever
+          adapter.log('send command');
 
-        // Send response in callback if required
-        obj.callback && adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
+          // Send response in callback if required
+          obj.callback && adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
+        }
       }
+    } catch (e) {
+      adapter.log.warn(`on.Message - Error: ${e.message}`);
     }
   });
 
   // is called when databases are connected and adapter received configuration.
   adapter.on('ready', async () => {
-    if (adapter.config.host) {
-      adapter.log.info('[START] Starting solarlog adapter');
-      await adapter.setStateAsync('info.connection', true, true);
-      await main();
-    } else {
-      adapter.log.warn('[START] No IP-address set');
+    try {
+      if (adapter.config.host) {
+        adapter.log.info('[START] Starting solarlog adapter');
+        await adapter.setStateAsync('info.connection', true, true);
+        await main();
+      } else {
+        adapter.log.warn('[START] No IP-address set');
+      }
+    } catch (e) {
+      adapter.log.warn(`on.Ready - Error: ${e.message}`);
     }
   });
 
@@ -150,166 +160,178 @@ function startAdapter(options) {
 } // endStartAdapter
 
 async function main() {
-  port = adapter.config.port;
-  // Vars
-  adapter.log.debug(`Host? ${adapter.config.host.includes('http')} : ${adapter.config.host}`)
-  if (adapter.config.host.includes('http')) {
-    deviceIpAddress = adapter.config.host;
-  } else {
-    deviceIpAddress = `http://${adapter.config.host}:${port}`;
-  }
-
-  //cmd = '/getjp'; // Kommandos in der URL nach der Host-Adresse
-  numinv = 0;
-  uzimp = !!adapter.config.invimp;
-  forecast = !!adapter.config.forecast;
-  historic = !!adapter.config.historic;
-  histCRON = `${adapter.config.histmin} ${adapter.config.histhour} * * *`
-  userPass = !!adapter.config.userpass;
-  loginData = `u=user&p=${adapter.config.userpw}`;
-  optionsDefault = {
-    method: 'post',
-    headers: {
-      'Accept': '*/*',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      Connection: 'keep-alive',
-      //'Content-Length': data.length,
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Referer': deviceIpAddress + '/',
-      'Accept-Origin': deviceIpAddress + '/',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Cookie': `banner_hidden=false; SolarLog=${dataToken}`
-    }
-  };
-
-  optionsJson = {
-    //port,
-    method: 'get',
-    headers: {
-      'Accept': '*/*',
-      'Accept-Encoding': 'gzip, deflate',
-      //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Connection': 'keep-alive',
-      //'Content-Length': data.length,
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Referer': deviceIpAddress + '/',
-      'Accept-Origin': deviceIpAddress + '/',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Cookie': 'banner_hidden=true; SolarLog=' + dataToken
-    }
-  };
-
-  adapter.log.debug('LOVE - Ich liebe euch!'); //eingefügt auf Wunsch von meiner Tochter :)
-
-  adapter.log.info(`Unterzähler - Import: ${adapter.config.invimp}`);
-  adapter.log.debug(`uzimp: ${uzimp}`);
-  if (historic) {
-    adapter.log.info(`Rufe historische Daten um ${adapter.config.histhour}:${adapter.config.histmin} ab`);
-  } else {
-    adapter.log.info('Historische Daten werden nicht abgerufen');
-  }
-  adapter.log.info(`Forecast - Datenabruf: ${forecast}`);
-  const pollingTimecurrent = (adapter.config.pollIntervalcurrent * 1000) || 30000;
-  const pollingTimeperiodic = (adapter.config.pollIntervalperiodic * 60000) || 300000;
-  adapter.log.debug(`[INFO] Configured polling interval consumption/production: ${pollingTimecurrent}`);
-  adapter.log.debug(`[INFO] Configured polling interval averages&other: ${pollingTimeperiodic}`);
-  adapter.log.debug(`[START] Started Adapter with: ${adapter.config.host}`);
-
-  if (userPass) {
-    await login();
-  }
-
-  if (uzimp) {
-    adapter.log.debug(`uzimp: ${uzimp}`);
-    adapter.log.debug('WR Importieren');
-
-    setTimeout(async () => await logCheck(startupData), 500);
-
-    testend = setInterval(async () => await test(), 2000); // Überprüfen, ob alle Channels angelegt sind.
-
-    fastPolling = fastPolling || setInterval(async () => await logCheck(fastpollData), pollingTimecurrent + 20000); // poll states every [30] seconds
-
-    polling = polling || setInterval(async () => await logCheck(pollingData), pollingTimeperiodic); // poll states every [30] seconds
-  } else {
-    adapter.log.debug(`uzimp: ${uzimp}`);
-    adapter.log.debug('WR nicht Importieren');
-    if (forecast) {
-      await setForecastObjects();
+  try {
+    port = adapter.config.port;
+    // Vars
+    adapter.log.debug(`Host? ${adapter.config.host.includes('http')} : ${adapter.config.host}`)
+    if (adapter.config.host.includes('http')) {
+      deviceIpAddress = adapter.config.host;
     } else {
-      await logCheck('{"801":{"170":null}}');
+      deviceIpAddress = `http://${adapter.config.host}:${port}`;
     }
 
-    polling = polling || setInterval(async () => await logCheck('{"801":{"170":null}}'), pollingTimecurrent); // poll states every [30] seconds
-  }
-
-  jedenTag = schedule.scheduleJob(histCRON, async () => {
-    if (historic) {
-      adapter.log.info('Langzeitwerte abrufen');
-      const obj = await adapter.getStateAsync('info.Model');
-      if (obj) {
-        const slmodel = parseInt(obj.val, 10);
-        adapter.log.debug(`Solarlog model ${slmodel}`);
-        if (slmodel === 500) {
-          await logCheck('{"854": null}');
-          setTimeout(async () => await logCheck(historicDataJSONmonths), 2000);
-          setTimeout(async () => await logCheck(historicDataJSONyears), 7000)
-        } else {
-          await logCheck(historicData);
-        }
+    //cmd = '/getjp'; // Kommandos in der URL nach der Host-Adresse
+    numinv = 0;
+    uzimp = !!adapter.config.invimp;
+    forecast = !!adapter.config.forecast;
+    historic = !!adapter.config.historic;
+    histCRON = `${adapter.config.histmin} ${adapter.config.histhour} * * *`
+    userPass = !!adapter.config.userpass;
+    loginData = `u=user&p=${adapter.config.userpw}`;
+    optionsDefault = {
+      method: 'post',
+      headers: {
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate',
+        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+        Connection: 'keep-alive',
+        //'Content-Length': data.length,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Referer': deviceIpAddress + '/',
+        'Accept-Origin': deviceIpAddress + '/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Cookie': `banner_hidden=false; SolarLog=${dataToken}`
       }
+    };
+
+    optionsJson = {
+      //port,
+      method: 'get',
+      headers: {
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate',
+        //'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Connection': 'keep-alive',
+        //'Content-Length': data.length,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Referer': deviceIpAddress + '/',
+        'Accept-Origin': deviceIpAddress + '/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Cookie': 'banner_hidden=true; SolarLog=' + dataToken
+      }
+    };
+
+    adapter.log.debug('LOVE - Ich liebe euch!'); //eingefügt auf Wunsch von meiner Tochter :)
+
+    adapter.log.info(`Unterzähler - Import: ${adapter.config.invimp}`);
+    adapter.log.debug(`uzimp: ${uzimp}`);
+    if (historic) {
+      adapter.log.info(`Rufe historische Daten um ${adapter.config.histhour}:${adapter.config.histmin} ab`);
     } else {
-      adapter.log.debug('Abruf historische Werte nich aktiviert');
+      adapter.log.info('Historische Daten werden nicht abgerufen');
     }
-  });
+    adapter.log.info(`Forecast - Datenabruf: ${forecast}`);
+    const pollingTimecurrent = (adapter.config.pollIntervalcurrent * 1000) || 30000;
+    const pollingTimeperiodic = (adapter.config.pollIntervalperiodic * 60000) || 300000;
+    adapter.log.debug(`[INFO] Configured polling interval consumption/production: ${pollingTimecurrent}`);
+    adapter.log.debug(`[INFO] Configured polling interval averages&other: ${pollingTimeperiodic}`);
+    adapter.log.debug(`[START] Started Adapter with: ${adapter.config.host}`);
 
-  jedeStunde = schedule.scheduleJob('25 * * * *', async () => {
-    adapter.log.debug('Forecast-Daten werden abgerufen');
-    if (forecast) {
-      await getForecastData();
+    if (userPass) {
+      await login();
     }
-  });
 
-  // all states changes inside the adapters namespace are subscribed
-  //adapter.subscribeStates('*');
+    if (uzimp) {
+      adapter.log.debug(`uzimp: ${uzimp}`);
+      adapter.log.debug('WR Importieren');
+
+      setTimeout(async () => await logCheck(startupData), 500);
+
+      testend = setInterval(async () => await test(), 2000); // Überprüfen, ob alle Channels angelegt sind.
+
+      fastPolling = fastPolling || setInterval(async () => await logCheck(fastpollData), pollingTimecurrent + 20000); // poll states every [30] seconds
+
+      polling = polling || setInterval(async () => await logCheck(pollingData), pollingTimeperiodic); // poll states every [30] seconds
+    } else {
+      adapter.log.debug(`uzimp: ${uzimp}`);
+      adapter.log.debug('WR nicht Importieren');
+      if (forecast) {
+        await setForecastObjects();
+      } else {
+        await logCheck('{"801":{"170":null}}');
+      }
+
+      polling = polling || setInterval(async () => await logCheck('{"801":{"170":null}}'), pollingTimecurrent); // poll states every [30] seconds
+    }
+
+    jedenTag = schedule.scheduleJob(histCRON, async () => {
+      if (historic) {
+        adapter.log.info('Langzeitwerte abrufen');
+        const obj = await adapter.getStateAsync('info.Model');
+        if (obj) {
+          const slmodel = parseInt(obj.val, 10);
+          adapter.log.debug(`Solarlog model ${slmodel}`);
+          if (slmodel === 500) {
+            await logCheck('{"854": null}');
+            setTimeout(async () => await logCheck(historicDataJSONmonths), 2000);
+            setTimeout(async () => await logCheck(historicDataJSONyears), 7000)
+          } else {
+            await logCheck(historicData);
+          }
+        }
+      } else {
+        adapter.log.debug('Abruf historische Werte nich aktiviert');
+      }
+    });
+
+    jedeStunde = schedule.scheduleJob('25 * * * *', async () => {
+      adapter.log.debug('Forecast-Daten werden abgerufen');
+      if (forecast) {
+        await getForecastData();
+      }
+    });
+
+    // all states changes inside the adapters namespace are subscribed
+    //adapter.subscribeStates('*');
+  } catch (e) {
+    adapter.log.warn(`main - Error: ${e.message}`);
+  }
 } // endMain
 
 async function test() {
-  const obj = await adapter.getStateAsync('info.numinv');
-  if (obj) {
-    const numbinv = obj.val;
-    adapter.log.debug(`Inverters to test: ${names}`);
-    adapter.log.debug(`numbinv: ${numbinv}`);
-    names.forEach(check);
-    adapter.log.debug(`Anzahl positiv: ${testi}`);
-    if (testi == numbinv) {
-      clearInterval(testend);
-      adapter.log.info('Alle WR/Zaehler gefunden');
-      adapter.log.debug(`Names: ${names}`);
-      await setDeviceInfo(names);
-    } else {
-      testi = 0;
-      adapter.log.warn('Nicht alle WR/Zaehler gefunden');
-      testj++;
-      if (testj > 5) {
-        adapter.log.warn('Fehler, noch nicht alle Unterzaehler angelegt');
+  try {
+    const obj = await adapter.getStateAsync('info.numinv');
+    if (obj) {
+      const numbinv = obj.val;
+      adapter.log.debug(`Inverters to test: ${names}`);
+      adapter.log.debug(`numbinv: ${numbinv}`);
+      names.forEach(check);
+      adapter.log.debug(`Anzahl positiv: ${testi}`);
+      if (testi == numbinv) {
         clearInterval(testend);
+        adapter.log.info('Alle WR/Zaehler gefunden');
+        adapter.log.debug(`Names: ${names}`);
+        await setDeviceInfo(names);
+      } else {
+        testi = 0;
+        adapter.log.warn('Nicht alle WR/Zaehler gefunden');
+        testj++;
+        if (testj > 5) {
+          adapter.log.warn('Fehler, noch nicht alle Unterzaehler angelegt');
+          clearInterval(testend);
+        }
       }
     }
+  } catch (e) {
+    adapter.log.warn(`Test - Error: ${e.message}`);
   }
 } // END test()
 
 function check(uz) {
-  adapter.getObject('INV.' + uz, function(err, obj) {
-    if (obj) {
-      adapter.log.debug(`Adapter ${uz} vorhanden`);
-      testi++;
-    } else {
-      adapter.log.warn(`Adapter ${uz} nicht vorhanden`);
-    }
-  });
+  try {
+    adapter.getObject('INV.' + uz, function(err, obj) {
+      if (obj) {
+        adapter.log.debug(`Adapter ${uz} vorhanden`);
+        testi++;
+      } else {
+        adapter.log.warn(`Adapter ${uz} nicht vorhanden`);
+      }
+    });
+  } catch (e) {
+    adapter.log.warn(`check - Error: ${e.message}`);
+  }
 } // END check()
 
 async function login() {
@@ -1274,143 +1296,235 @@ async function readSolarlogDataJson(reqData, resData) {
 } //end readSolarlogDatajson
 
 async function defDeviceInfo() { // Geräteinfos httpsReqGetUzDeviceinfo
-  const namLeng = names.length;
-  for (let y = 0; y < namLeng; y++) {
-    adapter.log.debug(`INV.${names[y]}.devicetype: ${deviceList[deviceinfos[y]][1]}`);
-    devicetypes.push(deviceList[deviceinfos[y]][1]);
+  try {
+    const namLeng = names.length;
+    for (let y = 0; y < namLeng; y++) {
+      adapter.log.debug(`INV.${names[y]}.devicetype: ${deviceList[deviceinfos[y]][1]}`);
+      devicetypes.push(deviceList[deviceinfos[y]][1]);
 
-    adapter.log.debug(`INV.${names[y]}.devicebrand: ${brandlist[deviceList[deviceinfos[y]][0]]}`);
-    devicebrands.push(brandlist[deviceList[deviceinfos[y]][0]]);
+      adapter.log.debug(`INV.${names[y]}.devicebrand: ${brandlist[deviceList[deviceinfos[y]][0]]}`);
+      devicebrands.push(brandlist[deviceList[deviceinfos[y]][0]]);
 
-    deviceclasses.push(deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)]);
+      deviceclasses.push(deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)]);
 
-    if (deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)] === 'Batterie') {
-      battDevicePresent = true;
-      adapter.log.debug('Batterie als Gerät vorhanden');
-      battindex[battarrind] = y;
-      adapter.log.debug(`Index Gerät Batterie: ${y}`);
-      battarrind++;
+      if (deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)] === 'Batterie') {
+        battDevicePresent = true;
+        adapter.log.debug('Batterie als Gerät vorhanden');
+        battindex[battarrind] = y;
+        adapter.log.debug(`Index Gerät Batterie: ${y}`);
+        battarrind++;
 
-      adapter.log.debug(`INV.${names[y]}.deviceclass: ${deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)]}`);
+        adapter.log.debug(`INV.${names[y]}.deviceclass: ${deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)]}`);
+      }
+
+      adapter.log.debug(`Batterie als Gerät: ${battDevicePresent}`);
     }
 
-    adapter.log.debug(`Batterie als Gerät: ${battDevicePresent}`);
-  }
+    adapter.log.debug(`Devicetypes: ${devicetypes}`);
+    adapter.log.debug(`Devicebrands: ${devicebrands}`);
+    adapter.log.debug(`Deviceclasses: ${deviceclasses}`);
 
-  adapter.log.debug(`Devicetypes: ${devicetypes}`);
-  adapter.log.debug(`Devicebrands: ${devicebrands}`);
-  adapter.log.debug(`Deviceclasses: ${deviceclasses}`);
-
-  if (names.length > 0 && deviceclasses.length > 0) {
-    await setInvObjects();
+    if (names.length > 0 && deviceclasses.length > 0) {
+      await setInvObjects();
+    }
+  } catch (e) {
+    adapter.log.warn(`defdeviceinfo - Error: ${e.message}`);
   }
 } // end defdeviceinfo
 
 async function setInvObjects() {
   // create Channel Inverter(i)
-  adapter.log.debug('Lege nun Objekte an - soweit nicht vorhanden 2');
-  adapter.log.debug(`NumInv Obj: ${numinv}`);
-  adapter.log.debug(`Names zum anlegen: ${names}`);
-  adapter.log.debug(`Anzahl Schaltgruppen: ${numsg}`);
-  adapter.log.debug(`Schaltgruppen: ${namessg}`);
+  try {
+    adapter.log.debug('Lege nun Objekte an - soweit nicht vorhanden 2');
+    adapter.log.debug(`NumInv Obj: ${numinv}`);
+    adapter.log.debug(`Names zum anlegen: ${names}`);
+    adapter.log.debug(`Anzahl Schaltgruppen: ${numsg}`);
+    adapter.log.debug(`Schaltgruppen: ${namessg}`);
 
-  for (let i = 0; i < numinv - 1; i++) {
-    await adapter.setObjectNotExistsAsync('INV.' + names[i], {
-      type: 'channel',
-      role: '',
-      common: {
-        name: '' + names[i]
-      },
-      native: {}
-    });
-
-    // create States PAC/Status/DaySum Inverter(i)
-    if (deviceclasses[i] !== 'Batterie') {
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.PAC`, {
-        type: 'state',
+    for (let i = 0; i < numinv - 1; i++) {
+      await adapter.setObjectNotExistsAsync('INV.' + names[i], {
+        type: 'channel',
+        role: '',
         common: {
-          name: 'PAC',
-          desc: 'Power AC',
-          type: 'number',
-          role: 'value.pac',
-          read: true,
-          write: false,
-          unit: 'W'
+          name: '' + names[i]
         },
         native: {}
       });
-    }
 
-    await adapter.setObjectNotExistsAsync(`INV.${names[i]}.status`, {
-      type: 'state',
-      common: {
-        name: 'status',
-        desc: 'Staus of Inverter',
-        type: 'string',
-        role: 'info.status',
-        read: true,
-        write: false
-      },
-      native: {}
-    });
+      // create States PAC/Status/DaySum Inverter(i)
+      if (deviceclasses[i] !== 'Batterie') {
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.PAC`, {
+          type: 'state',
+          common: {
+            name: 'PAC',
+            desc: 'Power AC',
+            type: 'number',
+            role: 'value.pac',
+            read: true,
+            write: false,
+            unit: 'W'
+          },
+          native: {}
+        });
+      }
 
-    if (deviceclasses[i] !== 'Batterie') {
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.daysum`, {
+      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.status`, {
         type: 'state',
         common: {
-          name: 'DaySum',
-          desc: 'Daily sum Wh',
-          type: 'number',
-          role: 'value.daysum',
+          name: 'status',
+          desc: 'Staus of Inverter',
+          type: 'string',
+          role: 'info.status',
           read: true,
-          write: false,
-          unit: 'Wh'
+          write: false
         },
         native: {}
       });
+
+      if (deviceclasses[i] !== 'Batterie') {
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.daysum`, {
+          type: 'state',
+          common: {
+            name: 'DaySum',
+            desc: 'Daily sum Wh',
+            type: 'number',
+            role: 'value.daysum',
+            read: true,
+            write: false,
+            unit: 'Wh'
+          },
+          native: {}
+        });
+      }
+
+      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.deviceclass`, {
+        type: 'state',
+        common: {
+          name: 'DeviceClass',
+          desc: 'Device Class',
+          type: 'string',
+          role: 'value.deviceclass',
+          read: true,
+          write: false
+        },
+        native: {}
+      });
+
+      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.devicebrand`, {
+        type: 'state',
+        common: {
+          name: 'DeviceBrand',
+          desc: 'Device brand',
+          type: 'string',
+          role: 'value.devicebrand',
+          read: true,
+          write: false
+        },
+        native: {}
+      });
+
+      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.devicetype`, {
+        type: 'state',
+        common: {
+          name: 'DeviceType',
+          desc: 'Device type',
+          type: 'string',
+          role: 'value.Devicetype',
+          read: true,
+          write: false
+        },
+        native: {}
+      });
+
+      if (deviceclasses[i] === 'Batterie' && battDevicePresent && battPresent) {
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.ChargePower`, {
+          type: 'state',
+          common: {
+            name: 'chargepower',
+            desc: 'Battery charging power',
+            type: 'number',
+            role: 'value.chargepower',
+            read: true,
+            write: false,
+            unit: 'W'
+          },
+          native: {}
+        });
+
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.DischargePower`, {
+          type: 'state',
+          common: {
+            name: 'dischargepower',
+            desc: 'Battery discharging power',
+            type: 'number',
+            role: 'value.dischargepower',
+            read: true,
+            write: false,
+            unit: 'W'
+          },
+          native: {}
+        });
+
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattLevel`, {
+          type: 'state',
+          common: {
+            name: 'battlevel',
+            desc: 'Battery Level',
+            type: 'number',
+            role: 'value.battlevel',
+            read: true,
+            write: false,
+            unit: '%'
+          },
+          native: {}
+        });
+
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattSelfCons`, {
+          type: 'state',
+          common: {
+            name: 'battselfcons',
+            desc: 'Battery self consumption',
+            type: 'number',
+            role: 'value.battselfcons',
+            read: true,
+            write: false,
+            unit: 'Wh'
+          },
+          native: {}
+        });
+
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattChargeDaysum`, {
+          type: 'state',
+          common: {
+            name: 'battchargedaysum',
+            desc: 'Total battery charged today',
+            type: 'number',
+            role: 'value.battchargedaysum',
+            read: true,
+            write: false,
+            unit: 'Wh'
+          },
+          native: {}
+        });
+
+        await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattDischargeDaysum`, {
+          type: 'state',
+          common: {
+            name: 'battdischargedaysum',
+            desc: 'Total battery diesemcharged today',
+            type: 'number',
+            role: 'value.battdischargedaysum',
+            read: true,
+            write: false,
+            unit: 'Wh'
+          },
+          native: {}
+        });
+      }
     }
 
-    await adapter.setObjectNotExistsAsync(`INV.${names[i]}.deviceclass`, {
-      type: 'state',
-      common: {
-        name: 'DeviceClass',
-        desc: 'Device Class',
-        type: 'string',
-        role: 'value.deviceclass',
-        read: true,
-        write: false
-      },
-      native: {}
-    });
-
-    await adapter.setObjectNotExistsAsync(`INV.${names[i]}.devicebrand`, {
-      type: 'state',
-      common: {
-        name: 'DeviceBrand',
-        desc: 'Device brand',
-        type: 'string',
-        role: 'value.devicebrand',
-        read: true,
-        write: false
-      },
-      native: {}
-    });
-
-    await adapter.setObjectNotExistsAsync(`INV.${names[i]}.devicetype`, {
-      type: 'state',
-      common: {
-        name: 'DeviceType',
-        desc: 'Device type',
-        type: 'string',
-        role: 'value.Devicetype',
-        read: true,
-        write: false
-      },
-      native: {}
-    });
-
-    if (deviceclasses[i] === 'Batterie' && battDevicePresent && battPresent) {
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.ChargePower`, {
+    if (!battDevicePresent && battPresent) {
+      await adapter.setObjectNotExistsAsync(`INV.Battery.ChargePower`, {
         type: 'state',
         common: {
           name: 'chargepower',
@@ -1424,7 +1538,7 @@ async function setInvObjects() {
         native: {}
       });
 
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.DischargePower`, {
+      await adapter.setObjectNotExistsAsync(`INV.Battery.DischargePower`, {
         type: 'state',
         common: {
           name: 'dischargepower',
@@ -1438,7 +1552,7 @@ async function setInvObjects() {
         native: {}
       });
 
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattLevel`, {
+      await adapter.setObjectNotExistsAsync(`INV.Battery.BattLevel`, {
         type: 'state',
         common: {
           name: 'battlevel',
@@ -1452,7 +1566,7 @@ async function setInvObjects() {
         native: {}
       });
 
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattSelfCons`, {
+      await adapter.setObjectNotExistsAsync(`INV.Battery.BattSelfCons`, {
         type: 'state',
         common: {
           name: 'battselfcons',
@@ -1466,7 +1580,7 @@ async function setInvObjects() {
         native: {}
       });
 
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattChargeDaysum`, {
+      await adapter.setObjectNotExistsAsync(`INV.Battery.BattChargeDaysum`, {
         type: 'state',
         common: {
           name: 'battchargedaysum',
@@ -1480,7 +1594,7 @@ async function setInvObjects() {
         native: {}
       });
 
-      await adapter.setObjectNotExistsAsync(`INV.${names[i]}.BattDischargeDaysum`, {
+      await adapter.setObjectNotExistsAsync(`INV.Battery.BattDischargeDaysum`, {
         type: 'state',
         common: {
           name: 'battdischargedaysum',
@@ -1494,44 +1608,168 @@ async function setInvObjects() {
         native: {}
       });
     }
-  }
 
-  if (!battDevicePresent && battPresent) {
-    await adapter.setObjectNotExistsAsync(`INV.Battery.ChargePower`, {
+    if (numsg > 0) {
+      for (let jsg = 0; jsg < 10; jsg++) {
+        if (namessg[jsg]) {
+          await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.mode`, {
+            type: 'state',
+            common: {
+              name: 'swichtgroupmode',
+              desc: 'shows set mode on/auto/off',
+              type: 'number',
+              states: {
+                0: 'OFF',
+                1: 'ON',
+                2: 'AUTO'
+              },
+              role: 'value.switchgroupmode',
+              read: true,
+              write: false
+            },
+            native: {}
+          });
+
+          await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.state`, {
+            type: 'state',
+            common: {
+              name: 'swichtgroupstate',
+              desc: 'shows set mode on/auto/off',
+              type: 'number',
+              states: {
+                0: 'OFF',
+                240: 'Switching',
+                255: 'ON'
+              },
+              role: 'value.switchgroupstate',
+              read: true,
+              write: false
+            },
+            native: {}
+          });
+
+          await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.linkeddev`, {
+            type: 'state',
+            common: {
+              name: 'swichtgrouplinkeddev',
+              desc: 'Hardware linked to SwitchGroup',
+              type: 'string',
+
+              role: 'value.switchgrouplinkeddev',
+              read: true,
+              write: false
+            },
+            native: {}
+          });
+
+          await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.linkeddevsub`, {
+            type: 'state',
+            common: {
+              name: 'swichtgrouplinkeddevsub',
+              desc: 'Sub-device of hardware linked to SwitchGroup (if existing)',
+              type: 'number',
+
+              role: 'value.switchgrouplinkeddevsub',
+              read: true,
+              write: false
+            },
+            native: {}
+          });
+        }
+      }
+    }
+
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconstoday', {
       type: 'state',
       common: {
-        name: 'chargepower',
-        desc: 'Battery charging power',
+        name: 'selfconstoday',
+        desc: 'Total self consumption today',
         type: 'number',
-        role: 'value.chargepower',
+        role: 'value.selfconstoday',
         read: true,
         write: false,
-        unit: 'W'
+        unit: 'Wh'
       },
       native: {}
     });
 
-    await adapter.setObjectNotExistsAsync(`INV.Battery.DischargePower`, {
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsyesterday', {
       type: 'state',
       common: {
-        name: 'dischargepower',
-        desc: 'Battery discharging power',
+        name: 'selfconsyesterday',
+        desc: 'Total self consumption yesterday',
         type: 'number',
-        role: 'value.dischargepower',
+        role: 'value.selfconsyesterday',
         read: true,
         write: false,
-        unit: 'W'
+        unit: 'Wh'
       },
       native: {}
     });
 
-    await adapter.setObjectNotExistsAsync(`INV.Battery.BattLevel`, {
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsmonth', {
       type: 'state',
       common: {
-        name: 'battlevel',
-        desc: 'Battery Level',
+        name: 'selfconsmonth',
+        desc: 'Total self consumption this month',
         type: 'number',
-        role: 'value.battlevel',
+        role: 'value.selfconsmonth',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconslastmonth', {
+      type: 'state',
+      common: {
+        name: 'selfconslastmonth',
+        desc: 'Total self consumption last month',
+        type: 'number',
+        role: 'value.selfconslastmonth',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsyear', {
+      type: 'state',
+      common: {
+        name: 'selfconsyear',
+        desc: 'Total self consumption year',
+        type: 'number',
+        role: 'value.selfconsyear',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconslastyear', {
+      type: 'state',
+      common: {
+        name: 'selfconslastyear',
+        desc: 'Total self consumption last year',
+        type: 'number',
+        role: 'value.selfconslastyear',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiotoday', {
+      type: 'state',
+      common: {
+        name: 'selfconsratiotoday',
+        desc: 'Self consumption ratio today',
+        type: 'number',
+        role: 'value.selfconsratiotoday',
         read: true,
         write: false,
         unit: '%'
@@ -1539,818 +1777,625 @@ async function setInvObjects() {
       native: {}
     });
 
-    await adapter.setObjectNotExistsAsync(`INV.Battery.BattSelfCons`, {
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsratioyesterday', {
       type: 'state',
       common: {
-        name: 'battselfcons',
-        desc: 'Battery self consumption',
+        name: 'selfconsratioyesterday',
+        desc: 'self consumption ratio yesterday',
         type: 'number',
-        role: 'value.battselfcons',
+        role: 'value.selfconsratioyesterday',
         read: true,
         write: false,
-        unit: 'Wh'
+        unit: '%'
       },
       native: {}
     });
 
-    await adapter.setObjectNotExistsAsync(`INV.Battery.BattChargeDaysum`, {
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiomonth', {
       type: 'state',
       common: {
-        name: 'battchargedaysum',
-        desc: 'Total battery charged today',
+        name: 'selfconratiosmonth',
+        desc: 'self consumption ratio this month',
         type: 'number',
-        role: 'value.battchargedaysum',
+        role: 'value.selfconsratiomonth',
         read: true,
         write: false,
-        unit: 'Wh'
+        unit: '%'
       },
       native: {}
     });
 
-    await adapter.setObjectNotExistsAsync(`INV.Battery.BattDischargeDaysum`, {
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiolastmonth', {
       type: 'state',
       common: {
-        name: 'battdischargedaysum',
-        desc: 'Total battery diesemcharged today',
+        name: 'selfconsratiolastmonth',
+        desc: 'self consumption ratio last month',
         type: 'number',
-        role: 'value.battdischargedaysum',
+        role: 'value.selfconsratiolastmonth',
         read: true,
         write: false,
-        unit: 'Wh'
+        unit: '%'
       },
       native: {}
     });
+
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsratioyear', {
+      type: 'state',
+      common: {
+        name: 'selfconsratioyear',
+        desc: 'self consumption ratio year',
+        type: 'number',
+        role: 'value.selfconsratioyear',
+        read: true,
+        write: false,
+        unit: '%'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiolastyear', {
+      type: 'state',
+      common: {
+        name: 'selfconsratiolastyear',
+        desc: 'self consumption ratio last year',
+        type: 'number',
+        role: 'value.selfconsratiolastyear',
+        read: true,
+        write: false,
+        unit: '%'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.RTOS', {
+      type: 'state',
+      common: {
+        name: 'RTOS',
+        desc: 'RTOS',
+        type: 'string',
+        role: 'value.RTOS',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.CLIB', {
+      type: 'state',
+      common: {
+        name: 'CLIB',
+        desc: 'CLIB',
+        type: 'string',
+        role: 'value.CLIB',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.MAC', {
+      type: 'state',
+      common: {
+        name: 'MAC-Adress',
+        desc: 'MAC-Adress',
+        type: 'string',
+        role: 'value.MAC',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.SN', {
+      type: 'state',
+      common: {
+        name: 'Serial Number',
+        desc: 'Serial Number',
+        type: 'string',
+        role: 'value.SN',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.Model', {
+      type: 'state',
+      common: {
+        name: 'Model - Number',
+        desc: 'Model - Number (SolarLog XX)',
+        type: 'string',
+        role: 'value.Model',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.InstDate', {
+      type: 'state',
+      common: {
+        name: 'Installation - date',
+        desc: 'Installation - date',
+        type: 'string',
+        role: 'value.InstDate',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.FW', {
+      type: 'state',
+      common: {
+        name: 'Firmware version',
+        desc: 'Firmware version',
+        type: 'string',
+        role: 'value.FW',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.FWrelD', {
+      type: 'state',
+      common: {
+        name: 'Firmware realease date',
+        desc: 'Firmware realease date',
+        type: 'string',
+        role: 'value.FWrelD',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('info.SD', {
+      type: 'state',
+      common: {
+        name: 'SC card info',
+        desc: 'SC card info',
+        type: 'string',
+        role: 'value.SD',
+        read: true,
+        write: false
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointToday', {
+      type: 'state',
+      common: {
+        name: 'setpointToday',
+        desc: 'todays production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.01', {
+      type: 'state',
+      common: {
+        name: 'setpointJAN',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.02', {
+      type: 'state',
+      common: {
+        name: 'setpointFEB',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.03', {
+      type: 'state',
+      common: {
+        name: 'setpointMAR',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.04', {
+      type: 'state',
+      common: {
+        name: 'setpointAPR',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.05', {
+      type: 'state',
+      common: {
+        name: 'setpointMAY',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.06', {
+      type: 'state',
+      common: {
+        name: 'setpointJUN',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.07', {
+      type: 'state',
+      common: {
+        name: 'setpointJUL',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.08', {
+      type: 'state',
+      common: {
+        name: 'setpointAUG',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.09', {
+      type: 'state',
+      common: {
+        name: 'setpointSEP',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.10', {
+      type: 'state',
+      common: {
+        name: 'setpointOCT',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.11', {
+      type: 'state',
+      common: {
+        name: 'setpointNOV',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointMonth.12', {
+      type: 'state',
+      common: {
+        name: 'setpointDEC',
+        desc: 'monthly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointYear', {
+      type: 'state',
+      common: {
+        name: 'setpoint current year',
+        desc: 'yearly production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+
+    await adapter.setObjectNotExistsAsync('forecast.setpointCurrMonth', {
+      type: 'state',
+      common: {
+        name: 'setpoint current month',
+        desc: 'monthly (current) production estimation',
+        type: 'number',
+        role: 'value.setpoint',
+        read: true,
+        write: false,
+        unit: 'kWh'
+      },
+      native: {}
+    });
+  } catch (e) {
+    adapter.log.warn(`setInvObjects - Error: ${e.message}`);
   }
-
-  if (numsg > 0) {
-    for (let jsg = 0; jsg < 10; jsg++) {
-      if (namessg[jsg]) {
-        await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.mode`, {
-          type: 'state',
-          common: {
-            name: 'swichtgroupmode',
-            desc: 'shows set mode on/auto/off',
-            type: 'number',
-            states: {
-              0: 'OFF',
-              1: 'ON',
-              2: 'AUTO'
-            },
-            role: 'value.switchgroupmode',
-            read: true,
-            write: false
-          },
-          native: {}
-        });
-
-        await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.state`, {
-          type: 'state',
-          common: {
-            name: 'swichtgroupstate',
-            desc: 'shows set mode on/auto/off',
-            type: 'number',
-            states: {
-              0: 'OFF',
-              240: 'Switching',
-              255: 'ON'
-            },
-            role: 'value.switchgroupstate',
-            read: true,
-            write: false
-          },
-          native: {}
-        });
-
-        await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.linkeddev`, {
-          type: 'state',
-          common: {
-            name: 'swichtgrouplinkeddev',
-            desc: 'Hardware linked to SwitchGroup',
-            type: 'string',
-
-            role: 'value.switchgrouplinkeddev',
-            read: true,
-            write: false
-          },
-          native: {}
-        });
-
-        await adapter.setObjectNotExistsAsync(`SwitchGroup.${namessg[jsg]}.linkeddevsub`, {
-          type: 'state',
-          common: {
-            name: 'swichtgrouplinkeddevsub',
-            desc: 'Sub-device of hardware linked to SwitchGroup (if existing)',
-            type: 'number',
-
-            role: 'value.switchgrouplinkeddevsub',
-            read: true,
-            write: false
-          },
-          native: {}
-        });
-      }
-    }
-  }
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconstoday', {
-    type: 'state',
-    common: {
-      name: 'selfconstoday',
-      desc: 'Total self consumption today',
-      type: 'number',
-      role: 'value.selfconstoday',
-      read: true,
-      write: false,
-      unit: 'Wh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsyesterday', {
-    type: 'state',
-    common: {
-      name: 'selfconsyesterday',
-      desc: 'Total self consumption yesterday',
-      type: 'number',
-      role: 'value.selfconsyesterday',
-      read: true,
-      write: false,
-      unit: 'Wh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsmonth', {
-    type: 'state',
-    common: {
-      name: 'selfconsmonth',
-      desc: 'Total self consumption this month',
-      type: 'number',
-      role: 'value.selfconsmonth',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconslastmonth', {
-    type: 'state',
-    common: {
-      name: 'selfconslastmonth',
-      desc: 'Total self consumption last month',
-      type: 'number',
-      role: 'value.selfconslastmonth',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsyear', {
-    type: 'state',
-    common: {
-      name: 'selfconsyear',
-      desc: 'Total self consumption year',
-      type: 'number',
-      role: 'value.selfconsyear',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconslastyear', {
-    type: 'state',
-    common: {
-      name: 'selfconslastyear',
-      desc: 'Total self consumption last year',
-      type: 'number',
-      role: 'value.selfconslastyear',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiotoday', {
-    type: 'state',
-    common: {
-      name: 'selfconsratiotoday',
-      desc: 'Self consumption ratio today',
-      type: 'number',
-      role: 'value.selfconsratiotoday',
-      read: true,
-      write: false,
-      unit: '%'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsratioyesterday', {
-    type: 'state',
-    common: {
-      name: 'selfconsratioyesterday',
-      desc: 'self consumption ratio yesterday',
-      type: 'number',
-      role: 'value.selfconsratioyesterday',
-      read: true,
-      write: false,
-      unit: '%'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiomonth', {
-    type: 'state',
-    common: {
-      name: 'selfconratiosmonth',
-      desc: 'self consumption ratio this month',
-      type: 'number',
-      role: 'value.selfconsratiomonth',
-      read: true,
-      write: false,
-      unit: '%'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiolastmonth', {
-    type: 'state',
-    common: {
-      name: 'selfconsratiolastmonth',
-      desc: 'self consumption ratio last month',
-      type: 'number',
-      role: 'value.selfconsratiolastmonth',
-      read: true,
-      write: false,
-      unit: '%'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsratioyear', {
-    type: 'state',
-    common: {
-      name: 'selfconsratioyear',
-      desc: 'self consumption ratio year',
-      type: 'number',
-      role: 'value.selfconsratioyear',
-      read: true,
-      write: false,
-      unit: '%'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('SelfCons.selfconsratiolastyear', {
-    type: 'state',
-    common: {
-      name: 'selfconsratiolastyear',
-      desc: 'self consumption ratio last year',
-      type: 'number',
-      role: 'value.selfconsratiolastyear',
-      read: true,
-      write: false,
-      unit: '%'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.RTOS', {
-    type: 'state',
-    common: {
-      name: 'RTOS',
-      desc: 'RTOS',
-      type: 'string',
-      role: 'value.RTOS',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.CLIB', {
-    type: 'state',
-    common: {
-      name: 'CLIB',
-      desc: 'CLIB',
-      type: 'string',
-      role: 'value.CLIB',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.MAC', {
-    type: 'state',
-    common: {
-      name: 'MAC-Adress',
-      desc: 'MAC-Adress',
-      type: 'string',
-      role: 'value.MAC',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.SN', {
-    type: 'state',
-    common: {
-      name: 'Serial Number',
-      desc: 'Serial Number',
-      type: 'string',
-      role: 'value.SN',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.Model', {
-    type: 'state',
-    common: {
-      name: 'Model - Number',
-      desc: 'Model - Number (SolarLog XX)',
-      type: 'string',
-      role: 'value.Model',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.InstDate', {
-    type: 'state',
-    common: {
-      name: 'Installation - date',
-      desc: 'Installation - date',
-      type: 'string',
-      role: 'value.InstDate',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.FW', {
-    type: 'state',
-    common: {
-      name: 'Firmware version',
-      desc: 'Firmware version',
-      type: 'string',
-      role: 'value.FW',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.FWrelD', {
-    type: 'state',
-    common: {
-      name: 'Firmware realease date',
-      desc: 'Firmware realease date',
-      type: 'string',
-      role: 'value.FWrelD',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('info.SD', {
-    type: 'state',
-    common: {
-      name: 'SC card info',
-      desc: 'SC card info',
-      type: 'string',
-      role: 'value.SD',
-      read: true,
-      write: false
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointToday', {
-    type: 'state',
-    common: {
-      name: 'setpointToday',
-      desc: 'todays production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.01', {
-    type: 'state',
-    common: {
-      name: 'setpointJAN',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.02', {
-    type: 'state',
-    common: {
-      name: 'setpointFEB',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.03', {
-    type: 'state',
-    common: {
-      name: 'setpointMAR',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.04', {
-    type: 'state',
-    common: {
-      name: 'setpointAPR',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.05', {
-    type: 'state',
-    common: {
-      name: 'setpointMAY',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.06', {
-    type: 'state',
-    common: {
-      name: 'setpointJUN',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.07', {
-    type: 'state',
-    common: {
-      name: 'setpointJUL',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.08', {
-    type: 'state',
-    common: {
-      name: 'setpointAUG',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.09', {
-    type: 'state',
-    common: {
-      name: 'setpointSEP',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.10', {
-    type: 'state',
-    common: {
-      name: 'setpointOCT',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.11', {
-    type: 'state',
-    common: {
-      name: 'setpointNOV',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointMonth.12', {
-    type: 'state',
-    common: {
-      name: 'setpointDEC',
-      desc: 'monthly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointYear', {
-    type: 'state',
-    common: {
-      name: 'setpoint current year',
-      desc: 'yearly production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
-  await adapter.setObjectNotExistsAsync('forecast.setpointCurrMonth', {
-    type: 'state',
-    common: {
-      name: 'setpoint current month',
-      desc: 'monthly (current) production estimation',
-      type: 'number',
-      role: 'value.setpoint',
-      read: true,
-      write: false,
-      unit: 'kWh'
-    },
-    native: {}
-  });
-
 
 } //End setInvObjects
 
 async function setDeviceInfo() {
-  for (let i = 0; i < numinv - 1; i++) {
-    await adapter.setStateAsync(`INV.${names[i]}.deviceclass`, deviceclasses[i], true);
-    await adapter.setStateAsync(`INV.${names[i]}.devicetype`, devicetypes[i], true);
-    await adapter.setStateAsync(`INV.${names[i]}.devicebrand`, devicebrands[i], true);
-  }
+  try {
+    for (let i = 0; i < numinv - 1; i++) {
+      await adapter.setStateAsync(`INV.${names[i]}.deviceclass`, deviceclasses[i], true);
+      await adapter.setStateAsync(`INV.${names[i]}.devicetype`, devicetypes[i], true);
+      await adapter.setStateAsync(`INV.${names[i]}.devicebrand`, devicebrands[i], true);
+    }
 
-  if (forecast) {
-    await setForecastObjects();
-  } else {
-    await logCheck(pollingData);
+    if (forecast) {
+      await setForecastObjects();
+    } else {
+      await logCheck(pollingData);
+    }
+  } catch (e) {
+    adapter.log.warn(`setDeviceInfo - Error: ${e.message}`);
   }
 } //End setdeviceinfo
 
 async function setForecastObjects() {
-  adapter.log.debug('Lege Objekt für Forecast an');
+  try {
+    adapter.log.debug('Lege Objekt für Forecast an');
 
-  await adapter.setObjectNotExistsAsync('info.latitude', {
-    type: 'state',
-    common: {
-      name: 'latitude',
-      desc: 'plant latitude',
-      type: 'string',
-      role: 'value.latitude',
-      read: true,
-      write: false,
-      unit: '°'
-    },
-    native: {}
-  });
+    await adapter.setObjectNotExistsAsync('info.latitude', {
+      type: 'state',
+      common: {
+        name: 'latitude',
+        desc: 'plant latitude',
+        type: 'string',
+        role: 'value.latitude',
+        read: true,
+        write: false,
+        unit: '°'
+      },
+      native: {}
+    });
 
-  await adapter.setObjectNotExistsAsync('info.longitude', {
-    type: 'state',
-    common: {
-      name: 'longitude',
-      desc: 'plant longitude',
-      type: 'string',
-      role: 'value.longitude',
-      read: true,
-      write: false,
-      unit: '°'
-    },
-    native: {}
-  });
+    await adapter.setObjectNotExistsAsync('info.longitude', {
+      type: 'state',
+      common: {
+        name: 'longitude',
+        desc: 'plant longitude',
+        type: 'string',
+        role: 'value.longitude',
+        read: true,
+        write: false,
+        unit: '°'
+      },
+      native: {}
+    });
 
-  await adapter.setObjectNotExistsAsync('info.inclination', {
-    type: 'state',
-    common: {
-      name: 'inclination',
-      desc: 'plant inclination',
-      type: 'string',
-      role: 'value.inclination',
-      read: true,
-      write: false,
-      unit: '°'
-    },
-    native: {}
-  });
+    await adapter.setObjectNotExistsAsync('info.inclination', {
+      type: 'state',
+      common: {
+        name: 'inclination',
+        desc: 'plant inclination',
+        type: 'string',
+        role: 'value.inclination',
+        read: true,
+        write: false,
+        unit: '°'
+      },
+      native: {}
+    });
 
-  await adapter.setObjectNotExistsAsync('info.azimuth', {
-    type: 'state',
-    common: {
-      name: 'azimuth',
-      desc: 'plant azimuth',
-      type: 'string',
-      role: 'value.azimuth',
-      read: true,
-      write: false,
-      unit: '°'
-    },
-    native: {}
-  });
+    await adapter.setObjectNotExistsAsync('info.azimuth', {
+      type: 'state',
+      common: {
+        name: 'azimuth',
+        desc: 'plant azimuth',
+        type: 'string',
+        role: 'value.azimuth',
+        read: true,
+        write: false,
+        unit: '°'
+      },
+      native: {}
+    });
 
-  await adapter.setObjectNotExistsAsync('forecast.today', {
-    type: 'state',
-    common: {
-      name: 'forecastToday',
-      desc: 'forecast for todays total kWh',
-      type: 'number',
-      role: 'value.forecastToday',
-      read: true,
-      write: false,
-      unit: 'Wh'
-    },
-    native: {}
-  });
+    await adapter.setObjectNotExistsAsync('forecast.today', {
+      type: 'state',
+      common: {
+        name: 'forecastToday',
+        desc: 'forecast for todays total kWh',
+        type: 'number',
+        role: 'value.forecastToday',
+        read: true,
+        write: false,
+        unit: 'Wh'
+      },
+      native: {}
+    });
 
-  await adapter.setObjectNotExistsAsync('forecast.tomorrow', {
-    type: 'state',
-    common: {
-      name: 'forecastTomorrow',
-      desc: 'forecast for tomorrows total kWh',
-      type: 'number',
-      role: 'value.forecastTomorrow',
-      read: true,
-      write: false,
-      unit: 'Wh'
-    },
-    native: {}
-  });
+    await adapter.setObjectNotExistsAsync('forecast.tomorrow', {
+      type: 'state',
+      common: {
+        name: 'forecastTomorrow',
+        desc: 'forecast for tomorrows total kWh',
+        type: 'number',
+        role: 'value.forecastTomorrow',
+        read: true,
+        write: false,
+        unit: 'Wh'
+      },
+      native: {}
+    });
 
-  await getForecastData();
+    await getForecastData();
 
-  setTimeout(async () => {
-    if (uzimp) {
-      await logCheck(pollingData);
-    } else {
-      await logCheck(['{"801":{"170":null}}']);
-    }
-  }, 1000);
+    setTimeout(async () => {
+      if (uzimp) {
+        await logCheck(pollingData);
+      } else {
+        await logCheck(['{"801":{"170":null}}']);
+      }
+    }, 1000);
+  } catch (e) {
+    adapter.log.warn(`setForecastObjects - Error: ${e.message}`);
+  }
 } //end setforecastobjects()
 
 async function getForecastData() {
-  adapter.log.debug('Rufe Forcastdaten ab');
-  cmdForecast = 'estimate/watthours/day/';
-  lat = adapter.config.latitude;
-  lon = adapter.config.longitude;
-  dec = adapter.config.inclination;
-  az = adapter.config.azimuth;
-  const objkwp = await adapter.getStateAsync('info.totalPower');
-  if (objkwp) {
-    kwp = objkwp.val / 1000;
+  try {
+    adapter.log.debug('Rufe Forcastdaten ab');
+    cmdForecast = 'estimate/watthours/day/';
+    lat = adapter.config.latitude;
+    lon = adapter.config.longitude;
+    dec = adapter.config.inclination;
+    az = adapter.config.azimuth;
+    const objkwp = await adapter.getStateAsync('info.totalPower');
+    if (objkwp) {
+      kwp = objkwp.val / 1000;
 
-    const urlProg = `${urlForecast + cmdForecast + lat}/${lon}/${dec}/${az}/${kwp}`;
-    adapter.log.debug(`Anfragedaten: ${urlProg}`);
+      const urlProg = `${urlForecast + cmdForecast + lat}/${lon}/${dec}/${az}/${kwp}`;
+      adapter.log.debug(`Anfragedaten: ${urlProg}`);
 
-    https.get(urlProg, res => {
-      let data = [];
-      const headerDate = res.headers && res.headers.date ? res.headers.date : 'no response date';
-      adapter.log.debug('Status Code:', res.statusCode);
-      adapter.log.debug('Date in Response header:', headerDate);
+      https.get(urlProg, res => {
+        let data = [];
+        const headerDate = res.headers && res.headers.date ? res.headers.date : 'no response date';
+        adapter.log.debug('Status Code:', res.statusCode);
+        adapter.log.debug('Date in Response header:', headerDate);
 
-      res.on('data', chunk => data.push(chunk));
+        res.on('data', chunk => data.push(chunk));
 
-      res.on('end', async () => {
-        adapter.log.debug('Response ended: ');
+        res.on('end', async () => {
+          adapter.log.debug('Response ended: ');
 
-        try {
-          const forecast = JSON.parse(Buffer.concat(data).toString());
-          adapter.log.debug(`forecast: ${JSON.stringify(forecast)}`);
+          try {
+            const forecast = JSON.parse(Buffer.concat(data).toString());
+            adapter.log.debug(`forecast: ${JSON.stringify(forecast)}`);
 
-          if (forecast.message.type === 'success') {
-            const watthoursday = forecast.result;
-            adapter.log.debug(`WatthoursDay = ${JSON.stringify(watthoursday)}`);
-            const watthourstoday = parseInt(forecast.result[new Date().toISOString().slice(0, 10)]);
-            adapter.log.debug(`Vorhersage für heute, ${new Date().toISOString().slice(0, 10)}: ${watthourstoday}`);
-            const tomorrow = new Date();
-            tomorrow.setDate(new Date().getDate() + 1);
-            const watthourstomorrow = parseInt(forecast.result[tomorrow.toISOString().slice(0, 10)]);
-            adapter.log.debug(`Vorhersage für morgen, ${tomorrow.toISOString().slice(0, 10)}: ${watthourstomorrow}`);
+            if (forecast.message.type === 'success') {
+              const watthoursday = forecast.result;
+              adapter.log.debug(`WatthoursDay = ${JSON.stringify(watthoursday)}`);
+              const watthourstoday = parseInt(forecast.result[new Date().toISOString().slice(0, 10)]);
+              adapter.log.debug(`Vorhersage für heute, ${new Date().toISOString().slice(0, 10)}: ${watthourstoday}`);
+              const tomorrow = new Date();
+              tomorrow.setDate(new Date().getDate() + 1);
+              const watthourstomorrow = parseInt(forecast.result[tomorrow.toISOString().slice(0, 10)]);
+              adapter.log.debug(`Vorhersage für morgen, ${tomorrow.toISOString().slice(0, 10)}: ${watthourstomorrow}`);
 
-            await adapter.setStateAsync('forecast.today', parseInt(watthourstoday, 10), true);
-            await adapter.setStateAsync('forecast.tomorrow', parseInt(watthourstomorrow, 10), true);
-            await adapter.setStateAsync('info.latitude', lat, true);
-            await adapter.setStateAsync('info.longitude', lon, true);
-            await adapter.setStateAsync('info.inclination', dec, true);
-            await adapter.setStateAsync('info.azimuth', az, true);
-          } else {
-            adapter.log.warn('Prognosefehler, keine Forecast - Werte erhalten');
-            adapter.log.info(`Antowrttyp: ${forecast.message.type}`);
-            adapter.log.info(`Antowrttext: ${forecast.message.text}`);
-            adapter.log.info(`Anfragen verbleibend (Limit:12): ${forecast.message.ratelimit.reamining}`);
-            adapter.log.info(`Antowrttyp: ${JSON.stringify(forecast.message)}`);
+              await adapter.setStateAsync('forecast.today', parseInt(watthourstoday, 10), true);
+              await adapter.setStateAsync('forecast.tomorrow', parseInt(watthourstomorrow, 10), true);
+              await adapter.setStateAsync('info.latitude', lat, true);
+              await adapter.setStateAsync('info.longitude', lon, true);
+              await adapter.setStateAsync('info.inclination', dec, true);
+              await adapter.setStateAsync('info.azimuth', az, true);
+            } else {
+              adapter.log.warn('Prognosefehler, keine Forecast - Werte erhalten');
+              adapter.log.info(`Antowrttyp: ${forecast.message.type}`);
+              adapter.log.info(`Antowrttext: ${forecast.message.text}`);
+              adapter.log.info(`Anfragen verbleibend (Limit:12): ${forecast.message.ratelimit.reamining}`);
+              adapter.log.info(`Antowrttyp: ${JSON.stringify(forecast.message)}`);
+            }
+          } catch (e) {
+            adapter.log.warn(`Getforecastdata - Error: ${e}`);
           }
-        } catch (e) {
-          adapter.log.warn(`Getforecastdata - Error: ${e}`);
-        }
-      });
-    }).on('error', err => console.log('Error: ', err.message));
-  } else {
-    adapter.log.warn('Prognosefehler: Anlageleistung nicht verfügbar');
+        });
+      }).on('error', err => console.log('Error: ', err.message));
+    } else {
+      adapter.log.warn('Prognosefehler: Anlageleistung nicht verfügbar');
+    }
+  } catch (e) {
+    adapter.log.warn(`getForecastData - Error: ${e.message}`);
   }
 } //end getforecastdata()
 
 async function setDisplayData(displaydata) {
-  const checkOK = [];
-  for (let di = 0; di <= 15; di++) {
-    checkOK[di] = displaydata[di][1];
+  try {
+    const checkOK = [];
+    for (let di = 0; di <= 15; di++) {
+      checkOK[di] = displaydata[di][1];
+    }
+
+    const checkError = errval => !errval;
+
+    adapter.log.debug(`Display OK?: ${checkOK.every(checkError)}`);
+    await adapter.setStateAsync('display.OK', checkOK.every(checkError), true);
+
+    adapter.log.debug(`Display Icon Inverter: ${displaydata[0][0]}`);
+    await adapter.setStateAsync('display.invicon', displaydata[0][0], true);
+    adapter.log.debug(`Display Icon Network: ${displaydata[1][0]}`);
+    await adapter.setStateAsync('display.networkicon', displaydata[1][0], true);
+    adapter.log.debug(`Display Icon Meter: ${displaydata[6][0]}`);
+    await adapter.setStateAsync('display.metericon', displaydata[6][0], true);
+    adapter.log.debug(`Display Icon Mail: ${displaydata[11][0]}`);
+    await adapter.setStateAsync('display.mailicon', displaydata[11][0], true);
+    adapter.log.debug(`Display Inverter Error: ${displaydata[0][1]}`);
+    await adapter.setStateAsync('display.inverror', displaydata[0][1], true);
+    adapter.log.debug(`Display Network Error: ${displaydata[1][1]}`);
+    await adapter.setStateAsync('display.networkerror', displaydata[1][1], true);
+    adapter.log.debug(`Display Meters offline: ${displaydata[6][1]}`);
+    await adapter.setStateAsync('display.metersoffline', displaydata[6][1], true);
+    adapter.log.debug(`Display Mail Error: ${displaydata[11][1]}`);
+    await adapter.setStateAsync('display.mailerror', displaydata[11][1], true);
+  } catch (e) {
+    adapter.log.warn(`setDisplayData - Error: ${e.message}`);
   }
-
-  const checkError = errval => !errval;
-
-  adapter.log.debug(`Display OK?: ${checkOK.every(checkError)}`);
-  await adapter.setStateAsync('display.OK', checkOK.every(checkError), true);
-
-  adapter.log.debug(`Display Icon Inverter: ${displaydata[0][0]}`);
-  await adapter.setStateAsync('display.invicon', displaydata[0][0], true);
-  adapter.log.debug(`Display Icon Network: ${displaydata[1][0]}`);
-  await adapter.setStateAsync('display.networkicon', displaydata[1][0], true);
-  adapter.log.debug(`Display Icon Meter: ${displaydata[6][0]}`);
-  await adapter.setStateAsync('display.metericon', displaydata[6][0], true);
-  adapter.log.debug(`Display Icon Mail: ${displaydata[11][0]}`);
-  await adapter.setStateAsync('display.mailicon', displaydata[11][0], true);
-  adapter.log.debug(`Display Inverter Error: ${displaydata[0][1]}`);
-  await adapter.setStateAsync('display.inverror', displaydata[0][1], true);
-  adapter.log.debug(`Display Network Error: ${displaydata[1][1]}`);
-  await adapter.setStateAsync('display.networkerror', displaydata[1][1], true);
-  adapter.log.debug(`Display Meters offline: ${displaydata[6][1]}`);
-  await adapter.setStateAsync('display.metersoffline', displaydata[6][1], true);
-  adapter.log.debug(`Display Mail Error: ${displaydata[11][1]}`);
-  await adapter.setStateAsync('display.mailerror', displaydata[11][1], true);
 } //end setdisplaydata
 
 function restartAdapter() {
