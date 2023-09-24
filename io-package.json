@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.2.6",
+    "version": "2.2.7",
     "news": {
+      "2.2.7": {
+        "en": "ready for js-controller 5.0, enhanced error-handling, dependecies updated",
+        "de": "bereit für js-controller 5.0, verbessertes Fehlerhandling, Dependencies aktualisiert"
+      },
       "2.2.6": {
         "en": "bug in 'forecast' fixed, dependecies updated",
         "de": "Fehler in 'forecast' behobend, Dependencies aktualisiert"
