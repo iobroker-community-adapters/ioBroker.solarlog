@@ -170,6 +170,12 @@ async function main() {
       deviceIpAddress = `http://${adapter.config.host}:${port}`;
     }
 
+    if (deviceIpAddress.substr(-1) == '/') {
+      deviceIpAddress = deviceIpAddress.substr(0, deviceIpAddress.length - 1);
+    }
+
+    adapter.log.info(`Solarlog IPaddress: ${deviceIpAddress}`)
+
     //cmd = '/getjp'; // Kommandos in der URL nach der Host-Adresse
     numinv = 0;
     uzimp = !!adapter.config.invimp;
@@ -2186,15 +2192,15 @@ async function setDeviceInfo() {
       await adapter.setStateAsync(`INV.${names[i]}.devicetype`, devicetypes[i], true);
       await adapter.setStateAsync(`INV.${names[i]}.devicebrand`, devicebrands[i], true);
     }
-
-    if (forecast) {
-      await setForecastObjects();
-    } else {
-      await logCheck(pollingData);
-    }
   } catch (e) {
     adapter.log.warn(`setDeviceInfo - Error: ${e.message}`);
   }
+  if (forecast) {
+    await setForecastObjects();
+  } else {
+    await logCheck(pollingData);
+  }
+
 } //End setdeviceinfo
 
 async function setForecastObjects() {
