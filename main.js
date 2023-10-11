@@ -2188,9 +2188,15 @@ async function setInvObjects() {
 async function setDeviceInfo() {
   try {
     for (let i = 0; i < numinv - 1; i++) {
-      await adapter.setStateAsync(`INV.${names[i]}.deviceclass`, deviceclasses[i], true);
-      await adapter.setStateAsync(`INV.${names[i]}.devicetype`, devicetypes[i], true);
-      await adapter.setStateAsync(`INV.${names[i]}.devicebrand`, devicebrands[i], true);
+      if (deviceclasses[i]) {
+        await adapter.setStateAsync(`INV.${names[i]}.deviceclass`, deviceclasses[i], true);
+      }
+      if (devicetypes[i]) {
+        await adapter.setStateAsync(`INV.${names[i]}.devicetype`, devicetypes[i], true);
+      }
+      if (devicebrands[i]) {
+        await adapter.setStateAsync(`INV.${names[i]}.devicebrand`, devicebrands[i], true);
+      }
     }
   } catch (e) {
     adapter.log.warn(`setDeviceInfo - Error: ${e.message}`);
