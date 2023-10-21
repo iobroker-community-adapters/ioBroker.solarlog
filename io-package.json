@@ -4,56 +4,43 @@
     "version": "2.2.8",
     "news": {
       "2.2.8": {
-        "en": "ready for js-controller 5.0, enhanced error-handling, dependecies updated",
-        "de": "bereit für js-controller 5.0, verbessertes Fehlerhandling, Dependencies aktualisiert"
+        "en": "ready for js-controller 5.0, enhanced error-handling, dependecies updated\n",
+        "de": "bereit für js-controller 5.0, erweiterte Fehlerbehandlung, dependencies aktualisiert\n",
+        "ru": "готов к js-controller 5.0, улучшенная обработка ошибок, обновленные зависимости\n",
+        "pt": "pronto para js-controller 5.0, manipulação de erros aprimorada, dependências atualizadas\n",
+        "nl": "quality over quantity (qoq) releases vertaling:\n",
+        "fr": "prêt pour js-controller 5.0, traitement d'erreur amélioré, les dépendances mis à jour\n",
+        "it": "pronto per js-controller 5.0, migliorata gestione degli errori, dipendenze aggiornate\n",
+        "es": "listo para js-controller 5.0, mayor manejo de errores, dependencias actualizadas\n",
+        "pl": "w zależności od aktualizacji aktualizatora 5.0, zwiększonego błędu, w zależności od aktualizacji aktualizacji\n",
+        "uk": "готовий для js-controller 5.0, розширена помилка-ручка, оновлені\n",
+        "zh-cn": "准备好供控制的p-5、加强错误处理、依赖性更新\n"
       },
       "2.2.6": {
         "en": "bug in 'forecast' fixed, dependecies updated",
-        "de": "Fehler in 'forecast' behobend, Dependencies aktualisiert"
+        "de": "fehler in der prognose behoben, abhängigkeiten aktualisiert",
+        "ru": "исправлена ошибка в прогнозе, обновление зависимостей",
+        "pt": "bug in predict corrigido, dependências atualizada",
+        "nl": "quality over quantity (qoq) releases vertaling:",
+        "fr": "bug dans prévision fixe, les dépendances mise à jour",
+        "it": "bug in previsione fisso, dipendenze aggiornate",
+        "es": "bug en previsión fija, dependencias actualizadas",
+        "pl": "błąd w trybie prognozowym, zależnie od aktualizacji",
+        "uk": "помилка в прогнозі фіксовані, залежностей оновлено",
+        "zh-cn": "b 在预测固定的预测中,更新的依赖"
       },
       "2.2.5": {
         "en": "testing fixed",
-        "de": "Testing aktualisiert"
-      },
-      "2.2.4": {
-        "en": "polling-bug fixed, dependencies updated",
-        "de": "Abfragefehler behoben, Dependecies aktualisiert"
-      },
-      "2.2.3": {
-        "en": "got => axios, usage of async functions",
-        "de": "got => axios, umstellung auf async - Funktionen"
-      },
-      "2.2.2": {
-        "en": "set ready for js-controller 4.0",
-        "de": "bereit für js-controller 4.0"
-      },
-      "2.2.1": {
-        "en": "replaced 'request' by 'got', node.js >= 12.",
-        "de": "'request' mit 'got' ersetzt, node.js >= 12."
-      },
-      "2.1.5": {
-        "en": "bugfix (variable type).",
-        "de": "bugfix (variable type)."
-      },
-      "2.1.4": {
-        "en": "history-/selfconsumption-data for SL500 added.",
-        "de": "History- / Selcons- Daten auch für SL500"
-      },
-      "2.1.3": {
-        "en": "bugfixes (js-controller 3.3.x)",
-        "de": "bugfixes (js-controller 3.3.x)"
-      },
-      "2.1.1": {
-        "en": "Cockpit-Data (consumption/production/battery/feed) added. Polling structure optimized for a faster polling of certain values ('live'-data).",
-        "de": "Cockpit-Daten (Verbrauch/Produktion/Batterie/Einspeisung) hinzugefügt. Abfragestruktur angepasse, erlaubt häufigeres Abrufen von bestimmten Werten."
-      },
-      "2.0.2": {
-        "en": "smart energy 'switch group' data added",
-        "de": "SmartEnergy Schaltgruppen hinzugefügt"
-      },
-      "2.0.0": {
-        "en": "Complete code redesign to reduce traffic between adapter and solarlog. NEW: System informations (info) and solarlogs setpoint-values for year, current and all month and current day (forecast).",
-        "de": "Vollständiges Code - Redesign zur Reduktion den Anzahl Abfragen beim Solarlog. NEU: System - infos (info) und Produktions - Sollwerte aus dem Solarlog für laufenden Tag/Monat/Jahr und für jeden Monat."
+        "de": "prüfverfahren",
+        "ru": "тестирование фиксированное",
+        "pt": "teste fixo",
+        "nl": "testen gerepareerd",
+        "fr": "essais fixes",
+        "it": "prova fissa",
+        "es": "pruebas fijas",
+        "pl": "test",
+        "uk": "тестування фіксованого",
+        "zh-cn": "固定试验"
       }
     },
 
@@ -67,19 +54,21 @@
       "it": "solarlogMonitor",
       "es": "solarlogMonitor",
       "pl": "solarlogmonitor",
+      "uk": "сонячнийlogMonitor\n",
       "zh-cn": "太阳能标志Monitor"
     },
     "desc": {
-      "en": "Monitor your solarlog meter",
-      "de": "Überwachen Sie Ihren Solarlog-Meter",
-      "ru": "Контролируйте свой солнечный метр",
-      "pt": "Monitorar o medidor solar",
-      "nl": "Monitor je zonnelogmeter",
-      "fr": "Surveillez votre compteur solaire",
-      "it": "Monitora il tuo contatore solare",
-      "es": "Monitoree su medidor de solarlog",
-      "pl": "Pamiętnik słoneczny",
-      "zh-cn": "监测你的太阳能参数"
+      "en": "Monitor your solarlog meter\n\n",
+      "de": "Überwachen Sie Ihren Solarlog-Meter\n\n",
+      "ru": "Контролируйте свой солнечный метр\n\n",
+      "pt": "Monitorar o medidor solar\n\n",
+      "nl": "Monitor je zonnelogmeter\n\n",
+      "fr": "Surveillez votre compteur solaire\n\n",
+      "it": "Monitora il tuo contatore solare\n\n",
+      "es": "Monitoree su medidor de solarlog\n\n",
+      "pl": "Pamiętnik słoneczny\n\n",
+      "uk": "Моніторинг лічильників сонячного блоку\n\n",
+      "zh-cn": "监测你的太阳能参数\n\n"
     },
     "authors": [
       "forelleblau <marceladam@gmx.ch>"
