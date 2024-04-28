@@ -43,7 +43,6 @@
         "zh-cn": "固定试验"
       }
     },
-
     "titleLang": {
       "en": "solarlogMonitor",
       "de": "solarlogMonitor",
@@ -89,14 +88,25 @@
     ],
     "readme": "https://github.com/iobroker-community-adapters/ioBroker.solarlog/blob/master/README.md",
     "loglevel": "info",
+    "tier": 2,
     "type": "energy",
-    "license": "MIT",
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
     "messagebox": false,
     "connectionType": "local",
     "dataSource": "poll",
-    "dependencies": [{
-      "js-controller": ">=3.3.22"
-    }]
+    "dependencies": [
+      {
+        "js-controller": ">=5.0.19"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=6.13.16"
+      }
+    ]
   },
   "native": {
     "host": "",

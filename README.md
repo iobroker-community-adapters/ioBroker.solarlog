@@ -38,12 +38,14 @@ Solarlog 200PM+ / 300PM+ / 500 / 1200Meter / 50
 
 SolarLog 50: There is no open JSON-Interface @ SolarLog 50 devices. So certain values in the 'info' and the 'status' channel will be 'ACCESS DENIED'. If you prefer another solution, please open an issue or post your preferences in a corresponding issue.
 
+## Changelog
 <!--
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-
-## Changelog
+### **WORK IN PROGRESS**
+* (mcm1957) Adapter requires node.js >= 18 and js-controller >= 5 now
+* (mcm1957) Dependencies have been updated
 
 ### 2.2.8
 
@@ -233,6 +235,7 @@ Planned Objects:
 
 The MIT License (MIT)
 
+Copyright (c) 2023-2024 ioBroker Community Developers <iobroker-community-adapters@gmx.de>  
 Copyright (c) 2018-2023 forelleblau marceladam@gmx.ch
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
