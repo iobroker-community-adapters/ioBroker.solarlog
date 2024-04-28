@@ -8,10 +8,12 @@
   },
   "description": "solarlog",
   "bundleDependencies": false,
-  "contributors": [{
-    "name": "Marcel Adam",
-    "email": "marceladam@gmx.ch"
-  }],
+  "contributors": [
+    {
+      "name": "Marcel Adam",
+      "email": "marceladam@gmx.ch"
+    }
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -78,5 +80,5 @@
     "translate": "translate-adapter",
     "release": "release-script"
   },
-  "version": "2.2.8"
+  "version": "2.3.0"
 }

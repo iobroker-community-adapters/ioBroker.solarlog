@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.2.8",
+    "version": "2.3.0",
     "news": {
+      "2.3.0": {
+        "en": "Adapter requires node.js >= 18 and js-controller >= 5 now\nDependencies have been updated",
+        "de": "Adapter benötigt node.js >= 18 und js-controller >= 5 jetzt\nAbhängigkeiten wurden aktualisiert",
+        "ru": "Адаптер требует node.js >= 18 и js-контроллер >= 5 сейчас\nЗависимость обновлена",
+        "pt": "Adapter requer node.js >= 18 e js-controller >= 5 agora\nAs dependências foram atualizadas",
+        "nl": "Voor adaptor zijn node.js < 18 en js-controller > Nu 5\nAfhankelijkheden zijn bijgewerkt",
+        "fr": "L'adaptateur nécessite node.js >= 18 et js-controller >= 5 maintenant\nLes dépendances ont été actualisées",
+        "it": "Adattatore richiede node.js >= 18 e js-controller >= 5 ora\nLe dipendenze sono state aggiornate",
+        "es": "Adaptador requiere node.js √≥= 18 y js-controller 5 ahora\nSe han actualizado las dependencias",
+        "pl": "Adapter wymaga node.js > = 18 i kontroler js- > = 5 teraz\nZaktualizowano zależności",
+        "uk": "Адаптер вимагає node.js >= 18 і js-controller >= 5 тепер\nЗалежність було оновлено",
+        "zh-cn": "适配器需要节点.js QQ18和js控制器 QQ 现在5号\n依赖关系已更新"
+      },
       "2.2.8": {
         "en": "ready for js-controller 5.0, enhanced error-handling, dependecies updated\n",
         "de": "bereit für js-controller 5.0, erweiterte Fehlerbehandlung, dependencies aktualisiert\n",
@@ -127,15 +140,14 @@
     "userpw": ""
   },
   "objects": [],
-  "instanceObjects": [{
+  "instanceObjects": [
+    {
       "_id": "info",
       "type": "channel",
       "common": {
         "name": "Information"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "info.lastSync",
@@ -148,9 +160,7 @@
         "write": false,
         "desc": "Last successful synchronization"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "info.numinv",
@@ -163,9 +173,7 @@
         "write": false,
         "desc": "Total number of inverters and meters"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "info.totalPower",
@@ -179,9 +187,7 @@
         "desc": "Total installed generator power",
         "unit": "Wp"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "info.connection",
@@ -195,9 +201,7 @@
         "def": false,
         "desc": "Is solarlog connected?"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status",
@@ -205,9 +209,7 @@
       "common": {
         "name": "Status"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.pac",
@@ -221,9 +223,7 @@
         "desc": "Total output PAC from all of the inverters",
         "unit": "W"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.feed",
@@ -237,9 +237,7 @@
         "desc": "Feed to (+) or consumption from (-) grid",
         "unit": "W"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.feedin",
@@ -253,9 +251,7 @@
         "desc": "Feed to grid",
         "unit": "W"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.feedinactive",
@@ -269,9 +265,7 @@
         "def": false,
         "desc": "Indicates if grid is fed"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.feedout",
@@ -285,9 +279,7 @@
         "desc": "Consumption from (feed out of)grid",
         "unit": "W"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.pdc",
@@ -301,9 +293,7 @@
         "desc": "Total output PAC from all of the inverters",
         "unit": "W"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.uac",
@@ -317,9 +307,7 @@
         "desc": "Average voltage UAC from the inverter",
         "unit": "V"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.udc",
@@ -333,9 +321,7 @@
         "desc": "Average voltage UDC from the inverter",
         "unit": "V"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.conspac",
@@ -349,9 +335,7 @@
         "desc": "Current total consumption PAC from all of the consumption meters",
         "unit": "W"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.yieldday",
@@ -365,9 +349,7 @@
         "desc": "Total yield for the day",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.yieldyesterday",
@@ -381,9 +363,7 @@
         "desc": "Total yield for the previous day",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.yieldmonth",
@@ -397,9 +377,7 @@
         "desc": "Total yield for the month",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.yieldyear",
@@ -413,9 +391,7 @@
         "desc": "Total yield for the year",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.yieldtotal",
@@ -429,9 +405,7 @@
         "desc": "Total Yield",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.consyieldday",
@@ -445,9 +419,7 @@
         "desc": "Total consumption today",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.consyieldyesterday",
@@ -461,9 +433,7 @@
         "desc": "Total consumption for the previous day",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.consyieldmonth",
@@ -476,11 +446,8 @@
         "write": false,
         "desc": "Total consumption for the month",
         "unit": "Wh"
-
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.consyieldyear",
@@ -494,9 +461,7 @@
         "desc": "Total consumption for the year",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "status.consyieldtotal",
@@ -510,9 +475,7 @@
         "desc": "Accumulated total consumption",
         "unit": "Wh"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.OK",
@@ -525,9 +488,7 @@
         "write": false,
         "desc": "Indication if display shows 'OK'"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.invicon",
@@ -545,9 +506,7 @@
         "write": false,
         "desc": "Indication if display shows inverter icon"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.networkicon",
@@ -565,9 +524,7 @@
         "write": false,
         "desc": "Indication if display shwos network icon"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.metericon",
@@ -585,9 +542,7 @@
         "write": false,
         "desc": "Indication if display shows meter icon"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.mailicon",
@@ -605,9 +560,7 @@
         "write": false,
         "desc": "Indication if display shows mail icon"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.inverror",
@@ -620,9 +573,7 @@
         "write": false,
         "desc": "Errornumber inverter errors"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.networkerror",
@@ -635,9 +586,7 @@
         "write": false,
         "desc": "Errornumber network errors"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.metersoffline",
@@ -650,9 +599,7 @@
         "write": false,
         "desc": "Number of meters offline"
       },
-      "native": {
-
-      }
+      "native": {}
     },
     {
       "_id": "display.mailerror",
@@ -665,9 +612,7 @@
         "write": false,
         "desc": "Number of mail error"
       },
-      "native": {
-
-      }
+      "native": {}
     }
   ]
 }
