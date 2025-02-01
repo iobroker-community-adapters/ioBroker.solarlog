@@ -124,23 +124,6 @@ function startAdapter(options) {
   // when adapter shuts down
   adapter.on('unload', callback => unload(callback));
 
-  // Some message was sent to adapter instance over message box. Used by email, pushover, text2speech, ...
-  adapter.on('message', function(obj) {
-    try {
-      if (typeof obj === 'object' && obj.message) {
-        if (obj.command === 'send') {
-          // e.g. send email or pushover or whatever
-          adapter.log('send command');
-
-          // Send response in callback if required
-          obj.callback && adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
-        }
-      }
-    } catch (e) {
-      adapter.log.warn(`on.Message - Error: ${e.message}`);
-    }
-  });
-
   // is called when databases are connected and adapter received configuration.
   adapter.on('ready', async () => {
     try {
@@ -219,16 +202,14 @@ async function main() {
       }
     };
 
-    adapter.log.debug('LOVE - Ich liebe euch!'); //eingefügt auf Wunsch von meiner Tochter :)
-
-    adapter.log.info(`Unterzähler - Import: ${adapter.config.invimp}`);
+    adapter.log.info(`subdivice Import: ${adapter.config.invimp}`);
     adapter.log.debug(`uzimp: ${uzimp}`);
     if (historic) {
-      adapter.log.info(`Rufe historische Daten um ${adapter.config.histhour}:${adapter.config.histmin} ab`);
+      adapter.log.info(`Getting historic data @ ${adapter.config.histhour}:${adapter.config.histmin}`);
     } else {
-      adapter.log.info('Historische Daten werden nicht abgerufen');
+      adapter.log.info('Historc data diabled');
     }
-    adapter.log.info(`Forecast - Datenabruf: ${forecast}`);
+    adapter.log.info(`Getting forecast data: ${forecast}`);
     const pollingTimecurrent = (adapter.config.pollIntervalcurrent * 1000) || 30000;
     const pollingTimeperiodic = (adapter.config.pollIntervalperiodic * 60000) || 300000;
     adapter.log.debug(`[INFO] Configured polling interval consumption/production: ${pollingTimecurrent}`);
@@ -241,7 +222,7 @@ async function main() {
 
     if (uzimp) {
       adapter.log.debug(`uzimp: ${uzimp}`);
-      adapter.log.debug('WR Importieren');
+      adapter.log.debug('Import inverters/WR');
 
       setTimeout(async () => await logCheck(startupData), 500);
 
@@ -252,7 +233,7 @@ async function main() {
       polling = polling || setInterval(async () => await logCheck(pollingData), pollingTimeperiodic); // poll states every [30] seconds
     } else {
       adapter.log.debug(`uzimp: ${uzimp}`);
-      adapter.log.debug('WR nicht Importieren');
+      adapter.log.debug('Not importing inverters/WR');
       if (forecast) {
         await setForecastObjects();
       } else {
@@ -264,7 +245,7 @@ async function main() {
 
     jedenTag = schedule.scheduleJob(histCRON, async () => {
       if (historic) {
-        adapter.log.info('Langzeitwerte abrufen');
+        adapter.log.info('Getting long term data');
         const obj = await adapter.getStateAsync('info.Model');
         if (obj) {
           const slmodel = parseInt(obj.val, 10);
@@ -278,12 +259,12 @@ async function main() {
           }
         }
       } else {
-        adapter.log.debug('Abruf historische Werte nich aktiviert');
+        adapter.log.debug('Historc data not activated');
       }
     });
 
     jedeStunde = schedule.scheduleJob('25 * * * *', async () => {
-      adapter.log.debug('Forecast-Daten werden abgerufen');
+      adapter.log.debug('Getting forecast data');
       if (forecast) {
         await getForecastData();
       }
@@ -304,18 +285,18 @@ async function test() {
       adapter.log.debug(`Inverters to test: ${names}`);
       adapter.log.debug(`numbinv: ${numbinv}`);
       names.forEach(check);
-      adapter.log.debug(`Anzahl positiv: ${testi}`);
+      adapter.log.debug(`Counts positive: ${testi}`);
       if (testi == numbinv) {
         clearInterval(testend);
-        adapter.log.info('Alle WR/Zaehler gefunden');
+        adapter.log.info('All inverters/counters found');
         adapter.log.debug(`Names: ${names}`);
         await setDeviceInfo(names);
       } else {
         testi = 0;
-        adapter.log.warn('Nicht alle WR/Zaehler gefunden');
+        adapter.log.warn('Not found all inverters/counters');
         testj++;
         if (testj > 5) {
-          adapter.log.warn('Fehler, noch nicht alle Unterzaehler angelegt');
+          adapter.log.warn('Error, not set all subdevices');
           clearInterval(testend);
         }
       }
@@ -329,10 +310,10 @@ function check(uz) {
   try {
     adapter.getObject('INV.' + uz, function(err, obj) {
       if (obj) {
-        adapter.log.debug(`Adapter ${uz} vorhanden`);
+        adapter.log.debug(`Adapter ${uz} available`);
         testi++;
       } else {
-        adapter.log.warn(`Adapter ${uz} nicht vorhanden`);
+        adapter.log.warn(`Adapter ${uz} not existing`);
       }
     });
   } catch (e) {
@@ -347,7 +328,7 @@ async function login() {
       Cookie: 'banner_hidden=false'
     };
     adapter.log.debug(`Options: ${JSON.stringify(options)}`);
-    adapter.log.debug('starte LOGIN');
+    adapter.log.debug('starting LOGIN');
 
     try {
       const response = await axios.post(`${deviceIpAddress}/login`, loginData, options);
@@ -363,7 +344,7 @@ async function login() {
     } catch (error) {
       adapter.log.info(`Login - axios - Error: ${error}`);
       if (requestCounter > 4) {
-        adapter.log.warn('Mehrfach fehlerhafter Login, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
+        adapter.log.warn('repeated login error, requests stopped, adapter is restarted in 90s.');
 
         unload();
 
@@ -372,7 +353,7 @@ async function login() {
           restartAdapter()
         }, 90000);
       } else {
-        adapter.log.info(`Fehler beim Login: Statuscode:${error}. Führe Login bei nächster Gelegenheit erneut aus.`)
+        adapter.log.info(`login error: Code:${error}. login will be retried.`)
         requestCounter++;
       }
     }
@@ -390,7 +371,7 @@ async function logCheck(dataLC) {
       options.headers['Cookie'] = `banner_hidden=false; SolarLog=${dataToken}`;
 
       adapter.log.debug(`Options: ${JSON.stringify(options)}`);
-      adapter.log.debug('Starte LogCheck');
+      adapter.log.debug('starting LogCheck');
 
       try {
         const response = await axios.get(`${deviceIpAddress}/logcheck?`, options);
@@ -404,10 +385,10 @@ async function logCheck(dataLC) {
 
         //logcheck: 0;0;1 = nicht angemeldet, 1;2;2= installateur 1;3;3 =inst/pm 1;1;1 =benutzer
         if (bodyArray[0] != 0) {
-          adapter.log.debug('login OK, starte Request');
+          adapter.log.debug('login OK, starting request');
           await httpsRequest(dataLC);
         } else {
-          adapter.log.info('login NICHT OK, starte zuerst Login, danach Request');
+          adapter.log.info('login NOT OK, restart login, then request');
           await login();
           setTimeout(async () => await logCheck(dataLC), 2000);
         }
@@ -415,7 +396,7 @@ async function logCheck(dataLC) {
         adapter.log.info(`Logcheck - axios - Error: ${error}`);
 
         if (requestCounter > 4) {
-          adapter.log.warn('Mehrfach fehlerhafter Logcheck, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
+          adapter.log.warn('repeated Logcheck error, requests stopped, adapter is restarded in 90s.');
           unload();
 
           restartTimer = setTimeout(() => {
@@ -488,7 +469,7 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
       adapter.log.info(`httpsRequest - axios - Error: ${error}`);
 
       if (requestCounter > 4) {
-        adapter.log.warn('Mehrfach fehlerhafter http-Request, Abfragen werden eingestellt, starte Adapter in 90 Sekunden neu neu.');
+        adapter.log.warn('repeated http-Request console.error, requests stopped, adapter is restarted in 90s.');
         unload();
 
         restartTimer = setTimeout(() => {
@@ -496,20 +477,20 @@ async function httpsRequest(reqData) { //Führt eine Abfrage beim solarlog durch
           restartAdapter()
         }, 90000);
       } else {
-        adapter.log.info(`Fehler beim http-request: Statuscode:${error}. Führe Request bei nächster Gelegenheit erneut aus.`);
+        adapter.log.info(`http-request error: code:${error}. request will be repeated.`);
         requestCounter++;
       }
     }
   } catch (e) {
-    adapter.log.warn(`JSON-parse-Fehler httpsRequest: ${e.message}`);
+    adapter.log.warn(`JSON-parse error httpsRequest: ${e.message}`);
   }
 } //end httpsRequest
 
 async function readSolarlogData(reqData, resData) {
   try {
-    adapter.log.debug('Verarbeite Daten');
-    adapter.log.debug(`Datensatz: ${reqData}`);
-    adapter.log.debug(`Auswertedaten: ${resData}`);
+    adapter.log.debug('processing Data');
+    adapter.log.debug(`data set: ${reqData}`);
+    adapter.log.debug(`evaluation data: ${resData}`);
 
     switch (reqData.slice(0, 6)) {
       case '{"141"': //inverter names and deviceinfo-code
@@ -525,7 +506,7 @@ async function readSolarlogData(reqData, resData) {
 
           await defDeviceInfo();
         } catch (e) {
-          adapter.log.warn(`JSON-parse-Fehler inverter names/deviceinfo: ${e.message}`);
+          adapter.log.warn(`JSON-parse error, inverter names/deviceinfo: ${e.message}`);
           throw e;
         }
 
@@ -563,7 +544,7 @@ async function readSolarlogData(reqData, resData) {
 
           await logCheck(inverterData);
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in get numinv: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in get numinv: ${e}`);
           throw e;
         }
 
@@ -575,12 +556,12 @@ async function readSolarlogData(reqData, resData) {
             sgname && adapter.log.debug(`neue Schaltgruppe: ${sgname}`);
             namessg[isg] = sgname.replace(/\s+/g, '');
           }
-          adapter.log.debug(`Anzahl Schaltgruppen: ${namessg.filter(Boolean).length}`)
+          adapter.log.debug(`number of switchgroups: ${namessg.filter(Boolean).length}`)
           numsg = namessg.filter(Boolean).length;
           adapter.log.debug(`namessg = ${namessg}`);
-          adapter.log.debug(`Schaltgruppen neu: ${namessg}`);
+          adapter.log.debug(`swichgroups new: ${namessg}`);
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in get switchgrouplist: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in get switchgrouplist: ${e}`);
           throw e;
         }
 
@@ -596,7 +577,7 @@ async function readSolarlogData(reqData, resData) {
           const sdinfo = JSON.parse(resData)[895];
           await adapter.setStateAsync('info.SD', `[${sdinfo[101]}|${sdinfo[103]}|${sdinfo[102]}|${sdinfo[100]}] - ${sdinfo[104]}/${sdinfo[105]}`, true);
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in system information: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in system information: ${e}`);
           throw e;
         }
 
@@ -624,7 +605,7 @@ async function readSolarlogData(reqData, resData) {
           await adapter.setStateAsync('forecast.setpointCurrMonth', ((JSON.parse(resData)[152][m] / 100) * setPointY), true);
           await adapter.setStateAsync('forecast.setpointToday', ((JSON.parse(resData)[152][m] / 100) * setPointY) / 30, true);
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in setpoint: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in setpoint: ${e}`);
           throw e;
         }
 
@@ -633,17 +614,17 @@ async function readSolarlogData(reqData, resData) {
           adapter.log.debug(`Battdata: ${battdata}`);
           if (battdata.length > 0) {
             battPresent = true;
-            adapter.log.debug('Batterie vorhanden, lege Objekte an.');
-            adapter.log.debug(`Batteriestatus: ${battPresent}`);
+            adapter.log.debug('Battery available, lege Objekte an.');
+            adapter.log.debug(`status battery: ${battPresent}`);
 
           } else {
-            adapter.log.debug('Keine Batterie vorhanden.');
-            adapter.log.debug(`Batteriestatus: ${battPresent}`);
+            adapter.log.debug('no battery available.');
+            adapter.log.debug(`Status battery: ${battPresent}`);
           }
 
           adapter.log.debug('END');
         } catch (e) {
-          adapter.log.warn(`JSON-parse-Fehler Battpresent: ${e.message}`);
+          adapter.log.warn(`JSON-parse error Battpresent: ${e.message}`);
           throw e;
         }
 
@@ -655,20 +636,20 @@ async function readSolarlogData(reqData, resData) {
       case '{"447"': //pollingData = '{"447":null,"777":{"0":null},"778":{"0":null},"801":{"170":null}}';
         try { //"447":null
           const dataSG = JSON.parse(resData)[447];
-          adapter.log.debug(`Schaltgruppen: ${namessg}`);
-          adapter.log.debug(`Anzahl Elemente: ${numsg}`);
+          adapter.log.debug(`switchgroups: ${namessg}`);
+          adapter.log.debug(`Nuber of elements: ${numsg}`);
           for (let sgj = 0; sgj < 10; sgj++) {
             if (namessg[sgj]) {
               adapter.log.debug(`SwichtGroup.${namessg[sgj]} Modus: ${dataSG[sgj][102]}`);
               await adapter.setStateAsync(`SwitchGroup.${namessg[sgj]}.mode`, dataSG[sgj][102], true);
-              adapter.log.debug(`SwichtGroup.${namessg[sgj]} Verknüpfte Hardware: ${names[dataSG[sgj][101][0][100]]}`);
+              adapter.log.debug(`SwichtGroup.${namessg[sgj]} linked hardware: ${names[dataSG[sgj][101][0][100]]}`);
               await adapter.setStateAsync(`SwitchGroup.${namessg[sgj]}.linkeddev`, names[dataSG[sgj][101][0][100]], true);
-              adapter.log.debug(`SwichtGroup.${namessg[sgj]} Verknüpfte Hardware Untereinheit: ${dataSG[sgj][101][0][101]}`);
+              adapter.log.debug(`SwichtGroup.${namessg[sgj]} linked hardware subunit: ${dataSG[sgj][101][0][101]}`);
               await adapter.setStateAsync(`SwitchGroup.${namessg[sgj]}.linkeddevsub`, dataSG[sgj][101][0][101], true);
             }
           }
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in swichtgroupmode: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in swichtgroupmode: ${e}`);
           throw e;
         }
 
@@ -693,7 +674,7 @@ async function readSolarlogData(reqData, resData) {
           await adapter.setStateAsync('status.consyieldyear', parseInt(json[114]), true);
           await adapter.setStateAsync('status.consyieldtotal', parseInt(json[115]), true);
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in standard data request: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in standard data request: ${e}`);
           throw e;
         }
 
@@ -702,19 +683,19 @@ async function readSolarlogData(reqData, resData) {
           adapter.log.debug(`DataSUZ: ${dataSUZ}`);
           adapter.log.debug(`Inv. to treat: ${names}`);
           const namLeng = names.length;
-          adapter.log.debug(`Anzahl Elemente: ${namLeng}`);
+          adapter.log.debug(`Number of elements: ${namLeng}`);
           const d = new Date();
           const heute = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear() - 2000}`;
-          adapter.log.debug(`Heute: ${heute}`);
+          adapter.log.debug(`today: ${heute}`);
           for (let isuz = 0; isuz < 31; isuz++) {
             if (dataSUZ[isuz].includes(heute.toString())) {
               var indexsuz = isuz;
-              adapter.log.debug(`Index Tageswerte: ${indexsuz}`);
+              adapter.log.debug(`Index daily values: ${indexsuz}`);
               break;
             }
           }
           const daysum = dataSUZ[indexsuz][1];
-          adapter.log.debug(`Tagessummen: ${daysum}`);
+          adapter.log.debug(`daysums: ${daysum}`);
           for (let suzi = 0; suzi < namLeng; suzi++) {
             if (deviceclasses[suzi] !== 'Batterie') {
               adapter.log.debug(`INV.${names[suzi]}: ${daysum[suzi]}`);
@@ -722,7 +703,7 @@ async function readSolarlogData(reqData, resData) {
             }
           }
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in sum data inverters: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in sum data inverters: ${e}`);
           throw e;
         }
 
@@ -731,20 +712,20 @@ async function readSolarlogData(reqData, resData) {
           adapter.log.debug(`DataSelfCons: ${dataselfcons}`);
           const d = new Date();
           const heute = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear() - 2000}`;
-          adapter.log.debug(`Heute: ${heute}`);
+          adapter.log.debug(`today: ${heute}`);
           const monatheute = d.getMonth() + 1;
-          adapter.log.debug(`Monat heute: ${monatheute}`);
+          adapter.log.debug(`month today: ${monatheute}`);
           for (let isuz = 0; isuz < 31; isuz++) {
             if (dataselfcons[isuz].includes(heute.toString())) {
               var indexsuz = isuz;
-              adapter.log.debug(`Index Tageswerte: ${indexsuz}`);
+              adapter.log.debug(`Index daily values: ${indexsuz}`);
               break;
             }
           }
           const dataselfconstoday = dataselfcons[indexsuz];
-          adapter.log.debug(`Tageswerte SelfCons: ${dataselfconstoday}`);
+          adapter.log.debug(`daily values SelfCons: ${dataselfconstoday}`);
           const daysum = dataselfcons[indexsuz][1];
-          adapter.log.debug(`Tagessumme Eigenverbrauch: ${daysum}`);
+          adapter.log.debug(`daysum self consumption: ${daysum}`);
           const dayratio = Math.round((daysum / json[105]) * 1000) / 10;
 
           await adapter.setStateAsync('SelfCons.selfconstoday', daysum, true);
@@ -752,21 +733,21 @@ async function readSolarlogData(reqData, resData) {
 
           d.setDate(d.getDate() - 1);
           const gestern = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear() - 2000}`;
-          adapter.log.debug(`Gestern: ${gestern}`);
+          adapter.log.debug(`yesterday: ${gestern}`);
           const monatGestern = d.getMonth() + 1;
-          adapter.log.debug(`Monat gestern: ${monatGestern}`);
+          adapter.log.debug(`month yesterday: ${monatGestern}`);
           if (monatGestern === monatheute) {
             for (let iscy = 0; iscy < 31; iscy++) {
               if (dataselfcons[iscy].includes(gestern.toString())) {
                 var indexscy = iscy;
-                adapter.log.debug(`Index Tageswerte gestern: ${indexscy}`);
+                adapter.log.debug(`Index daily values yesterday: ${indexscy}`);
                 break;
               }
             }
             const dataselfconsyesterday = dataselfcons[indexscy];
-            adapter.log.debug(`Gesternwerte SelfCons: ${dataselfconsyesterday}`);
+            adapter.log.debug(`yesterday-values SelfCons: ${dataselfconsyesterday}`);
             const daysumy = dataselfcons[indexscy][1];
-            adapter.log.debug(`Gesternsumme Eigenverbrauch: ${daysumy}`);
+            adapter.log.debug(`yesterday-sum self consumption: ${daysumy}`);
             const dayratioy = Math.round((daysumy / json[106]) * 1000) / 10;
 
             await adapter.setStateAsync('SelfCons.selfconsyesterday', daysumy, true);
@@ -787,12 +768,12 @@ async function readSolarlogData(reqData, resData) {
             await adapter.setStateAsync('INV.Battery.BattChargeDaysum', dataselfconstoday[3], true);
             await adapter.setStateAsync('INV.Battery.BattDischargeDaysum', dataselfconstoday[4], true);
           } else if (!battDevicePresent && !battPresent) {
-            adapter.log.debug('Keine Batterie vorhanden');
+            adapter.log.debug('no batery available');
           } else {
-            adapter.log.debug('Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch');
+            adapter.log.debug('Strange: battery data available but no battery index data');
           }
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in self consumtion: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in self consumption: ${e}`);
           throw e;
         }
 
@@ -809,7 +790,7 @@ async function readSolarlogData(reqData, resData) {
           } else {
             adapter.log.debug(`Inv. to treat: ${names}`);
             const namLeng = names.length;
-            adapter.log.debug(`Anzahl Elemente: ${namLeng}`);
+            adapter.log.debug(`number of elements: ${namLeng}`);
             for (let uzj = 0; uzj < namLeng; uzj++) {
               if (deviceclasses[uzj] !== 'Batterie') {
                 adapter.log.debug(`INV.${names[uzj]} Status: ${datafast[608][uzj]}`);
@@ -819,9 +800,9 @@ async function readSolarlogData(reqData, resData) {
               }
             }
 
-            adapter.log.debug(`Schaltgruppen: ${namessg}`);
+            adapter.log.debug(`switchgroups: ${namessg}`);
 
-            adapter.log.debug(`Anzahl Schaltgruppen: ${numsg}`);
+            adapter.log.debug(`number of switchgroups: ${numsg}`);
             for (let sgsj = 0; sgsj < 10; sgsj++) {
               if (namessg[sgsj]) {
                 adapter.log.debug(`SwichtGroup.${namessg[sgsj]} Status: ${datafast[801][175][sgsj][101]}`);
@@ -831,14 +812,14 @@ async function readSolarlogData(reqData, resData) {
 
             battdata = datafast[858];
             adapter.log.debug(`Battdata: ${battdata}`);
-            adapter.log.debug(`Battdata - Länge: ${battdata.length}`)
+            adapter.log.debug(`Battdata - length: ${battdata.length}`)
             if (!battdata.length) {
               battdata[2] = 0;
               battdata[3] = 0;
             }
-            adapter.log.debug(`Erzeugung: ${+datafast[780] - +battdata[3]}`);
+            adapter.log.debug(`production: ${+datafast[780] - +battdata[3]}`);
             await adapter.setStateAsync('status.pac', parseInt(+datafast[780] - +battdata[3]), true);
-            adapter.log.debug(`Verbrauch: ${+datafast[781] - +battdata[2]}`);
+            adapter.log.debug(`consumption: ${+datafast[781] - +battdata[2]}`);
             await adapter.setStateAsync('status.conspac', parseInt(+datafast[781] - +battdata[2]), true);
 
             if (battDevicePresent && battPresent) {
@@ -846,7 +827,7 @@ async function readSolarlogData(reqData, resData) {
               await adapter.setStateAsync(`INV.${names[battindex[0]]}.ChargePower`, battdata[2], true);
               await adapter.setStateAsync(`INV.${names[battindex[0]]}.DischargePower`, battdata[3], true);
               feed = +datafast[780] - +datafast[781];
-              adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
+              adapter.log.debug(`production(+)/consumption(-): ${feed}`);
               await adapter.setStateAsync('status.feed', feed, true);
               if (Math.sign(feed) === 1) {
                 await adapter.setStateAsync('status.feedin', feed, true);
@@ -862,7 +843,7 @@ async function readSolarlogData(reqData, resData) {
               await adapter.setStateAsync('INV.Battery.ChargePower', battdata[2], true);
               await adapter.setStateAsync('INV.Battery.DischargePower', battdata[3], true);
               feed = +datafast[780] - +datafast[781];
-              adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
+              adapter.log.debug(`production(+)/consumption(-): ${feed}`);
               await adapter.setStateAsync('status.feed', feed, true);
               if (Math.sign(feed) === 1) {
                 await adapter.setStateAsync('status.feedin', feed, true);
@@ -874,9 +855,9 @@ async function readSolarlogData(reqData, resData) {
                 await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
               }
             } else if (!battDevicePresent && !battPresent) {
-              adapter.log.debug('Keine Batterie vorhanden');
+              adapter.log.debug('no battery available');
               feed = +datafast[780] - +datafast[781];
-              adapter.log.debug(`Erzeugung(+)/Verbrauch(-): ${feed}`);
+              adapter.log.debug(`production(+)/consumption(-): ${feed}`);
               await adapter.setStateAsync('status.feed', feed, true);
               if (Math.sign(feed) === 1) {
                 await adapter.setStateAsync('status.feedin', feed, true);
@@ -888,7 +869,7 @@ async function readSolarlogData(reqData, resData) {
                 await adapter.setStateAsync('status.feedout', Math.abs(feed), true);
               }
             } else {
-              adapter.log.debug('Strange: Batteriedaten vorhanden aber Batterie - Vorhanden Indikatoren falsch');
+              adapter.log.debug('Strange: battery-data available, but battery indicators wrong');
             }
 
             setDisplayData(datafast[794][0]);
@@ -896,7 +877,7 @@ async function readSolarlogData(reqData, resData) {
           }
 
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in datafast: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in datafast: ${e}`);
           throw e;
         }
         break;
@@ -908,7 +889,7 @@ async function readSolarlogData(reqData, resData) {
           adapter.log.debug(`Inv. to treat: ${names}`);
           const namLeng = names.length;
 
-          adapter.log.debug(`Anzahl Elemente: ${namLeng}`);
+          adapter.log.debug(`number of elements: ${namLeng}`);
           for (let iy = 0; iy < dataYear.length; iy++) {
             const year = dataYear[iy][0].slice(-2);
             for (let inu = 0; inu < names.length; inu++) {
@@ -939,7 +920,7 @@ async function readSolarlogData(reqData, resData) {
             }
           }
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in status data inverters: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in status data inverters: ${e}`);
           throw e;
         }
 
@@ -956,7 +937,7 @@ async function readSolarlogData(reqData, resData) {
                 type: 'state',
                 common: {
                   name: 'yieldmonth',
-                  desc: 'Month sum producion Wh',
+                  desc: 'Month sum production Wh',
                   type: 'number',
                   role: 'value.monthsum',
                   read: true,
@@ -1012,7 +993,7 @@ async function readSolarlogData(reqData, resData) {
             await adapter.setStateAsync('SelfCons.selfconsratiomonth', Math.round((dataMonthtot[dataMonthtot.length - 1][3] * 1000) / (dataMonthtot[dataMonthtot.length - 1][2]) * 1000) / 10, true);
             await adapter.setStateAsync('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtot[dataMonthtot.length - 2][3] * 1000) / (dataMonthtot[dataMonthtot.length - 2][2]) * 1000) / 10, true);
           } catch (e) {
-            adapter.log.warn(`readSolarlogData - Fehler in historic monthly: ${e}`);
+            adapter.log.warn(`readSolarlogData - error in historic monthly: ${e}`);
             throw e;
           }
 
@@ -1027,7 +1008,7 @@ async function readSolarlogData(reqData, resData) {
                 type: 'state',
                 common: {
                   name: 'yieldyear',
-                  desc: 'Year sum producion Wh',
+                  desc: 'Year sum production Wh',
                   type: 'number',
                   role: 'value.yearsum',
                   read: true,
@@ -1081,7 +1062,7 @@ async function readSolarlogData(reqData, resData) {
             await adapter.setStateAsync('SelfCons.selfconsratioyear', Math.round((dataYeartot[dataYeartot.length - 1][3] * 1000) / (dataYeartot[dataYeartot.length - 1][2]) * 1000) / 10, true);
             await adapter.setStateAsync('SelfCons.selfconsratiolastyear', Math.round((dataYeartot[dataYeartot.length - 2][3] * 1000) / (dataYeartot[dataYeartot.length - 2][2]) * 1000) / 10, true);
           } catch (e) {
-            adapter.log.warn(`readSolarlogData - Fehler in status historic sum data: ${e}`);
+            adapter.log.warn(`readSolarlogData - error in status historic sum data: ${e}`);
             throw e;
           }
         }
@@ -1109,25 +1090,25 @@ async function readSolarlogData(reqData, resData) {
           await adapter.setStateAsync('status.consyieldyear', parseInt(json[114]), true);
           await adapter.setStateAsync('status.consyieldtotal', parseInt(json[115]), true);
         } catch (e) {
-          adapter.log.warn(`readSolarlogData - Fehler in standard data request: ${e}`);
+          adapter.log.warn(`readSolarlogData - error in standard data request: ${e}`);
           throw e;
         }
         break;
 
       default:
-        adapter.log.warn('Fehler: Problem bei der Solarlog-Datenauswertung, kein Datensatz erkannt');
+        adapter.log.warn('error in data evaluation, no solarlog data recognized');
     }
 
   } catch (e) {
-    adapter.log.warn(`readSolarlogData - Fehler : ${e}`);
+    adapter.log.warn(`readSolarlogData - error : ${e}`);
   }
 } //end readSolarlogData
 
 async function readSolarlogDataJson(reqData, resData) {
   try {
-    adapter.log.debug('Verarbeite Daten');
-    adapter.log.debug(`Datensatz: ${reqData}`);
-    adapter.log.debug(`Auswertedaten: ${resData}`);
+    adapter.log.debug('processing data');
+    adapter.log.debug(`data set: ${reqData}`);
+    adapter.log.debug(`evaluation data: ${resData}`);
 
     switch (reqData) {
       case '/years.json?_=':
@@ -1143,7 +1124,7 @@ async function readSolarlogDataJson(reqData, resData) {
               type: 'state',
               common: {
                 name: 'yieldyear',
-                desc: 'Year sum producion Wh',
+                desc: 'Year sum production Wh',
                 type: 'number',
                 role: 'value.yearsum',
                 read: true,
@@ -1207,7 +1188,7 @@ async function readSolarlogDataJson(reqData, resData) {
 
 
         } catch (e) {
-          adapter.log.warn(`readSolarlogDatajson - years - Fehler : ${e}`);
+          adapter.log.warn(`readSolarlogDatajson - years - error : ${e}`);
         }
         break;
 
@@ -1226,7 +1207,7 @@ async function readSolarlogDataJson(reqData, resData) {
               type: 'state',
               common: {
                 name: 'yieldmonth',
-                desc: 'Month sum producion Wh',
+                desc: 'Month sum production Wh',
                 type: 'number',
                 role: 'value.monthsum',
                 read: true,
@@ -1289,15 +1270,15 @@ async function readSolarlogDataJson(reqData, resData) {
           await adapter.setStateAsync('SelfCons.selfconsratiolastmonth', Math.round((dataMonthtotj[1][3] * 1000) / (dataMonthtotj[1][2]) * 1000) / 10, true);
 
         } catch (e) {
-          adapter.log.warn(`readSolarlogDatajson - month - Fehler : ${e}`);
+          adapter.log.warn(`readSolarlogDatajson - month - error : ${e}`);
         }
         break;
 
       default:
-        adapter.log.warn('Fehler: Problem bei der Solarlog-Datenauswertung JSON, kein Datensatz erkannt');
+        adapter.log.warn('error in JSON data processing, no solarlog data recognized');
     }
   } catch (e) {
-    adapter.log.warn(`readSolarlogDatajson - Fehler : ${e}`);
+    adapter.log.warn(`readSolarlogDatajson - error : ${e}`);
   }
 } //end readSolarlogDatajson
 
@@ -1315,15 +1296,15 @@ async function defDeviceInfo() { // Geräteinfos httpsReqGetUzDeviceinfo
 
       if (deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)] === 'Batterie') {
         battDevicePresent = true;
-        adapter.log.debug('Batterie als Gerät vorhanden');
+        adapter.log.debug('Battery as device available');
         battindex[battarrind] = y;
-        adapter.log.debug(`Index Gerät Batterie: ${y}`);
+        adapter.log.debug(`Index battery device: ${y}`);
         battarrind++;
 
         adapter.log.debug(`INV.${names[y]}.deviceclass: ${deviceClassList[(Math.log(deviceList[deviceinfos[y]][5]) / Math.LN2)]}`);
       }
 
-      adapter.log.debug(`Batterie als Gerät: ${battDevicePresent}`);
+      adapter.log.debug(`Battery as divice: ${battDevicePresent}`);
     }
 
     adapter.log.debug(`Devicetypes: ${devicetypes}`);
@@ -1341,11 +1322,11 @@ async function defDeviceInfo() { // Geräteinfos httpsReqGetUzDeviceinfo
 async function setInvObjects() {
   // create Channel Inverter(i)
   try {
-    adapter.log.debug('Lege nun Objekte an - soweit nicht vorhanden 2');
+    adapter.log.debug('laying out objects, if not existing');
     adapter.log.debug(`NumInv Obj: ${numinv}`);
-    adapter.log.debug(`Names zum anlegen: ${names}`);
-    adapter.log.debug(`Anzahl Schaltgruppen: ${numsg}`);
-    adapter.log.debug(`Schaltgruppen: ${namessg}`);
+    adapter.log.debug(`Names to lay ou: ${names}`);
+    adapter.log.debug(`Number of swichtgroups: ${numsg}`);
+    adapter.log.debug(`switchgrous: ${namessg}`);
 
     for (let i = 0; i < numinv - 1; i++) {
       await adapter.setObjectNotExistsAsync('INV.' + names[i], {
@@ -2211,7 +2192,7 @@ async function setDeviceInfo() {
 
 async function setForecastObjects() {
   try {
-    adapter.log.debug('Lege Objekt für Forecast an');
+    adapter.log.debug('laying out forecast objects');
 
     await adapter.setObjectNotExistsAsync('info.latitude', {
       type: 'state',
@@ -2313,7 +2294,7 @@ async function setForecastObjects() {
 
 async function getForecastData() {
   try {
-    adapter.log.debug('Rufe Forcastdaten ab');
+    adapter.log.debug('getting forecast data');
     cmdForecast = 'estimate/watthours/day/';
     lat = adapter.config.latitude;
     lon = adapter.config.longitude;
@@ -2324,7 +2305,7 @@ async function getForecastData() {
       kwp = objkwp.val / 1000;
 
       const urlProg = `${urlForecast + cmdForecast + lat}/${lon}/${dec}/${az}/${kwp}`;
-      adapter.log.debug(`Anfragedaten: ${urlProg}`);
+      adapter.log.debug(`request data: ${urlProg}`);
 
       https.get(urlProg, res => {
         let data = [];
@@ -2345,11 +2326,11 @@ async function getForecastData() {
               const watthoursday = forecast.result;
               adapter.log.debug(`WatthoursDay = ${JSON.stringify(watthoursday)}`);
               const watthourstoday = parseInt(forecast.result[new Date().toISOString().slice(0, 10)]);
-              adapter.log.debug(`Vorhersage für heute, ${new Date().toISOString().slice(0, 10)}: ${watthourstoday}`);
+              adapter.log.debug(`forecast for today, ${new Date().toISOString().slice(0, 10)}: ${watthourstoday}`);
               const tomorrow = new Date();
               tomorrow.setDate(new Date().getDate() + 1);
               const watthourstomorrow = parseInt(forecast.result[tomorrow.toISOString().slice(0, 10)]);
-              adapter.log.debug(`Vorhersage für morgen, ${tomorrow.toISOString().slice(0, 10)}: ${watthourstomorrow}`);
+              adapter.log.debug(`forecast for tomorrow, ${tomorrow.toISOString().slice(0, 10)}: ${watthourstomorrow}`);
 
               await adapter.setStateAsync('forecast.today', parseInt(watthourstoday, 10), true);
               await adapter.setStateAsync('forecast.tomorrow', parseInt(watthourstomorrow, 10), true);
@@ -2358,11 +2339,11 @@ async function getForecastData() {
               await adapter.setStateAsync('info.inclination', dec, true);
               await adapter.setStateAsync('info.azimuth', az, true);
             } else {
-              adapter.log.warn('Prognosefehler, keine Forecast - Werte erhalten');
-              adapter.log.info(`Antowrttyp: ${forecast.message.type}`);
-              adapter.log.info(`Antowrttext: ${forecast.message.text}`);
-              adapter.log.info(`Anfragen verbleibend (Limit:12): ${forecast.message.ratelimit.reamining}`);
-              adapter.log.info(`Antowrttyp: ${JSON.stringify(forecast.message)}`);
+              adapter.log.warn('forecast error, no forecast data available');
+              adapter.log.info(`response type: ${forecast.message.type}`);
+              adapter.log.info(`response text: ${forecast.message.text}`);
+              adapter.log.info(`requests remaining (Limit:12): ${forecast.message.ratelimit.reamining}`);
+              adapter.log.info(`response type: ${JSON.stringify(forecast.message)}`);
             }
           } catch (e) {
             adapter.log.warn(`Getforecastdata - Error: ${e}`);
@@ -2370,7 +2351,7 @@ async function getForecastData() {
         });
       }).on('error', err => console.log('Error: ', err.message));
     } else {
-      adapter.log.warn('Prognosefehler: Anlageleistung nicht verfügbar');
+      adapter.log.warn('forecast error, installed power not available');
     }
   } catch (e) {
     adapter.log.warn(`getForecastData - Error: ${e.message}`);
