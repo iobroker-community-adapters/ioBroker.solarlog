@@ -333,20 +333,12 @@ async function login() {
     adapter.log.debug(`Options: ${JSON.stringify(options)}`);
     adapter.log.debug("starting LOGIN");
 
-    // Salts abholen
-    const getjpPayload = { "550": { "103": null, "104": null, "107": null, "110": null } };
+    const getjpPayload = { "550": { "103": null, "104": null } };
     const prot = await axios.post(`${deviceIpAddress}/getjp`, getjpPayload, options);
     const b = prot?.data?.["550"] || {};
-    const pwsHashed = !!b["103"];
+    const pwsHashed = b["103"] === 1 || b["103"] === "1" || b["103"] === true;
 
-    // Salt anhand des Users wählen
-    const pickSalt = (u, block) => {
-      const map = { "user": "104", "installer": "107", "admin": "110" };
-      const key = map[(u || "").toLowerCase()] || "104";
-      return block[key] || block["104"] || block["107"] || block["110"] || null;
-    };
-
-    const salt = pickSalt(userName, b);
+    const salt = b["104"]
     const pwdForPost = pwsHashed && salt ? bcrypt.hashSync(userPw, salt) : userPw;
     const loginData = `u=${userName}&p=${pwdForPost}`;
 
