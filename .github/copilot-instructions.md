@@ -1,6 +1,6 @@
 # ioBroker Adapter Development with GitHub Copilot
 
-**Version:** 0.4.0
+**Version:** 0.4.2
 **Template Source:** https://github.com/DrozmotiX/ioBroker-Copilot-Instructions
 
 This file contains instructions and best practices for GitHub Copilot when working on ioBroker adapter development.
@@ -8,6 +8,7 @@ This file contains instructions and best practices for GitHub Copilot when worki
 ## Project Context
 
 You are working on an ioBroker adapter. ioBroker is an integration platform for the Internet of Things, focused on building smart home and industrial IoT solutions. Adapters are plugins that connect ioBroker to external systems, devices, or services.
+
 
 ### Solarlog Adapter Specific Context
 
@@ -28,6 +29,7 @@ This adapter connects to Solarlog devices to monitor solar photovoltaic installa
   - Historical data collection at configurable times
   - Battery data monitoring (where supported)
   - Smart energy switch group data
+
 
 ## Testing
 
@@ -83,64 +85,381 @@ tests.integration(path.join(__dirname, '..'), {
                 return new Promise(async (resolve, reject) => {
                     try {
                         harness = getHarness();
+                        
+                        // Get adapter object using promisified pattern
+                        const obj = await new Promise((res, rej) => {
+                            harness.objects.getObject('system.adapter.your-adapter.0', (err, o) => {
+                                if (err) return rej(err);
+                                res(o);
+                            });
+                        });
+                        
+                        if (!obj) {
+                            return reject(new Error('Adapter object not found'));
+                        }
 
-                        // Wait for adapter to be ready  
+                        // Configure adapter properties
+                        Object.assign(obj.native, {
+                            position: TEST_COORDINATES,
+                            createCurrently: true,
+                            createHourly: true,
+                            createDaily: true,
+                            // Add other configuration as needed
+                        });
+
+                        // Set the updated configuration
+                        harness.objects.setObject(obj._id, obj);
+
+                        console.log('✅ Step 1: Configuration written, starting adapter...');
+                        
+                        // Start adapter and wait
                         await harness.startAdapterAndWait();
-                        await wait(5000);
+                        
+                        console.log('✅ Step 2: Adapter started');
 
-                        // Verify initial states
-                        const state = await harness.states.getStateAsync('test.0.info.connection');
-                        expect(state).to.be.ok;
+                        // Wait for adapter to process data
+                        const waitMs = 15000;
+                        await wait(waitMs);
 
-                        resolve();
+                        console.log('🔍 Step 3: Checking states after adapter run...');
+                        
+                        // Get all states created by adapter
+                        const stateIds = await harness.dbConnection.getStateIDs('your-adapter.0.*');
+                        
+                        console.log(`📊 Found ${stateIds.length} states`);
+
+                        if (stateIds.length > 0) {
+                            console.log('✅ Adapter successfully created states');
+                            
+                            // Show sample of created states
+                            const allStates = await new Promise((res, rej) => {
+                                harness.states.getStates(stateIds, (err, states) => {
+                                    if (err) return rej(err);
+                                    res(states || []);
+                                });
+                            });
+                            
+                            console.log('📋 Sample states created:');
+                            stateIds.slice(0, 5).forEach((stateId, index) => {
+                                const state = allStates[index];
+                                console.log(`   ${stateId}: ${state && state.val !== undefined ? state.val : 'undefined'}`);
+                            });
+                            
+                            await harness.stopAdapter();
+                            resolve(true);
+                        } else {
+                            console.log('❌ No states were created by the adapter');
+                            reject(new Error('Adapter did not create any states'));
+                        }
                     } catch (error) {
                         reject(error);
                     }
                 });
-            });
+            }).timeout(40000);
         });
     }
 });
 ```
 
-#### Test File Structure
-- `test/integration.js` - Main integration test runner  
-- `test/package.js` - Package validation tests
-- Additional test files for specific functionality
+#### Testing Both Success AND Failure Scenarios
 
-#### Test Configuration
-When configuring harness for testing:
+**IMPORTANT**: For every "it works" test, implement corresponding "it doesn't work and fails" tests. This ensures proper error handling and validates that your adapter fails gracefully when expected.
 
 ```javascript
-// Configure adapter for testing
-await harness.changeAdapterConfig('test', {
-    native: {
-        host: 'test.example.com',
-        port: 80,
-        pollIntervalcurrent: 30,
-        // ... other config
+// Example: Testing successful configuration
+it('should configure and start adapter with valid configuration', function () {
+    return new Promise(async (resolve, reject) => {
+        // ... successful configuration test as shown above
+    });
+}).timeout(40000);
+
+// Example: Testing failure scenarios
+it('should NOT create daily states when daily is disabled', function () {
+    return new Promise(async (resolve, reject) => {
+        try {
+            harness = getHarness();
+            
+            console.log('🔍 Step 1: Fetching adapter object...');
+            const obj = await new Promise((res, rej) => {
+                harness.objects.getObject('system.adapter.your-adapter.0', (err, o) => {
+                    if (err) return rej(err);
+                    res(o);
+                });
+            });
+            
+            if (!obj) return reject(new Error('Adapter object not found'));
+            console.log('✅ Step 1.5: Adapter object loaded');
+
+            console.log('🔍 Step 2: Updating adapter config...');
+            Object.assign(obj.native, {
+                position: TEST_COORDINATES,
+                createCurrently: false,
+                createHourly: true,
+                createDaily: false, // Daily disabled for this test
+            });
+
+            await new Promise((res, rej) => {
+                harness.objects.setObject(obj._id, obj, (err) => {
+                    if (err) return rej(err);
+                    console.log('✅ Step 2.5: Adapter object updated');
+                    res(undefined);
+                });
+            });
+
+            console.log('🔍 Step 3: Starting adapter...');
+            await harness.startAdapterAndWait();
+            console.log('✅ Step 4: Adapter started');
+
+            console.log('⏳ Step 5: Waiting 20 seconds for states...');
+            await new Promise((res) => setTimeout(res, 20000));
+
+            console.log('🔍 Step 6: Fetching state IDs...');
+            const stateIds = await harness.dbConnection.getStateIDs('your-adapter.0.*');
+
+            console.log(`📊 Step 7: Found ${stateIds.length} total states`);
+
+            const hourlyStates = stateIds.filter((key) => key.includes('hourly'));
+            if (hourlyStates.length > 0) {
+                console.log(`✅ Step 8: Correctly ${hourlyStates.length} hourly weather states created`);
+            } else {
+                console.log('❌ Step 8: No hourly states created (test failed)');
+                return reject(new Error('Expected hourly states but found none'));
+            }
+
+            // Check daily states should NOT be present
+            const dailyStates = stateIds.filter((key) => key.includes('daily'));
+            if (dailyStates.length === 0) {
+                console.log(`✅ Step 9: No daily states found as expected`);
+            } else {
+                console.log(`❌ Step 9: Daily states present (${dailyStates.length}) (test failed)`);
+                return reject(new Error('Expected no daily states but found some'));
+            }
+
+            await harness.stopAdapter();
+            console.log('🛑 Step 10: Adapter stopped');
+
+            resolve(true);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}).timeout(40000);
+
+// Example: Testing missing required configuration  
+it('should handle missing required configuration properly', function () {
+    return new Promise(async (resolve, reject) => {
+        try {
+            harness = getHarness();
+            
+            console.log('🔍 Step 1: Fetching adapter object...');
+            const obj = await new Promise((res, rej) => {
+                harness.objects.getObject('system.adapter.your-adapter.0', (err, o) => {
+                    if (err) return rej(err);
+                    res(o);
+                });
+            });
+            
+            if (!obj) return reject(new Error('Adapter object not found'));
+
+            console.log('🔍 Step 2: Removing required configuration...');
+            // Remove required configuration to test failure handling
+            delete obj.native.position; // This should cause failure or graceful handling
+
+            await new Promise((res, rej) => {
+                harness.objects.setObject(obj._id, obj, (err) => {
+                    if (err) return rej(err);
+                    res(undefined);
+                });
+            });
+
+            console.log('🔍 Step 3: Starting adapter...');
+            await harness.startAdapterAndWait();
+
+            console.log('⏳ Step 4: Waiting for adapter to process...');
+            await new Promise((res) => setTimeout(res, 10000));
+
+            console.log('🔍 Step 5: Checking adapter behavior...');
+            const stateIds = await harness.dbConnection.getStateIDs('your-adapter.0.*');
+
+            // Check if adapter handled missing configuration gracefully
+            if (stateIds.length === 0) {
+                console.log('✅ Adapter properly handled missing configuration - no invalid states created');
+                resolve(true);
+            } else {
+                // If states were created, check if they're in error state
+                const connectionState = await new Promise((res, rej) => {
+                    harness.states.getState('your-adapter.0.info.connection', (err, state) => {
+                        if (err) return rej(err);
+                        res(state);
+                    });
+                });
+                
+                if (!connectionState || connectionState.val === false) {
+                    console.log('✅ Adapter properly failed with missing configuration');
+                    resolve(true);
+                } else {
+                    console.log('❌ Adapter should have failed or handled missing config gracefully');
+                    reject(new Error('Adapter should have handled missing configuration'));
+                }
+            }
+
+            await harness.stopAdapter();
+        } catch (error) {
+            console.log('✅ Adapter correctly threw error with missing configuration:', error.message);
+            resolve(true);
+        }
+    });
+}).timeout(40000);
+```
+
+#### Advanced State Access Patterns
+
+For testing adapters that create multiple states, use bulk state access methods to efficiently verify large numbers of states:
+
+```javascript
+it('should create and verify multiple states', () => new Promise(async (resolve, reject) => {
+    // Configure and start adapter first...
+    harness.objects.getObject('system.adapter.tagesschau.0', async (err, obj) => {
+        if (err) {
+            console.error('Error getting adapter object:', err);
+            reject(err);
+            return;
+        }
+
+        // Configure adapter as needed
+        obj.native.someConfig = 'test-value';
+        harness.objects.setObject(obj._id, obj);
+
+        await harness.startAdapterAndWait();
+
+        // Wait for adapter to create states
+        setTimeout(() => {
+            // Access bulk states using pattern matching
+            harness.dbConnection.getStateIDs('tagesschau.0.*').then(stateIds => {
+                if (stateIds && stateIds.length > 0) {
+                    harness.states.getStates(stateIds, (err, allStates) => {
+                        if (err) {
+                            console.error('❌ Error getting states:', err);
+                            reject(err); // Properly fail the test instead of just resolving
+                            return;
+                        }
+
+                        // Verify states were created and have expected values
+                        const expectedStates = ['tagesschau.0.info.connection', 'tagesschau.0.articles.0.title'];
+                        let foundStates = 0;
+                        
+                        for (const stateId of expectedStates) {
+                            if (allStates[stateId]) {
+                                foundStates++;
+                                console.log(`✅ Found expected state: ${stateId}`);
+                            } else {
+                                console.log(`❌ Missing expected state: ${stateId}`);
+                            }
+                        }
+
+                        if (foundStates === expectedStates.length) {
+                            console.log('✅ All expected states were created successfully');
+                            resolve();
+                        } else {
+                            reject(new Error(`Only ${foundStates}/${expectedStates.length} expected states were found`));
+                        }
+                    });
+                } else {
+                    reject(new Error('No states found matching pattern tagesschau.0.*'));
+                }
+            }).catch(reject);
+        }, 20000); // Allow more time for multiple state creation
+    });
+})).timeout(45000);
+```
+
+#### Key Integration Testing Rules
+
+1. **NEVER test API URLs directly** - Let the adapter handle API calls
+2. **ALWAYS use the harness** - `getHarness()` provides the testing environment  
+3. **Configure via objects** - Use `harness.objects.setObject()` to set adapter configuration
+4. **Start properly** - Use `harness.startAdapterAndWait()` to start the adapter
+5. **Check states** - Use `harness.states.getState()` to verify results
+6. **Use timeouts** - Allow time for async operations with appropriate timeouts
+7. **Test real workflow** - Initialize → Configure → Start → Verify States
+
+#### Workflow Dependencies
+Integration tests should run ONLY after lint and adapter tests pass:
+
+```yaml
+integration-tests:
+  needs: [check-and-lint, adapter-tests]
+  runs-on: ubuntu-latest
+  steps:
+    - name: Run integration tests
+      run: npx mocha test/integration-*.js --exit
+```
+
+#### What NOT to Do
+❌ Direct API testing: `axios.get('https://api.example.com')`
+❌ Mock adapters: `new MockAdapter()`  
+❌ Direct internet calls in tests
+❌ Bypassing the harness system
+
+#### What TO Do
+✅ Use `@iobroker/testing` framework
+✅ Configure via `harness.objects.setObject()`
+✅ Start via `harness.startAdapterAndWait()`
+✅ Test complete adapter lifecycle
+✅ Verify states via `harness.states.getState()`
+✅ Allow proper timeouts for async operations
+
+### API Testing with Credentials
+For adapters that connect to external APIs requiring authentication, implement comprehensive credential testing:
+
+#### Password Encryption for Integration Tests
+When creating integration tests that need encrypted passwords (like those marked as `encryptedNative` in io-package.json):
+
+1. **Read system secret**: Use `harness.objects.getObjectAsync("system.config")` to get `obj.native.secret`
+2. **Apply XOR encryption**: Implement the encryption algorithm:
+   ```javascript
+   async function encryptPassword(harness, password) {
+       const systemConfig = await harness.objects.getObjectAsync("system.config");
+       if (!systemConfig || !systemConfig.native || !systemConfig.native.secret) {
+           throw new Error("Could not retrieve system secret for password encryption");
+       }
+       
+       const secret = systemConfig.native.secret;
+       let result = '';
+       for (let i = 0; i < password.length; ++i) {
+           result += String.fromCharCode(secret[i % secret.length].charCodeAt(0) ^ password.charCodeAt(i));
+       }
+       return result;
+   }
+   ```
+3. **Store encrypted password**: Set the encrypted result in adapter config, not the plain text
+4. **Result**: Adapter will properly decrypt and use credentials, enabling full API connectivity testing
+
+#### Demo Credentials Testing Pattern
+- Use provider demo credentials when available (e.g., `demo@api-provider.com` / `demo`)
+- Create separate test file (e.g., `test/integration-demo.js`) for credential-based tests
+- Add npm script: `"test:integration-demo": "mocha test/integration-demo --exit"`
+- Implement clear success/failure criteria with recognizable log messages
+- Expected success pattern: Look for specific adapter initialization messages
+- Test should fail clearly with actionable error messages for debugging
+
+#### Enhanced Test Failure Handling
+```javascript
+it("Should connect to API with demo credentials", async () => {
+    // ... setup and encryption logic ...
+    
+    const connectionState = await harness.states.getStateAsync("adapter.0.info.connection");
+    
+    if (connectionState && connectionState.val === true) {
+        console.log("✅ SUCCESS: API connection established");
+        return true;
+    } else {
+        throw new Error("API Test Failed: Expected API connection to be established with demo credentials. " +
+            "Check logs above for specific API errors (DNS resolution, 401 Unauthorized, network issues, etc.)");
     }
-});
+}).timeout(120000); // Extended timeout for API calls
 ```
 
-#### Common Issues and Solutions
-
-**Missing Package Files Test**: Always include package files validation:
-```javascript
-const path = require('path');
-const { tests } = require('@iobroker/testing');
-
-// Validate the package files
-tests.packageFiles(path.join(__dirname, '..'));
-```
-
-**Test Timeouts**: Integration tests need adequate time for adapter startup:
-```javascript
-it('should start adapter', function () {
-    this.timeout(60000); // Increase timeout for slow startup
-    // Test code
-});
-```
 
 ### Solarlog Testing Specifics
 
@@ -168,334 +487,332 @@ const testConfig = {
 };
 ```
 
-## Architecture
+## README Updates
 
-### Adapter Structure
-- **main.js** - Primary adapter logic and state management  
-- **io-package.json** - Adapter metadata and configuration schema
-- **admin/** - Configuration UI files
-- **docs/** - Documentation and data object reference
+### Required Sections
+When updating README.md files, ensure these sections are present and well-documented:
 
-### State Management Pattern
+1. **Installation** - Clear npm/ioBroker admin installation steps
+2. **Configuration** - Detailed configuration options with examples
+3. **Usage** - Practical examples and use cases
+4. **Changelog** - Version history and changes (use "## **WORK IN PROGRESS**" section for ongoing changes following AlCalzone release-script standard)
+5. **License** - License information (typically MIT for ioBroker adapters)
+6. **Support** - Links to issues, discussions, and community support
 
-Use proper ioBroker state patterns:
+### Documentation Standards
+- Use clear, concise language
+- Include code examples for configuration
+- Add screenshots for admin interface when applicable
+- Maintain multilingual support (at minimum English and German)
+- When creating PRs, add entries to README under "## **WORK IN PROGRESS**" section following ioBroker release script standard
+- Always reference related issues in commits and PR descriptions (e.g., "solves #xx" or "fixes #xx")
 
-```javascript
-// Create states
-await this.setObjectNotExistsAsync('status.pac', {
-    type: 'state',
-    common: {
-        name: 'PowerAC',
-        type: 'number',
-        role: 'value.power',
-        read: true,
-        write: false,
-        unit: 'W'
-    },
-    native: {}
-});
+### Mandatory README Updates for PRs
+For **every PR or new feature**, always add a user-friendly entry to README.md:
 
-// Set state values with acknowledgment
-await this.setStateAsync('status.pac', value, true);
+- Add entries under `## **WORK IN PROGRESS**` section before committing
+- Use format: `* (author) **TYPE**: Description of user-visible change`
+- Types: **NEW** (features), **FIXED** (bugs), **ENHANCED** (improvements), **TESTING** (test additions), **CI/CD** (automation)
+- Focus on user impact, not technical implementation details
+- Example: `* (DutchmanNL) **FIXED**: Adapter now properly validates login credentials instead of always showing "credentials missing"`
+
+### Documentation Workflow Standards
+- **Mandatory README updates**: Establish requirement to update README.md for every PR/feature
+- **Standardized documentation**: Create consistent format and categories for changelog entries
+- **Enhanced development workflow**: Integrate documentation requirements into standard development process
+
+### Changelog Management with AlCalzone Release-Script
+Follow the [AlCalzone release-script](https://github.com/AlCalzone/release-script) standard for changelog management:
+
+#### Format Requirements
+- Always use `## **WORK IN PROGRESS**` as the placeholder for new changes
+- Add all PR/commit changes under this section until ready for release
+- Never modify version numbers manually - only when merging to main branch
+- Maintain this format in README.md or CHANGELOG.md:
+
+```markdown
+# Changelog
+
+<!--
+  Placeholder for the next version (at the beginning of the line):
+  ## **WORK IN PROGRESS**
+-->
+
+## **WORK IN PROGRESS**
+
+-   Did some changes
+-   Did some more changes
+
+## v0.1.0 (2023-01-01)
+Initial release
 ```
 
-### Configuration Management
+#### Workflow Process
+- **During Development**: All changes go under `## **WORK IN PROGRESS**`
+- **For Every PR**: Add user-facing changes to the WORK IN PROGRESS section
+- **Before Merge**: Version number and date are only added when merging to main
+- **Release Process**: The release-script automatically converts the placeholder to the actual version
 
-Handle configuration in the `native` section of io-package.json:
+#### Change Entry Format
+Use this consistent format for changelog entries:
+- `- (author) **TYPE**: User-friendly description of the change`
+- Types: **NEW** (features), **FIXED** (bugs), **ENHANCED** (improvements)
+- Focus on user impact, not technical implementation details
+- Reference related issues: "fixes #XX" or "solves #XX"
 
-```javascript
-// Access configuration
-const host = this.config.host;
-const port = this.config.port || 80;
+#### Example Entry
+```markdown
+## **WORK IN PROGRESS**
+
+- (DutchmanNL) **FIXED**: Adapter now properly validates login credentials instead of always showing "credentials missing" (fixes #25)
+- (DutchmanNL) **NEW**: Added support for device discovery to simplify initial setup
 ```
 
-## Development Patterns
+## Dependency Updates
 
-### Adapter Lifecycle
+### Package Management
+- Always use `npm` for dependency management in ioBroker adapters
+- When working on new features in a repository with an existing package-lock.json file, use `npm ci` to install dependencies. Use `npm install` only when adding or updating dependencies.
+- Keep dependencies minimal and focused
+- Only update dependencies to latest stable versions when necessary or in separate Pull Requests. Avoid updating dependencies when adding features that don't require these updates.
+- When you modify `package.json`:
+  1. Run `npm install` to update and sync `package-lock.json`.
+  2. If `package-lock.json` was updated, commit both `package.json` and `package-lock.json`.
+
+### Dependency Best Practices
+- Prefer built-in Node.js modules when possible
+- Use `@iobroker/adapter-core` for adapter base functionality
+- Avoid deprecated packages
+- Document any specific version requirements
+
+## JSON-Config Admin Instructions
+
+### Configuration Schema
+When creating admin configuration interfaces:
+
+- Use JSON-Config format for modern ioBroker admin interfaces
+- Provide clear labels and help text for all configuration options
+- Include input validation and error messages
+- Group related settings logically
+- Example structure:
+  ```json
+  {
+    "type": "panel",
+    "items": {
+      "host": {
+        "type": "text",
+        "label": "Host address",
+        "help": "IP address or hostname of the device"
+      }
+    }
+  }
+  ```
+
+### Admin Interface Guidelines
+- Use consistent naming conventions
+- Provide sensible default values
+- Include validation for required fields
+- Add tooltips for complex configuration options
+- Ensure translations are available for all supported languages (minimum English and German)
+- Write end-user friendly labels and descriptions, avoiding technical jargon where possible
+
+## Best Practices for Dependencies
+
+### HTTP Client Libraries
+- **Preferred:** Use native `fetch` API (Node.js 20+ required for adapters; built-in since Node.js 18)
+- **Avoid:** `axios` unless specific features are required (reduces bundle size)
+
+### Example with fetch:
 ```javascript
-class SolarlogAdapter extends utils.Adapter {
-    constructor(options = {}) {
-        super({
-            ...options,
-            name: 'solarlog',
-        });
-        this.on('ready', this.onReady.bind(this));
-        this.on('unload', this.onUnload.bind(this));
-    }
-    
-    async onReady() {
-        // Initialize adapter
-    }
-    
-    onUnload(callback) {
-        // Cleanup resources
-        callback();
-    }
+try {
+  const response = await fetch('https://api.example.com/data');
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  const data = await response.json();
+} catch (error) {
+  this.log.error(`API request failed: ${error.message}`);
 }
 ```
 
-### Data Polling Pattern
+### Other Dependency Recommendations
+- **Logging:** Use adapter built-in logging (`this.log.*`)
+- **Scheduling:** Use adapter built-in timers and intervals
+- **File operations:** Use Node.js `fs/promises` for async file operations
+- **Configuration:** Use adapter config system rather than external config libraries
 
-For devices like Solarlog that require regular polling:
+## Error Handling
 
+### Adapter Error Patterns
+- Always catch and log errors appropriately
+- Use adapter log levels (error, warn, info, debug)
+- Provide meaningful, user-friendly error messages that help users understand what went wrong
+- Handle network failures gracefully
+- Implement retry mechanisms where appropriate
+- Always clean up timers, intervals, and other resources in the `unload()` method
+
+### Example Error Handling:
 ```javascript
-class SolarlogAdapter extends utils.Adapter {
-    constructor(options = {}) {
-        super(options);
-        this.pollTimer = null;
-    }
-    
-    async onReady() {
-        await this.startPolling();
-    }
-    
-    async startPolling() {
-        // Initial data fetch
-        await this.fetchData();
-        
-        // Set up recurring polling
-        this.pollTimer = setTimeout(async () => {
-            await this.fetchData();
-            await this.startPolling(); // Recursive polling
-        }, this.config.pollIntervalcurrent * 1000);
-    }
-    
-    onUnload(callback) {
-        if (this.pollTimer) {
-            clearTimeout(this.pollTimer);
-            this.pollTimer = null;
-        }
-        callback();
-    }
+try {
+  await this.connectToDevice();
+} catch (error) {
+  this.log.error(`Failed to connect to device: ${error.message}`);
+  this.setState('info.connection', false, true);
+  // Implement retry logic if needed
 }
 ```
 
-### HTTP Request Pattern
-
-For API communication with devices:
-
+### Timer and Resource Cleanup:
 ```javascript
-const axios = require('axios');
+// In your adapter class
+private connectionTimer?: NodeJS.Timeout;
 
-async function fetchDeviceData() {
-    try {
-        const response = await axios.get(`http://${host}:${port}/getjp`, {
-            timeout: 5000
-        });
-        
-        if (response.status === 200) {
-            return response.data;
-        }
-        throw new Error(`HTTP ${response.status}`);
-        
-    } catch (error) {
-        this.log.error(`Failed to fetch data: ${error.message}`);
-        throw error;
+async onReady() {
+  this.connectionTimer = setInterval(() => {
+    this.checkConnection();
+  }, 30000);
+}
+
+onUnload(callback) {
+  try {
+    // Clean up timers and intervals
+    if (this.connectionTimer) {
+      clearInterval(this.connectionTimer);
+      this.connectionTimer = undefined;
     }
+    // Close connections, clean up resources
+    callback();
+  } catch (e) {
+    callback();
+  }
 }
 ```
 
-### Error Handling
+## Code Style and Standards
 
-Implement comprehensive error handling:
+- Follow JavaScript/TypeScript best practices
+- Use async/await for asynchronous operations
+- Implement proper resource cleanup in `unload()` method
+- Use semantic versioning for adapter releases
+- Include proper JSDoc comments for public methods
 
-```javascript
-async function processData() {
-    try {
-        const data = await this.fetchData();
-        await this.updateStates(data);
+## CI/CD and Testing Integration
+
+### GitHub Actions for API Testing
+For adapters with external API dependencies, implement separate CI/CD jobs:
+
+```yaml
+# Tests API connectivity with demo credentials (runs separately)
+demo-api-tests:
+  if: contains(github.event.head_commit.message, '[skip ci]') == false
+  
+  runs-on: ubuntu-22.04
+  
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
         
-        // Update connection state
-        await this.setStateAsync('info.connection', true, true);
-        
-    } catch (error) {
-        this.log.error(`Data processing failed: ${error.message}`);
-        await this.setStateAsync('info.connection', false, true);
-        
-        // Don't throw - keep adapter running
-    }
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run demo API tests
+      run: npm run test:integration-demo
+```
+
+### CI/CD Best Practices
+- Run credential tests separately from main test suite
+- Use ubuntu-22.04 for consistency
+- Don't make credential tests required for deployment
+- Provide clear failure messages for API connectivity issues
+- Use appropriate timeouts for external API calls (120+ seconds)
+
+### Package.json Script Integration
+Add dedicated script for credential testing:
+```json
+{
+  "scripts": {
+    "test:integration-demo": "mocha test/integration-demo --exit"
+  }
 }
 ```
 
-## Code Quality
+### Practical Example: Complete API Testing Implementation
+Here's a complete example based on lessons learned from the Discovergy adapter:
 
-### ESLint Configuration
-Follow the project's ESLint rules. Common patterns:
-
+#### test/integration-demo.js
 ```javascript
-// Use proper indentation (4 spaces)
-if (condition) {
-    doSomething();
-}
+const path = require("path");
+const { tests } = require("@iobroker/testing");
 
-// Always use semicolons
-const variable = getValue();
-
-// Use async/await consistently
-async function processData() {
-    const result = await fetchData();
+// Helper function to encrypt password using ioBroker's encryption method
+async function encryptPassword(harness, password) {
+    const systemConfig = await harness.objects.getObjectAsync("system.config");
+    
+    if (!systemConfig || !systemConfig.native || !systemConfig.native.secret) {
+        throw new Error("Could not retrieve system secret for password encryption");
+    }
+    
+    const secret = systemConfig.native.secret;
+    let result = '';
+    for (let i = 0; i < password.length; ++i) {
+        result += String.fromCharCode(secret[i % secret.length].charCodeAt(0) ^ password.charCodeAt(i));
+    }
+    
     return result;
 }
-```
 
-### Logging Best Practices
+// Run integration tests with demo credentials
+tests.integration(path.join(__dirname, ".."), {
+    defineAdditionalTests({ suite }) {
+        suite("API Testing with Demo Credentials", (getHarness) => {
+            let harness;
+            
+            before(() => {
+                harness = getHarness();
+            });
 
-```javascript
-// Use appropriate log levels
-this.log.error('Critical error occurred');
-this.log.warn('Potential issue detected');  
-this.log.info('Normal operation info');
-this.log.debug('Detailed debugging info');
+            it("Should connect to API and initialize with demo credentials", async () => {
+                console.log("Setting up demo credentials...");
+                
+                if (harness.isAdapterRunning()) {
+                    await harness.stopAdapter();
+                }
+                
+                const encryptedPassword = await encryptPassword(harness, "demo_password");
+                
+                await harness.changeAdapterConfig("your-adapter", {
+                    native: {
+                        username: "demo@provider.com",
+                        password: encryptedPassword,
+                        // other config options
+                    }
+                });
 
-// Include context in log messages
-this.log.error(`Failed to connect to ${host}:${port} - ${error.message}`);
-```
-
-### Memory Management
-
-```javascript
-// Clean up timers and intervals
-onUnload(callback) {
-    if (this.pollTimer) {
-        clearTimeout(this.pollTimer);
-        this.pollTimer = null;
+                console.log("Starting adapter with demo credentials...");
+                await harness.startAdapter();
+                
+                // Wait for API calls and initialization
+                await new Promise(resolve => setTimeout(resolve, 60000));
+                
+                const connectionState = await harness.states.getStateAsync("your-adapter.0.info.connection");
+                
+                if (connectionState && connectionState.val === true) {
+                    console.log("✅ SUCCESS: API connection established");
+                    return true;
+                } else {
+                    throw new Error("API Test Failed: Expected API connection to be established with demo credentials. " +
+                        "Check logs above for specific API errors (DNS resolution, 401 Unauthorized, network issues, etc.)");
+                }
+            }).timeout(120000);
+        });
     }
-    
-    if (this.scheduleJob) {
-        this.scheduleJob.cancel();
-        this.scheduleJob = null;
-    }
-    
-    callback();
-}
-```
-
-## Dependencies
-
-### Core Dependencies
-- `@iobroker/adapter-core` - Base adapter functionality
-- `axios` - HTTP requests (preferred over deprecated libraries)
-- `node-schedule` - Scheduled tasks for historical data collection
-
-### Development Dependencies  
-- `@iobroker/testing` - Official testing framework
-- `eslint` - Code linting
-- `mocha` - Test runner
-- `chai` - Assertions
-
-### Avoid Deprecated Packages
-- Don't use `request` (deprecated) - use `axios` instead
-- Don't use `got` if `axios` is already in use for consistency
-
-## Git and Release Management
-
-### Commit Guidelines
-- Use conventional commit format: `feat:`, `fix:`, `docs:`, etc.
-- Include scope when relevant: `fix(polling):`, `feat(forecast):`
-- Reference issues: `fixes #123`
-
-### Branching Strategy
-- `master` - stable releases
-- `dev` - development branch  
-- Feature branches: `feature/description`
-- Bug fixes: `fix/issue-description`
-
-### Release Process
-- Use `@alcalzone/release-script` for automated releases
-- Update `CHANGELOG_OLD.md` for older versions
-- Maintain `README.md` changelog section for recent versions
-
-## Documentation
-
-### README Structure
-Maintain these sections:
-- Installation instructions
-- Configuration options 
-- Hardware compatibility
-- Changelog
-- License
-
-### Inline Comments
-Add comments for:
-- Complex logic
-- API response parsing
-- Configuration validation
-- Error handling strategies
-
-## Security
-
-### Configuration Validation
-```javascript
-// Validate user inputs
-const port = parseInt(this.config.port) || 80;
-if (port < 1 || port > 65535) {
-    throw new Error('Invalid port number');
-}
-
-const host = this.config.host?.trim();
-if (!host) {
-    throw new Error('Host is required');
-}
-```
-
-### API Security  
-```javascript
-// Handle authentication if required
-const authConfig = this.config.userpass ? {
-    auth: {
-        username: this.config.username,
-        password: this.config.userpw
-    }
-} : {};
-
-const response = await axios.get(url, {
-    ...authConfig,
-    timeout: 5000
 });
 ```
 
-## Performance
-
-### State Updates
-```javascript
-// Batch state updates when possible
-const updates = [
-    ['status.pac', powerData.pac],
-    ['status.pdc', powerData.pdc],
-    ['status.uac', powerData.uac]
-];
-
-for (const [id, value] of updates) {
-    await this.setStateAsync(id, value, true);
-}
-```
-
-### Resource Usage
-- Use appropriate polling intervals (not too frequent)
-- Implement exponential backoff for failures
-- Clean up resources properly in unload
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Connection Problems**: Check host/port configuration and network accessibility
-2. **Polling Too Frequent**: Increase intervals to reduce device load
-3. **Memory Leaks**: Ensure all timers and schedules are cleared in unload
-4. **State Creation**: Use `setObjectNotExistsAsync` to avoid overwriting existing states
-
-### Debug Strategies
-```javascript
-// Add debug logging for data flow
-this.log.debug(`Received data: ${JSON.stringify(data, null, 2)}`);
-
-// Log configuration on startup  
-this.log.info(`Connecting to ${this.config.host}:${this.config.port}`);
-
-// Track polling performance
-const startTime = Date.now();
-// ... do work ...
-this.log.debug(`Polling completed in ${Date.now() - startTime}ms`);
-```
-
-This comprehensive guide should help GitHub Copilot understand the ioBroker adapter development patterns and provide more relevant suggestions for this solar monitoring adapter.
+[CUSTOMIZE: Add any adapter-specific coding standards or patterns here]
