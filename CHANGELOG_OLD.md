@@ -1,4 +1,8 @@
 # Older changes
+## 2.2.4
+
+-   polling-bug fixed, dependecies updated
+
 ## 2.2.3
 
 -   got => axios, usage of async functions

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.3.0",
+    "version": "2.3.1-alpha.0",
     "news": {
+      "2.3.1-alpha.0": {
+        "en": "login fix for solarlog firmware >= 6.1.1",
+        "de": "login fix für solarlog firmware >= 6.1.1",
+        "ru": "login fix для прошивки solarlog >= 6.1.1.1",
+        "pt": "correção de login para firmware solarlog >= 6.1.1",
+        "nl": "login fix voor solarlog firmware 6.1.1",
+        "fr": "fixateur de connexion pour le firmware solaire >= 6.1.1",
+        "it": "correzione di login per il firmware solarelog >= 6.1.1",
+        "es": "fijación de inicio de sesión para el firmware solarlog 6.1.1",
+        "pl": "fix logowania dla oprogramowania solarlog > = 6.1.1",
+        "uk": "фіксація входу для прошивки solarlog >= 6.1.1 км",
+        "zh-cn": "日光记录固件的登录修正qq 6.1.1 联合国"
+      },
       "2.3.0": {
         "en": "Adapter requires node.js >= 18 and js-controller >= 5 now\nDependencies have been updated",
         "de": "Adapter benötigt node.js >= 18 und js-controller >= 5 jetzt\nAbhängigkeiten wurden aktualisiert",
