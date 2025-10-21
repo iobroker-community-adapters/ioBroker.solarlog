@@ -102,7 +102,9 @@
     "mode": "daemon",
     "compact": true,
     "icon": "solarlog.png",
-    "materialize": true,
+    "adminUI": {
+      "config": "materialize"
+    },
     "enabled": true,
     "extIcon": "https://raw.githubusercontent.com/iobroker-community-adapters/ioBroker.solarlog/master/admin/solarlog.png",
     "keywords": [
