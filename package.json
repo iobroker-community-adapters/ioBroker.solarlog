@@ -1,4 +1,7 @@
 {
+  "name": "iobroker.solarlog",
+  "version": "2.3.1-alpha.0",
+  "description": "solarlog",
   "author": {
     "name": "Marcel Adam",
     "email": "marceladam@gmx.ch"
@@ -6,8 +9,6 @@
   "bugs": {
     "url": "https://github.com/iobroker-community-adapters/ioBroker.solarlog/issues"
   },
-  "description": "solarlog",
-  "bundleDependencies": [],
   "contributors": [
     {
       "name": "Marcel Adam",
@@ -29,13 +30,10 @@
     "@alcalzone/release-script-plugin-license": "^4.0.0",
     "@alcalzone/release-script-plugin-manual-review": "^4.0.0",
     "@iobroker/adapter-dev": "^1.5.0",
+    "@iobroker/eslint-config": "^2.2.0",
     "@iobroker/testing": "^5.1.1",
     "@tsconfig/node14": "^14.1.5",
     "@types/node": "^24.9.1",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.6.2",
     "typescript": "~5.9.3"
   },
   "homepage": "https://github.com/iobroker-community-adapters/ioBroker.solarlog",
@@ -54,7 +52,6 @@
     "LICENSE",
     "io-package.json"
   ],
-  "name": "iobroker.solarlog",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iobroker-community-adapters/ioBroker.solarlog.git"
@@ -65,9 +62,8 @@
     "test:integration": "mocha test/integration --exit",
     "test": "npm run test:js && npm run test:package",
     "check": "tsc --noEmit -p tsconfig.check.json",
-    "lint": "eslint .",
+    "lint": "eslint -c eslint.config.mjs .",
     "translate": "translate-adapter",
     "release": "release-script"
-  },
-  "version": "2.3.1-alpha.0"
+  }
 }
