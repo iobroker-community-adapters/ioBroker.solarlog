@@ -43,8 +43,10 @@ SolarLog 50: There is no open JSON-Interface @ SolarLog 50 devices. So certain v
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### 2.3.1-alpha.0 (2025-10-21)
-*   login fix for solarlog firmware >= 6.1.1
+### **WORK IN PROGRESS**
+* (mcm1957) Adapter requires node.js >= 20, js-controller >= 6.0.11 and admin >= 7.6.17
+* (it-busch) login fix for solarlog firmware >= 6.1.1
+* (mcm1957) Dependencies have been updated
 
 ### 2.3.0 (2024-04-28)
 * (mcm1957) Adapter requires node.js >= 18 and js-controller >= 5 now
