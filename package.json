@@ -79,6 +79,6 @@
     "lint": "eslint .",
     "translate": "translate-adapter",
     "release": "release-script"
-  }
+  },
   "version": "2.3.0"
 }
