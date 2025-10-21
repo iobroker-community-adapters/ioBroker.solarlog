@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "solarlog",
-    "version": "2.3.1",
+    "version": "2.3.0",
     "news": {
       "2.3.0": {
         "en": "Adapter requires node.js >= 18 and js-controller >= 5 now\nDependencies have been updated",
