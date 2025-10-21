@@ -331,7 +331,7 @@ async function login() {
       Cookie: 'banner_hidden=false'
     };
     adapter.log.debug(`Options: ${JSON.stringify(options)}`);
-    adapter.log.debug("starting LOGIN");
+    adapter.log.debug('starting LOGIN');
 
     // Solarlog API codes:
     // '550' is the main request object for login parameters.
