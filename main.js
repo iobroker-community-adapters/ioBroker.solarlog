@@ -13,6 +13,7 @@ const utils = require('@iobroker/adapter-core'); // Get common adapter utils
 const axios = require('axios');
 const https = require('https');
 const schedule = require('node-schedule');
+const bcrypt = require('bcryptjs');
 
 let adapter;
 
@@ -165,8 +166,9 @@ async function main() {
     forecast = !!adapter.config.forecast;
     historic = !!adapter.config.historic;
     histCRON = `${adapter.config.histmin} ${adapter.config.histhour} * * *`
+    userName = `user`;
     userPass = !!adapter.config.userpass;
-    loginData = `u=user&p=${adapter.config.userpw}`;
+    userPw = adapter.config.userpw;
     optionsDefault = {
       method: 'post',
       headers: {
@@ -180,6 +182,7 @@ async function main() {
         'Accept-Origin': deviceIpAddress + '/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
         'X-Requested-With': 'XMLHttpRequest',
+        'X-SL-CSRF-PROTECTION': '1',
         'Cookie': `banner_hidden=false; SolarLog=${dataToken}`
       }
     };
@@ -329,6 +332,19 @@ async function login() {
     };
     adapter.log.debug(`Options: ${JSON.stringify(options)}`);
     adapter.log.debug('starting LOGIN');
+
+    // Solarlog API codes:
+    // '550' is the main request object for login parameters.
+    // '103' indicates whether password hashing is required (1 = hash required).
+    // '104' contains the salt value for password hashing.
+    const getjpPayload = { "550": { "103": null, "104": null } };
+    const prot = await axios.post(`${deviceIpAddress}/getjp`, getjpPayload, options);
+    const b = prot?.data?.["550"] || {};
+    const pwsHashed = b["103"] === 1 || b["103"] === "1" || b["103"] === true;
+
+    const salt = b["104"];
+    const pwdForPost = pwsHashed && salt ? bcrypt.hashSync(userPw, salt) : userPw;
+    const loginData = `u=${userName}&p=${pwdForPost}`;
 
     try {
       const response = await axios.post(`${deviceIpAddress}/login`, loginData, options);
