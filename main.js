@@ -13,7 +13,7 @@ const utils = require('@iobroker/adapter-core'); // Get common adapter utils
 const axios = require('axios');
 const https = require('https');
 const schedule = require('node-schedule');
-const bcrypt = require("bcryptjs");
+const bcrypt = require('bcryptjs');
 
 let adapter;
 
