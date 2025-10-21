@@ -342,7 +342,7 @@ async function login() {
     const b = prot?.data?.["550"] || {};
     const pwsHashed = b["103"] === 1 || b["103"] === "1" || b["103"] === true;
 
-    const salt = b["104"]
+    const salt = b["104"];
     const pwdForPost = pwsHashed && salt ? bcrypt.hashSync(userPw, salt) : userPw;
     const loginData = `u=${userName}&p=${pwdForPost}`;
 
