@@ -43,7 +43,7 @@ SolarLog 50: There is no open JSON-Interface @ SolarLog 50 devices. So certain v
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### 2.3.1 (2025-09-29)
+## **WORK IN PROGRESS**
 *   login fix for solarlog firmware >= 6.1.1
 
 ### 2.3.0 (2024-04-28)
