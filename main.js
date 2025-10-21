@@ -333,6 +333,10 @@ async function login() {
     adapter.log.debug(`Options: ${JSON.stringify(options)}`);
     adapter.log.debug("starting LOGIN");
 
+    // Solarlog API codes:
+    // '550' is the main request object for login parameters.
+    // '103' indicates whether password hashing is required (1 = hash required).
+    // '104' contains the salt value for password hashing.
     const getjpPayload = { "550": { "103": null, "104": null } };
     const prot = await axios.post(`${deviceIpAddress}/getjp`, getjpPayload, options);
     const b = prot?.data?.["550"] || {};
