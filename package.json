@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.3.2",
-    "axios": "^1.7.9",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "node-schedule": "^2.1.1"
   },
