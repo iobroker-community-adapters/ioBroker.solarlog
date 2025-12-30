@@ -2,19 +2,14 @@
   "name": "iobroker.solarlog",
   "version": "2.4.0",
   "description": "solarlog",
-  "author": {
-    "name": "Marcel Adam",
-    "email": "marceladam@gmx.ch"
-  },
+  "author": "Marcel Adam <marceladam@gmx.ch>",
+  "contributors": [
+    "Marcel Adam <marceladam@gmx.ch>",
+    "iobroker-community-adapters <iobroker-community-adapters@gmx.de>"
+  ],
   "bugs": {
     "url": "https://github.com/iobroker-community-adapters/ioBroker.solarlog/issues"
   },
-  "contributors": [
-    {
-      "name": "Marcel Adam",
-      "email": "marceladam@gmx.ch"
-    }
-  ],
   "engines": {
     "node": ">=20"
   },
