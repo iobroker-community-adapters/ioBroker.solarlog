@@ -96,7 +96,8 @@
       "zh-cn": "监测你的太阳能参数\n\n"
     },
     "authors": [
-      "forelleblau <marceladam@gmx.ch>"
+      "forelleblau <marceladam@gmx.ch>",
+      "iobroker-community-adapters <iobroker-community-adapters@gmx.de>"
     ],
     "platform": "Javascript/Node.js",
     "mode": "daemon",
