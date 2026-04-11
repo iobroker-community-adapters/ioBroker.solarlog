@@ -29,7 +29,7 @@
     "@iobroker/testing": "^5.2.2",
     "@tsconfig/node14": "^14.1.8",
     "@types/node": "^25.5.2",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.2"
   },
   "homepage": "https://github.com/iobroker-community-adapters/ioBroker.solarlog",
   "keywords": [
