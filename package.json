@@ -28,7 +28,7 @@
     "@iobroker/eslint-config": "^2.3.4",
     "@iobroker/testing": "^5.2.2",
     "@tsconfig/node14": "^14.1.8",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.7.0",
     "typescript": "~5.9.3"
   },
   "homepage": "https://github.com/iobroker-community-adapters/ioBroker.solarlog",
